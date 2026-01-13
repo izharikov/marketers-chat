@@ -1,56 +1,104 @@
 import { experimental_XMC } from "@sitecore-marketplace-sdk/xmc";
 import { tool } from "ai";
 import { z } from "zod/v4";
+import { v4 as uuidv4 } from 'uuid';
+
+async function wrapAgentCall<TResult>(call: (jobId: string) => Promise<TResult>) {
+    const jobId = uuidv4();
+    const response = call(jobId);
+    return { ...response, jobId };
+};
+
+const assetToolsConfig = {
+    get_asset_information: {
+        description: 'Retrieves detailed information about a specific digital asset including its metadata, file properties, and usage information.',
+        inputSchema: z.object({
+            assetId: z.string().describe('The unique identifier of the asset to be retrieved.'),
+        }),
+    },
+    search_assets: {
+        description: 'Searches for digital assets based on query terms, file types, or tags. Returns a list of matching assets with their metadata and download URLs.',
+        inputSchema: z.object({
+            query: z.string().describe('The search query to find assets matching the specified criteria.'),
+            language: z.string().describe('The language of the assets to be retrieved.'),
+            type: z.string().describe('The type of the assets to be retrieved.'),
+        }),
+    },
+    update_asset: {
+        description: 'Updates the metadata and properties of an existing digital asset. This allows you to modify asset information such as alt text, titles, and custom field values.',
+        inputSchema: z.object({
+            assetId: z.string().describe('The unique identifier of the asset to be updated.'),
+            fields: z.object({
+            }).describe('The metadata of the asset to be updated.'),
+            language: z.string().describe('The language of the asset to be updated.'),
+            name: z.string().describe('The name of the asset to be updated.'),
+            altText: z.string().describe('The alt text of the asset to be updated.'),
+
+        }),
+    },
+    upload_asset: {
+        description: 'Uploads a new digital asset to the Sitecore Experience Cloud. This allows you to add new assets to your digital asset library.',
+        inputSchema: z.object({
+            fileUrl: z.string().describe('File url to upload'),
+            name: z.string().describe('The name of the asset to be uploaded.'),
+            itemPath: z.string().describe('The path of the asset to be uploaded.'),
+            language: z.string().describe('The language of the asset to be uploaded.'),
+            extension: z.string().describe('The extension of the asset to be uploaded.'),
+            siteName: z.string().describe('The name of the site to which the asset will be uploaded.'),
+        }),
+    },
+};
+
+export function clientAssetTools() {
+    return {
+        get_asset_information: tool(assetToolsConfig.get_asset_information),
+        search_assets: tool(assetToolsConfig.search_assets),
+        update_asset: tool(assetToolsConfig.update_asset),
+        upload_asset: tool(assetToolsConfig.upload_asset),
+    };
+}
 
 export function assetTools(client: experimental_XMC, sitecoreContextId: string) {
     return {
         get_asset_information: tool({
-            description: 'Retrieves detailed information about a specific digital asset including its metadata, file properties, and usage information.',
-            inputSchema: z.object({
-                assetId: z.string().describe('The unique identifier of the asset to be retrieved.'),
-            }),
+            ...assetToolsConfig.get_asset_information,
             execute: async ({ assetId }) => {
-                return await client.agent.assetsGetAssetInformation({
+                return await wrapAgentCall(async (jobId) => client.agent.assetsGetAssetInformation({
                     query: {
                         sitecoreContextId,
+                    },
+                    headers: {
+                        'x-sc-job-id': jobId,
                     },
                     path: {
                         assetId,
                     }
-                });
-            }
+                }));
+            },
         }),
         search_assets: tool({
-            description: 'Searches for digital assets based on query terms, file types, or tags. Returns a list of matching assets with their metadata and download URLs.',
-            inputSchema: z.object({
-                query: z.string().describe('The search query to find assets matching the specified criteria.'),
-                language: z.string().describe('The language of the assets to be retrieved.'),
-                type: z.string().describe('The type of the assets to be retrieved.'),
-            }),
+            ...assetToolsConfig.search_assets,
             execute: async ({ query, language, type }) => {
-                return await client.agent.assetsSearchAssets({
+                return await wrapAgentCall(async (jobId) => client.agent.assetsSearchAssets({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         sitecoreContextId,
                         query,
                         language,
                         type,
                     },
-                });
+                }));
             }
         }),
         update_asset: tool({
-            description: 'Updates the metadata and properties of an existing digital asset. This allows you to modify asset information such as alt text, titles, and custom field values.',
-            inputSchema: z.object({
-                assetId: z.string().describe('The unique identifier of the asset to be updated.'),
-                fields: z.object({
-                }).describe('The metadata of the asset to be updated.'),
-                language: z.string().describe('The language of the asset to be updated.'),
-                name: z.string().describe('The name of the asset to be updated.'),
-                altText: z.string().describe('The alt text of the asset to be updated.'),
-
-            }),
+            ...assetToolsConfig.update_asset,
             execute: async ({ assetId, fields, language, name, altText }) => {
-                return await client.agent.assetsUpdateAsset({
+                return await wrapAgentCall(async (jobId) => client.agent.assetsUpdateAsset({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         sitecoreContextId,
                     },
@@ -63,23 +111,18 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string) 
                         name,
                         altText,
                     },
-                });
+                }));
             }
         }),
         upload_asset: tool({
-            description: 'Uploads a new digital asset to the Sitecore Experience Cloud. This allows you to add new assets to your digital asset library.',
-            inputSchema: z.object({
-                fileUrl: z.string().describe('File url to upload'),
-                name: z.string().describe('The name of the asset to be uploaded.'),
-                itemPath: z.string().describe('The path of the asset to be uploaded.'),
-                language: z.string().describe('The language of the asset to be uploaded.'),
-                extension: z.string().describe('The extension of the asset to be uploaded.'),
-                siteName: z.string().describe('The name of the site to which the asset will be uploaded.'),
-            }),
+            ...assetToolsConfig.upload_asset,
             execute: async ({ fileUrl, name, itemPath, language, extension, siteName }) => {
                 const arrayBuffer = await fetch(fileUrl).then(res => res.arrayBuffer());
                 const file = new Blob([arrayBuffer]);
-                return await client.agent.assetsUploadAsset({
+                return await wrapAgentCall(async (jobId) => client.agent.assetsUploadAsset({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         sitecoreContextId,
                     },
@@ -87,7 +130,7 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string) 
                         file,
                         upload_request: JSON.stringify({ name, itemPath, language, extension, siteName })
                     }
-                });
+                }));
             }
         })
     }
@@ -101,11 +144,14 @@ export function environmentTools(client: experimental_XMC, sitecoreContextId: st
             description: 'Retrieves all languages available.',
             inputSchema: z.object({}),
             execute: async () => {
-                return await client.agent.environmentsListLanguages({
+                return await wrapAgentCall(async (jobId) => client.agent.environmentsListLanguages({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         sitecoreContextId,
                     },
-                });
+                }));
             }
         })
     }
@@ -125,7 +171,10 @@ export function personalizationTools(client: experimental_XMC, sitecoreContextId
                 language: z.string().describe('The language of the personalization version.'),
             }),
             execute: async ({ pageId, name, variant_name, audience_name, condition_template_id, condition_params, language }) => {
-                return await client.agent.personalizationCreatePersonalizationVersion({
+                return await wrapAgentCall(async (jobId) => client.agent.personalizationCreatePersonalizationVersion({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -140,7 +189,7 @@ export function personalizationTools(client: experimental_XMC, sitecoreContextId
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_personalization_versions_by_page: tool({
@@ -149,25 +198,31 @@ export function personalizationTools(client: experimental_XMC, sitecoreContextId
                 pageId: z.string().describe('The unique identifier of the page.'),
             }),
             execute: async ({ pageId }) => {
-                return await client.agent.personalizationGetPersonalizationVersionsByPage({
+                return await wrapAgentCall(async (jobId) => client.agent.personalizationGetPersonalizationVersionsByPage({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_condition_templates: tool({
             description: 'Retrieves all available condition templates for personalization.',
             inputSchema: z.object({}),
             execute: async () => {
-                return await client.agent.personalizationGetConditionTemplates({
+                return await wrapAgentCall(async (jobId) => client.agent.personalizationGetConditionTemplates({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         sitecoreContextId,
                     },
-                });
+                }));
             }
         }),
         get_condition_template_by_id: tool({
@@ -176,14 +231,17 @@ export function personalizationTools(client: experimental_XMC, sitecoreContextId
                 templateId: z.string().describe('The unique identifier of the condition template.'),
             }),
             execute: async ({ templateId }) => {
-                return await client.agent.personalizationGetConditionTemplateById({
+                return await wrapAgentCall(async (jobId) => client.agent.personalizationGetConditionTemplateById({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         template_id: templateId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         })
     }
@@ -197,14 +255,17 @@ export function jobTools(client: experimental_XMC, sitecoreContextId: string) {
                 jobId: z.string().describe('The unique identifier of the job to be reverted.'),
             }),
             execute: async ({ jobId }) => {
-                return await client.agent.jobsRevertJob({
+                return await wrapAgentCall(async (jobId) => client.agent.jobsRevertJob({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         jobId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_job: tool({
@@ -213,14 +274,17 @@ export function jobTools(client: experimental_XMC, sitecoreContextId: string) {
                 jobId: z.string().describe('The unique identifier of the job.'),
             }),
             execute: async ({ jobId }) => {
-                return await client.agent.jobsGetJob({
+                return await wrapAgentCall(async (jobId) => client.agent.jobsGetJob({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         jobId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         list_operations: tool({
@@ -229,14 +293,17 @@ export function jobTools(client: experimental_XMC, sitecoreContextId: string) {
                 jobId: z.string().describe('The unique identifier of the job.'),
             }),
             execute: async ({ jobId }) => {
-                return await client.agent.jobsListOperations({
+                return await wrapAgentCall(async (jobId) => client.agent.jobsListOperations({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         jobId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         })
     }
@@ -251,7 +318,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 language: z.string().describe('The language of the page.'),
             }),
             execute: async ({ pageId, language }) => {
-                return await client.agent.pagesGetPage({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPage({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -259,7 +329,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         create_page: tool({
@@ -272,7 +342,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 fields: z.array(z.record(z.string(), z.unknown())).describe('The fields for the new page.'),
             }),
             execute: async ({ templateId, name, parentId, language, fields }) => {
-                return await client.agent.pagesCreatePage({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesCreatePage({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     body: {
                         templateId,
                         name,
@@ -283,7 +356,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_page_template_by_id: tool({
@@ -292,12 +365,15 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 templateId: z.string().describe('The unique identifier of the page template.'),
             }),
             execute: async ({ templateId }) => {
-                return await client.agent.pagesGetPageTemplateById({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPageTemplateById({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         templateId,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_allowed_components_by_placeholder: tool({
@@ -308,7 +384,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 language: z.string().describe('The language of the page.'),
             }),
             execute: async ({ pageId, placeholderName, language }) => {
-                return await client.agent.pagesGetAllowedComponentsByPlaceholder({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetAllowedComponentsByPlaceholder({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                         placeholderName,
@@ -317,7 +396,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_components_on_page: tool({
@@ -328,7 +407,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 version: z.number().describe('The version of the page.'),
             }),
             execute: async ({ pageId, language, version }) => {
-                return await client.agent.pagesGetComponentsOnPage({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetComponentsOnPage({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -337,7 +419,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                         version,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         add_component_on_page: tool({
@@ -351,7 +433,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 fields: z.record(z.string(), z.unknown()).describe('The fields for the component.'),
             }),
             execute: async ({ pageId, componentRenderingId, placeholderPath, componentItemName, language, fields }) => {
-                return await client.agent.pagesAddComponentOnPage({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesAddComponentOnPage({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -365,7 +450,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         set_component_datasource: tool({
@@ -377,7 +462,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 language: z.string().describe('The language of the page.'),
             }),
             execute: async ({ pageId, componentId, datasourceId, language }) => {
-                return await client.agent.pagesSetComponentDatasource({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesSetComponentDatasource({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                         componentId,
@@ -389,7 +477,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         add_language_to_page: tool({
@@ -399,7 +487,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 language: z.string().describe('The language to add.'),
             }),
             execute: async ({ pageId, language }) => {
-                return await client.agent.pagesAddLanguageToPage({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesAddLanguageToPage({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -409,7 +500,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         search_site: tool({
@@ -420,14 +511,17 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 language: z.string().describe('The language to search in.'),
             }),
             execute: async ({ search_query, site_name, language }) => {
-                return await client.agent.pagesSearchSite({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesSearchSite({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         search_query,
                         site_name,
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_page_path_by_live_url: tool({
@@ -436,12 +530,15 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 live_url: z.string().describe('The live URL of the page.'),
             }),
             execute: async ({ live_url }) => {
-                return await client.agent.pagesGetPagePathByLiveUrl({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPagePathByLiveUrl({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         live_url,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_page_screenshot: tool({
@@ -454,7 +551,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 height: z.number().describe('The height of the screenshot.'),
             }),
             execute: async ({ pageId, version, language, width, height }) => {
-                return await client.agent.pagesGetPageScreenshot({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPageScreenshot({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -465,7 +565,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                         height,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_page_html: tool({
@@ -476,7 +576,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 version: z.number().describe('The version of the page.'),
             }),
             execute: async ({ pageId, language, version }) => {
-                return await client.agent.pagesGetPageHtml({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPageHtml({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -485,7 +588,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                         version,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_page_preview_url: tool({
@@ -496,7 +599,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 version: z.number().describe('The version of the page.'),
             }),
             execute: async ({ pageId, language, version }) => {
-                return await client.agent.pagesGetPagePreviewUrl({
+                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPagePreviewUrl({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         pageId,
                     },
@@ -505,7 +611,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                         version,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         })
     }
@@ -517,17 +623,14 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
             description: 'Retrieves a list of all available sites with their basic information and configuration.',
             inputSchema: z.object({}),
             execute: async () => {
-                try {
-                    console.log('Querying sites: ' + sitecoreContextId);
-                    return await client.agent.sitesGetSitesList({
-                        query: {
-                            sitecoreContextId,
-                        }
-                    });
-                } catch (error) {
-                    console.error(error);
-                    return 'Error occurred ' + error;
-                }
+                return await wrapAgentCall(async (jobId) => client.agent.sitesGetSitesList({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
+                    query: {
+                        sitecoreContextId,
+                    }
+                }));
             }
         }),
         get_site_details: tool({
@@ -536,14 +639,17 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
                 siteId: z.string().describe('The unique identifier of the site.'),
             }),
             execute: async ({ siteId }) => {
-                return await client.agent.sitesGetSiteDetails({
+                return await wrapAgentCall(async (jobId) => client.agent.sitesGetSiteDetails({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         siteId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_all_pages_by_site: tool({
@@ -553,7 +659,10 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
                 language: z.string().describe('The language of the pages.'),
             }),
             execute: async ({ siteName, language }) => {
-                return await client.agent.sitesGetAllPagesBySite({
+                return await wrapAgentCall(async (jobId) => client.agent.sitesGetAllPagesBySite({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         siteName,
                     },
@@ -561,7 +670,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_site_id_from_item: tool({
@@ -570,14 +679,17 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
                 itemId: z.string().describe('The unique identifier of the item.'),
             }),
             execute: async ({ itemId }) => {
-                return await client.agent.sitesGetSiteIdFromItem({
+                return await wrapAgentCall(async (jobId) => client.agent.sitesGetSiteIdFromItem({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         itemId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         })
     }
@@ -595,7 +707,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 fields: z.record(z.string(), z.unknown()).describe('The fields for the content item.'),
             }),
             execute: async ({ templateId, name, parentId, language, fields }) => {
-                return await client.agent.contentCreateContentItem({
+                return await wrapAgentCall(async (jobId) => client.agent.contentCreateContentItem({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     body: {
                         templateId,
                         name,
@@ -606,7 +721,7 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         delete_content: tool({
@@ -616,7 +731,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 language: z.string().describe('The language of the item.'),
             }),
             execute: async ({ itemId, language }) => {
-                return await client.agent.contentDeleteContent({
+                return await wrapAgentCall(async (jobId) => client.agent.contentDeleteContent({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         itemId,
                     },
@@ -624,7 +742,7 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_content_item_by_id: tool({
@@ -634,7 +752,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 language: z.string().describe('The language of the item.'),
             }),
             execute: async ({ itemId, language }) => {
-                return await client.agent.contentGetContentItemById({
+                return await wrapAgentCall(async (jobId) => client.agent.contentGetContentItemById({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         itemId,
                     },
@@ -642,7 +763,7 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         update_content: tool({
@@ -655,7 +776,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 siteName: z.string().describe('The name of the site.'),
             }),
             execute: async ({ itemId, fields, language, createNewVersion, siteName }) => {
-                return await client.agent.contentUpdateContent({
+                return await wrapAgentCall(async (jobId) => client.agent.contentUpdateContent({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         itemId,
                     },
@@ -668,7 +792,7 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_content_item_by_path: tool({
@@ -679,14 +803,17 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 language: z.string().describe('The language of the item.'),
             }),
             execute: async ({ item_path, failOnNotFound, language }) => {
-                return await client.agent.contentGetContentItemByPath({
+                return await wrapAgentCall(async (jobId) => client.agent.contentGetContentItemByPath({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         item_path,
                         failOnNotFound,
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         list_available_insert_options: tool({
@@ -696,7 +823,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 language: z.string().describe('The language of the item.'),
             }),
             execute: async ({ itemId, language }) => {
-                return await client.agent.contentListAvailableInsertoptions({
+                return await wrapAgentCall(async (jobId) => client.agent.contentListAvailableInsertoptions({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         itemId,
                     },
@@ -704,7 +834,7 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                         language,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         })
     }
@@ -722,7 +852,10 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                 language: z.string().describe('The language of the datasource.'),
             }),
             execute: async ({ componentId, siteName, dataFields, children, language }) => {
-                return await client.agent.componentsCreateComponentDatasource({
+                return await wrapAgentCall(async (jobId) => client.agent.componentsCreateComponentDatasource({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         componentId,
                     },
@@ -735,7 +868,7 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         search_component_datasources: tool({
@@ -745,7 +878,10 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                 term: z.string().describe('The search term.'),
             }),
             execute: async ({ componentId, term }) => {
-                return await client.agent.componentsSearchComponentDatasources({
+                return await wrapAgentCall(async (jobId) => client.agent.componentsSearchComponentDatasources({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         componentId,
                     },
@@ -753,7 +889,7 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                         term,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         list_components: tool({
@@ -762,12 +898,15 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                 site_name: z.string().describe('The name of the site.'),
             }),
             execute: async ({ site_name }) => {
-                return await client.agent.componentsListComponents({
+                return await wrapAgentCall(async (jobId) => client.agent.componentsListComponents({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     query: {
                         site_name,
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         }),
         get_component: tool({
@@ -776,14 +915,17 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                 componentId: z.string().describe('The unique identifier of the component.'),
             }),
             execute: async ({ componentId }) => {
-                return await client.agent.componentsGetComponent({
+                return await wrapAgentCall(async (jobId) => client.agent.componentsGetComponent({
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                     path: {
                         componentId,
                     },
                     query: {
                         sitecoreContextId,
                     }
-                });
+                }));
             }
         })
     }
