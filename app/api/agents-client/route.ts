@@ -1,11 +1,9 @@
 import { streamText, UIMessage, convertToModelMessages, tool, stepCountIs } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import {
-    assetTools, componentsTools,
-    contentTools, environmentTools, pagesTools,
-    personalizationTools, sitesTools, jobTools
+    clientPagesTools,
+    clientSitesTools
 } from '@/lib/agents/tools';
-import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -14,20 +12,10 @@ export async function POST(req: Request) {
     const {
         messages,
         model,
-        contextId,
     }: {
         messages: UIMessage[];
         model: string;
-        contextId: string;
     } = await req.json();
-
-    const accessToken = req.headers.get("authorization")?.split(" ")[1];
-
-    const xmcClient = await experimental_createXMCClient({
-        getAccessToken: async () => {
-            return accessToken!;
-        },
-    });
 
     const result = streamText({
         model: openai(model),
@@ -35,16 +23,17 @@ export async function POST(req: Request) {
         system:
             'You are SitecoreAI assistnant: use available tools.',
         tools: {
-            ...assetTools(xmcClient, contextId),
-            ...componentsTools(xmcClient, contextId),
-            ...contentTools(xmcClient, contextId),
-            ...environmentTools(xmcClient, contextId),
-            ...pagesTools(xmcClient, contextId),
-            ...personalizationTools(xmcClient, contextId),
-            ...sitesTools(xmcClient, contextId),
-            ...jobTools(xmcClient, contextId),
+            // ...assetTools(xmcClient, contextId),
+            // ...componentsTools(xmcClient, contextId),
+            // ...contentTools(xmcClient, contextId),
+            // ...environmentTools(xmcClient, contextId),
+            ...clientPagesTools(),
+            // ...personalizationTools(xmcClient, contextId),
+            ...clientSitesTools(),
+            // ...jobTools(xmcClient, contextId),
 
         },
+        activeTools: ['get_page', 'get_all_pages_by_site'],
         stopWhen: stepCountIs(10),
     });
     // send sources and reasoning back to the client
