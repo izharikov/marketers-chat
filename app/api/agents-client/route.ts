@@ -1,7 +1,13 @@
 import { streamText, UIMessage, convertToModelMessages, tool, stepCountIs } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
 import {
+    clientAssetTools,
+    clientComponentsTools,
+    clientContentTools,
+    clientEnvironmentTools,
+    clientJobTools,
     clientPagesTools,
+    clientPersonalizationTools,
     clientSitesTools
 } from '@/lib/agents/tools';
 
@@ -18,23 +24,30 @@ export async function POST(req: Request) {
     } = await req.json();
 
     const result = streamText({
-        model: openai(model),
+        model,
         messages: await convertToModelMessages(messages),
         system:
             'You are SitecoreAI assistnant: use available tools.',
         tools: {
-            // ...assetTools(xmcClient, contextId),
-            // ...componentsTools(xmcClient, contextId),
-            // ...contentTools(xmcClient, contextId),
-            // ...environmentTools(xmcClient, contextId),
+            // ...clientAssetTools(),
+            ...clientComponentsTools(),
+            ...clientContentTools(),
+            // ...clientEnvironmentTools(),
             ...clientPagesTools(),
-            // ...personalizationTools(xmcClient, contextId),
+            ...clientPersonalizationTools(),
             ...clientSitesTools(),
-            // ...jobTools(xmcClient, contextId),
+            // ...clientJobTools(),
 
         },
-        activeTools: ['get_page', 'get_all_pages_by_site'],
-        stopWhen: stepCountIs(10),
+        stopWhen: stepCountIs(100),
+        providerOptions: {
+            openai: { // fixes from https://github.com/vercel/ai/issues/7099#issuecomment-3567630392
+                reasoningSummary: 'detailed',
+                reasoningEffort: 'low',
+                store: false,
+                include: ['reasoning.encrypted_content'],
+            } satisfies OpenAIResponsesProviderOptions,
+        },
     });
     // send sources and reasoning back to the client
     return result.toUIMessageStreamResponse({

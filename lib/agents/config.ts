@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const fieldSchema = z.union([
+    z.string(),
+    z.number(),
+]);
+
 export const assetToolsConfig = {
     get_asset_information: {
         description: 'Retrieves detailed information about a specific digital asset including its metadata, file properties, and usage information.',
@@ -115,7 +120,7 @@ export const pagesToolsConfig = {
             name: z.string().describe('The name of the new page.'),
             parentId: z.string().describe('The ID of the parent page.'),
             language: z.string().describe('The language of the new page.'),
-            fields: z.array(z.record(z.string(), z.unknown())).describe('The fields for the new page.'),
+            fields: z.array(z.record(z.string(), fieldSchema)).describe('The fields for the new page.'),
         }),
     },
     get_page_template_by_id: {
@@ -148,7 +153,7 @@ export const pagesToolsConfig = {
             placeholderPath: z.string().describe('The path of the placeholder.'),
             componentItemName: z.string().describe('The item name of the component.'),
             language: z.string().describe('The language of the page.'),
-            fields: z.record(z.string(), z.unknown()).describe('The fields for the component.'),
+            fields: z.record(z.string(), fieldSchema).describe('The fields for the component.'),
         }),
     },
     set_component_datasource: {
@@ -243,7 +248,7 @@ export const contentToolsConfig = {
             name: z.string().describe('The name of the content item.'),
             parentId: z.string().describe('The ID of the parent item.'),
             language: z.string().describe('The language of the content item.'),
-            fields: z.record(z.string(), z.unknown()).describe('The fields for the content item.'),
+            fields: z.record(z.string(), fieldSchema).describe('The fields for the content item.'),
         }),
     },
     delete_content: {
@@ -264,7 +269,7 @@ export const contentToolsConfig = {
         description: 'Updates comprehensive information about a content item including its fields and metadata.',
         inputSchema: z.object({
             itemId: z.string().describe('The unique identifier of the item to update.'),
-            fields: z.record(z.string(), z.unknown()).describe('The fields to update.'),
+            fields: z.record(z.string(), fieldSchema).describe('The fields to update.'),
             language: z.string().describe('The language of the item.'),
             createNewVersion: z.boolean().describe('Whether to create a new version.'),
             siteName: z.string().describe('The name of the site.'),
@@ -294,8 +299,8 @@ export const componentsToolsConfig = {
         inputSchema: z.object({
             componentId: z.string().describe('The unique identifier of the component.'),
             siteName: z.string().describe('The name of the site.'),
-            dataFields: z.record(z.string(), z.unknown()).describe('The fields for the datasource.'),
-            children: z.array(z.record(z.string(), z.unknown())).describe('The children of the datasource.'),
+            dataFields: z.record(z.string(), fieldSchema).describe('The fields for the datasource.'),
+            children: z.array(z.record(z.string(), fieldSchema)).describe('The children of the datasource.'),
             language: z.string().describe('The language of the datasource.'),
         }),
     },

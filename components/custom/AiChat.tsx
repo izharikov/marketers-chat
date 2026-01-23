@@ -57,14 +57,19 @@ import { Loader } from '@/components/ai-elements/loader';
 import { ToolUIPart } from 'ai';
 
 const models = [
+
     {
-        name: 'GPT 4o',
-        value: 'gpt-4o',
+        name: 'GPT 5 Nano',
+        value: 'openai/gpt-5-nano',
     },
     {
-        name: 'GPT 4.1 Mini',
-        value: 'gpt-4.1-mini',
+        name: 'GPT 5.2',
+        value: 'openai/gpt-5.2',
     },
+    {
+        name: 'Claude Opus 4.5',
+        value: 'anthropic/claude-opus-4.5',
+    }
 ];
 
 type AiChatProps = {
@@ -152,7 +157,8 @@ const AiChat = ({ chat, handleSubmit }: AiChatProps) => {
                                                     <ToolHeader type={tool.type} state={tool.state} />
                                                     <ToolContent>
                                                         {!!tool.input && <ToolInput input={tool.input} />}
-                                                        {!!tool.output && <ToolOutput
+                                                        {tool.state === 'output-error' && !!tool.rawInput && <ToolInput input={tool.rawInput} />}
+                                                        {!!(tool.output || tool.errorText) && <ToolOutput
                                                             output={tool.output}
                                                             errorText={tool.errorText}
                                                         />}

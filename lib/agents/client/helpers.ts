@@ -1,4 +1,4 @@
-import { ClientSDK, QueryKey, QueryOptions } from "@sitecore-marketplace-sdk/client";
+import { ClientSDK, QueryKey, QueryOptions, MutationKey, MutationOptions } from "@sitecore-marketplace-sdk/client";
 import { z } from "zod/v4";
 
 export type ToolConfig<TInput> = {
@@ -33,6 +33,24 @@ export async function clientQuery<K extends QueryKey>(client: ClientSDK, query: 
     } catch (error) {
         console.log('Error fetching data', error);
         return 'Error occurred while fetching data';
+    }
+}
+
+export async function clientMutate<K extends MutationKey>(client: ClientSDK, mutation: K, params: MutationOptions<K>) {
+    try {
+        const res = await client.mutate(mutation, params);
+        if (typeof res === 'string') {
+            return res;
+        }
+
+        return {
+            ...res as object,
+            request: null,
+            response: null,
+        }
+    } catch (error) {
+        console.log('Error mutating data', error);
+        return 'Error occurred while mutating data';
     }
 }
 
