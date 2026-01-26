@@ -8,7 +8,7 @@ import {
     sitesToolsConfig,
     contentToolsConfig,
     componentsToolsConfig
-} from "../config";
+} from "../definitions";
 import { clientQuery, clientMutate, clientTool } from "./helpers";
 
 export const sitesTools = {

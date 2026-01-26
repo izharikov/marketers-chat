@@ -6,7 +6,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
-import { runClientTool } from '@/lib/agents/client';
+import { runClientTool } from '@/lib/tools/client';
 
 import AiChat from '@/components/custom/AiChat';
 

@@ -4,7 +4,7 @@ import {
     assetTools, componentsTools,
     contentTools, environmentTools, pagesTools,
     personalizationTools, sitesTools, jobTools
-} from '@/lib/agents/tools';
+} from '@/lib/tools/tools';
 import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
 
 // Allow streaming responses up to 30 seconds

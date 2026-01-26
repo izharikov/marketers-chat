@@ -1,15 +1,17 @@
-import { streamText, UIMessage, convertToModelMessages, tool, stepCountIs } from 'ai';
-import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
+import { streamText, UIMessage, convertToModelMessages, stepCountIs, smoothStream } from 'ai';
+import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
+import { wrapLanguageModel, gateway } from 'ai';
+import { devToolsMiddleware } from '@ai-sdk/devtools';
 import {
-    clientAssetTools,
-    clientComponentsTools,
-    clientContentTools,
-    clientEnvironmentTools,
-    clientJobTools,
-    clientPagesTools,
-    clientPersonalizationTools,
-    clientSitesTools
-} from '@/lib/agents/tools';
+    assetTools,
+    componentsTools,
+    contentTools,
+    environmentTools,
+    jobTools,
+    pagesTools,
+    personalizationTools,
+    sitesTools
+} from '@/lib/tools/client';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -17,11 +19,16 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
     const {
         messages,
-        model,
+        model: modelName,
     }: {
         messages: UIMessage[];
         model: string;
     } = await req.json();
+
+    const model = process.env.NODE_ENV === 'development' ? wrapLanguageModel({
+        model: gateway(modelName),
+        middleware: [devToolsMiddleware()],
+    }) : modelName;
 
     const result = streamText({
         model,
@@ -29,14 +36,14 @@ export async function POST(req: Request) {
         system:
             'You are SitecoreAI assistnant: use available tools.',
         tools: {
-            // ...clientAssetTools(),
-            ...clientComponentsTools(),
-            ...clientContentTools(),
-            // ...clientEnvironmentTools(),
-            ...clientPagesTools(),
-            ...clientPersonalizationTools(),
-            ...clientSitesTools(),
-            // ...clientJobTools(),
+            ...assetTools(),
+            ...componentsTools(),
+            ...contentTools(),
+            ...environmentTools(),
+            ...pagesTools(),
+            ...personalizationTools(),
+            ...sitesTools(),
+            ...jobTools(),
 
         },
         stopWhen: stepCountIs(100),
@@ -48,6 +55,7 @@ export async function POST(req: Request) {
                 include: ['reasoning.encrypted_content'],
             } satisfies OpenAIResponsesProviderOptions,
         },
+        experimental_transform: smoothStream(),
     });
     // send sources and reasoning back to the client
     return result.toUIMessageStreamResponse({
