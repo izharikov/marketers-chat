@@ -5,6 +5,15 @@ import {
     ConversationScrollButton,
 } from '@/components/ai-elements/conversation';
 import {
+    Confirmation,
+    ConfirmationAccepted,
+    ConfirmationAction,
+    ConfirmationActions,
+    ConfirmationRejected,
+    ConfirmationRequest,
+    ConfirmationTitle,
+} from "@/components/ai-elements/confirmation";
+import {
     Message,
     MessageContent,
     MessageResponse,
@@ -39,9 +48,9 @@ import {
     ToolInput,
     ToolOutput,
 } from '@/components/ai-elements/tool';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
-import { CopyIcon, GlobeIcon, RefreshCcwIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, GlobeIcon, RefreshCcwIcon, XIcon } from 'lucide-react';
 import {
     Source,
     Sources,
@@ -74,13 +83,18 @@ const models = [
 
 type AiChatProps = {
     chat: ReturnType<typeof useChat>,
-    handleSubmit: (input: { message: PromptInputMessage, model: string }) => Promise<void>,
+    onSetModel: (model: string) => void;
 };
 
-const AiChat = ({ chat, handleSubmit }: AiChatProps) => {
+const AiChat = ({ chat, onSetModel }: AiChatProps) => {
     const [input, setInput] = useState('');
     const [model, setModel] = useState<string>(models[0].value);
-
+    useEffect(() => {
+        onSetModel(model);
+    }, [model]);
+    useEffect(() => {
+        console.log('set model', model);
+    }, []);
     const { messages, regenerate, status } = chat;
     return (
         <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
@@ -153,17 +167,58 @@ const AiChat = ({ chat, handleSubmit }: AiChatProps) => {
                                         default:
                                             if (part.type.startsWith('tool')) {
                                                 const tool = part as ToolUIPart;
-                                                return <Tool defaultOpen={false} key={`${message.id}-${tool.toolCallId}`}>
-                                                    <ToolHeader type={tool.type} state={tool.state} />
-                                                    <ToolContent>
-                                                        {!!tool.input && <ToolInput input={tool.input} />}
-                                                        {tool.state === 'output-error' && !!tool.rawInput && <ToolInput input={tool.rawInput} />}
-                                                        {!!(tool.output || tool.errorText) && <ToolOutput
-                                                            output={tool.output}
-                                                            errorText={tool.errorText}
-                                                        />}
-                                                    </ToolContent>
-                                                </Tool>;
+                                                return <Fragment key={`${message.id}-${tool.toolCallId}`}>
+                                                    <Tool defaultOpen={false}>
+                                                        <ToolHeader type={tool.type} state={tool.state} />
+                                                        <ToolContent>
+                                                            {!!tool.input && <ToolInput input={tool.input} />}
+                                                            {tool.state === 'output-error' && !!tool.rawInput && <ToolInput input={tool.rawInput} />}
+                                                            {!!(tool.output || tool.errorText) && <ToolOutput
+                                                                output={tool.output}
+                                                                errorText={tool.errorText}
+                                                            />}
+                                                        </ToolContent>
+                                                    </Tool>
+                                                    <Confirmation approval={tool.approval} state={tool.state}>
+                                                        <ConfirmationTitle>
+                                                            <ConfirmationRequest>
+                                                                Do you want to execute this tool?
+                                                            </ConfirmationRequest>
+                                                            <ConfirmationAccepted>
+                                                                <CheckIcon className="size-4 text-green-600 dark:text-green-400" />
+                                                                <span>Accepted</span>
+                                                            </ConfirmationAccepted>
+                                                            <ConfirmationRejected>
+                                                                <XIcon className="size-4 text-destructive" />
+                                                                <span>Rejected</span>
+                                                            </ConfirmationRejected>
+                                                        </ConfirmationTitle>
+                                                        <ConfirmationActions>
+                                                            <ConfirmationAction
+                                                                onClick={() => {
+                                                                    chat.addToolApprovalResponse({
+                                                                        id: tool.approval?.id!,
+                                                                        approved: false,
+                                                                    });
+                                                                }}
+                                                                variant="outline"
+                                                            >
+                                                                Reject
+                                                            </ConfirmationAction>
+                                                            <ConfirmationAction
+                                                                onClick={() => {
+                                                                    chat.addToolApprovalResponse({
+                                                                        id: tool.approval?.id!,
+                                                                        approved: true,
+                                                                    });
+                                                                }}
+                                                                variant="default"
+                                                            >
+                                                                Accept
+                                                            </ConfirmationAction>
+                                                        </ConfirmationActions>
+                                                    </Confirmation>
+                                                </Fragment>
                                             }
                                             return null;
                                     }
@@ -175,7 +230,7 @@ const AiChat = ({ chat, handleSubmit }: AiChatProps) => {
                     <ConversationScrollButton />
                 </Conversation>
                 <PromptInput onSubmit={message => {
-                    handleSubmit({ message, model })
+                    chat.sendMessage(message);
                     setInput('');
                 }} className="mt-4" globalDrop multiple>
                     <PromptInputHeader>

@@ -1,17 +1,31 @@
 import { experimental_XMC } from "@sitecore-marketplace-sdk/xmc";
-import { tool } from "ai";
+import { JSONValue, Tool, tool } from "ai";
 import { v4 as uuidv4 } from 'uuid';
 import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, pagesToolsConfig, sitesToolsConfig, jobToolsConfig, environmentToolsConfig, personalizationToolsConfig } from "../definitions";
 
-async function wrapAgentCall<TResult>(call: (jobId: string) => Promise<TResult>) {
+type ToolConfig = {
+    needsApproval?: boolean;
+}
+
+function wrapTool(commonConfig: ToolConfig) {
+    return function <INPUT, OUTPUT>(params: Tool<INPUT, OUTPUT>) {
+        return tool({
+            ...params,
+            ...commonConfig,
+        });
+    };
+}
+
+async function wrapAgentCall<TResult extends { data: any }>(call: (jobId: string) => Promise<TResult>) {
     const jobId = uuidv4();
-    const response = call(jobId);
-    return { ...response, jobId };
+    const response = await call(jobId);
+    return { ...response.data, jobId };
 };
 
-export function assetTools(client: experimental_XMC, sitecoreContextId: string) {
+export function assetTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        get_asset_information: tool({
+        get_asset_information: wrapped({
             ...assetToolsConfig.get_asset_information,
             execute: async ({ assetId }) => {
                 return await wrapAgentCall(async (jobId) => client.agent.assetsGetAssetInformation({
@@ -27,7 +41,7 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             },
         }),
-        search_assets: tool({
+        search_assets: wrapped({
             ...assetToolsConfig.search_assets,
             execute: async ({ query, language, type }) => {
                 return await wrapAgentCall(async (jobId) => client.agent.assetsSearchAssets({
@@ -43,7 +57,7 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        update_asset: tool({
+        update_asset: wrapped({
             ...assetToolsConfig.update_asset,
             execute: async ({ assetId, fields, language, name, altText }) => {
                 return await wrapAgentCall(async (jobId) => client.agent.assetsUpdateAsset({
@@ -65,7 +79,7 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        upload_asset: tool({
+        upload_asset: wrapped({
             ...assetToolsConfig.upload_asset,
             execute: async ({ fileUrl, name, itemPath, language, extension, siteName }) => {
                 const arrayBuffer = await fetch(fileUrl).then(res => res.arrayBuffer());
@@ -473,9 +487,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
     }
 }
 
-export function sitesTools(client: experimental_XMC, sitecoreContextId: string) {
+export function sitesTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        get_sites_list: tool({
+        get_sites_list: wrapped({
             ...sitesToolsConfig.get_sites_list,
             execute: async () => {
                 return await wrapAgentCall(async (jobId) => client.agent.sitesGetSitesList({
@@ -488,7 +503,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_site_details: tool({
+        get_site_details: wrapped({
             ...sitesToolsConfig.get_site_details,
             execute: async ({ siteId }) => {
                 return await wrapAgentCall(async (jobId) => client.agent.sitesGetSiteDetails({
@@ -504,7 +519,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_all_pages_by_site: tool({
+        get_all_pages_by_site: wrapped({
             ...sitesToolsConfig.get_all_pages_by_site,
             execute: async ({ siteName, language }) => {
                 return await wrapAgentCall(async (jobId) => client.agent.sitesGetAllPagesBySite({
@@ -521,7 +536,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_site_id_from_item: tool({
+        get_site_id_from_item: wrapped({
             ...sitesToolsConfig.get_site_id_from_item,
             execute: async ({ itemId }) => {
                 return await wrapAgentCall(async (jobId) => client.agent.sitesGetSiteIdFromItem({

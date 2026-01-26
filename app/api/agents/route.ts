@@ -1,11 +1,12 @@
-import { streamText, UIMessage, convertToModelMessages, tool, stepCountIs } from 'ai';
+import { streamText, UIMessage, convertToModelMessages, tool, stepCountIs, gateway, wrapLanguageModel } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import {
     assetTools, componentsTools,
     contentTools, environmentTools, pagesTools,
     personalizationTools, sitesTools, jobTools
-} from '@/lib/tools/tools';
+} from '@/lib/tools/server';
 import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
+import { devToolsMiddleware } from '@ai-sdk/devtools';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -13,7 +14,7 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
     const {
         messages,
-        model,
+        model: modelName,
         contextId,
     }: {
         messages: UIMessage[];
@@ -21,7 +22,13 @@ export async function POST(req: Request) {
         contextId: string;
     } = await req.json();
 
-    const accessToken = req.headers.get("authorization")?.split(" ")[1];
+    const model = process.env.NODE_ENV === 'development' ? wrapLanguageModel({
+        model: gateway(modelName),
+        middleware: [devToolsMiddleware()],
+    }) : modelName;
+
+
+    const accessToken = req.headers.get("Authorization")?.split(" ")[1];
 
     const xmcClient = await experimental_createXMCClient({
         getAccessToken: async () => {
@@ -29,8 +36,12 @@ export async function POST(req: Request) {
         },
     });
 
+    const config = {
+        needsApproval: true,
+    };
+
     const result = streamText({
-        model: openai(model),
+        model,
         messages: await convertToModelMessages(messages),
         system:
             'You are SitecoreAI assistnant: use available tools.',
@@ -41,7 +52,7 @@ export async function POST(req: Request) {
             ...environmentTools(xmcClient, contextId),
             ...pagesTools(xmcClient, contextId),
             ...personalizationTools(xmcClient, contextId),
-            ...sitesTools(xmcClient, contextId),
+            ...sitesTools(xmcClient, contextId, config),
             ...jobTools(xmcClient, contextId),
 
         },

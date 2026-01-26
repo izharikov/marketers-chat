@@ -1,60 +1,55 @@
 'use client';
-import {
-  type PromptInputMessage,
-} from '@/components/ai-elements/prompt-input';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
 import { runClientTool } from '@/lib/tools/client';
 
 import AiChat from '@/components/custom/AiChat';
+import { useEffect, useRef, useState } from 'react';
 
 type ToolExecution = 'frontend' | 'backend';
 
-const toolExecution: ToolExecution = 'frontend';
+const toolExecution: ToolExecution = 'backend';
 
 const ChatBotServerTools = () => {
+  const model = useRef<string | undefined>(undefined);
+  const appContext = useAppContext();
   const chat = useChat({
     transport: new DefaultChatTransport({
       api: '/api/agents',
+      body: () => {
+        return {
+          model: model.current,
+          contextId: appContext?.resourceAccess?.[0]?.context?.preview,
+        }
+      },
+      headers: async () => {
+        const accessToken = await getAccessTokenSilently();
+        return {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      },
     }),
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
   const { getAccessTokenSilently } = useAuth();
-  const appContext = useAppContext();
-  const handleSubmit = async ({ message, model }: { message: PromptInputMessage, model: string }) => {
-    const hasText = Boolean(message.text);
-    const hasAttachments = Boolean(message.files?.length);
-    if (!(hasText || hasAttachments)) {
-      return;
-    }
-    const accessToken = await getAccessTokenSilently();
-    chat.sendMessage(
-      {
-        text: message.text || 'Sent with attachments',
-        files: message.files
-      },
-      {
-        body: {
-          model: model,
-          contextId: appContext?.resourceAccess?.[0]?.context?.preview,
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      },
-    );
-  };
   return (
-    <AiChat chat={chat} handleSubmit={handleSubmit} />
+    <AiChat chat={chat} onSetModel={val => model.current = val} />
   );
 }
 
 const ChatBotClientTools = () => {
   const client = useMarketplaceClient();
+  const model = useRef<string | undefined>(undefined);
   const chat = useChat({
     transport: new DefaultChatTransport({
       api: '/api/agents-client',
+      body: () => {
+        return {
+          model: model.current,
+        }
+      }
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     async onToolCall({ toolCall }) {
@@ -72,34 +67,16 @@ const ChatBotClientTools = () => {
         toolCallId: toolCallId,
         output: res,
       });
-    }
+    },
   });
   const appContext = useAppContext();
-  const handleSubmit = async ({ message, model }: { message: PromptInputMessage, model: string }) => {
-    const hasText = Boolean(message.text);
-    const hasAttachments = Boolean(message.files?.length);
-    if (!(hasText || hasAttachments)) {
-      return;
-    }
-    chat.sendMessage(
-      {
-        text: message.text || 'Sent with attachments',
-        files: message.files
-      },
-      {
-        body: {
-          model: model,
-        },
-      },
-    );
-  };
   return (
-    <AiChat chat={chat} handleSubmit={handleSubmit} />
+    <AiChat chat={chat} onSetModel={val => model.current = val} />
   );
 }
 
 const ChatBotDemo = () => {
-  if (toolExecution === 'frontend') {
+  if (toolExecution === 'frontend' as ToolExecution) {
     return <ChatBotClientTools />;
   }
   return <ChatBotServerTools />;
