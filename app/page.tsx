@@ -1,16 +1,16 @@
 'use client';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, ToolCallPart, ToolUIPart } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
 import { runClientTool } from '@/lib/tools/client';
 
 import AiChat from '@/components/custom/AiChat';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 
 type ToolExecution = 'frontend' | 'backend';
 
-const toolExecution: ToolExecution = 'backend';
+const toolExecution: ToolExecution = 'frontend';
 
 const ChatBotServerTools = () => {
   const model = useRef<string | undefined>(undefined);
@@ -42,6 +42,21 @@ const ChatBotServerTools = () => {
 const ChatBotClientTools = () => {
   const client = useMarketplaceClient();
   const model = useRef<string | undefined>(undefined);
+
+  const executeTool = async (toolPart: ToolUIPart) => {
+    const toolName = toolPart.type.substring('tool-'.length);
+    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
+    const res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
+    if (!res) {
+      return;
+    }
+    chat.addToolOutput({
+      tool: toolName,
+      toolCallId: toolPart.toolCallId,
+      output: res,
+    });
+  }
+
   const chat = useChat({
     transport: new DefaultChatTransport({
       api: '/api/agents-client',
@@ -52,26 +67,30 @@ const ChatBotClientTools = () => {
       }
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    async onToolCall({ toolCall }) {
-      if (toolCall.dynamic) {
-        return;
+    onFinish: async ({ message, finishReason }) => {
+      // if tool was finished because of tool call
+      if (finishReason === 'tool-calls') {
+        const toolPart = message.parts.reverse()[0] as ToolUIPart;
+        // ensure it is a tool call
+        if (toolPart.type.startsWith('tool')) {
+          // if approve was requested - should be handled in Confirmation section
+          if (toolPart.state === 'approval-requested') {
+            return;
+          }
+          // if input is available - run tests
+          if (toolPart.state === 'input-available') {
+            await executeTool(toolPart);
+          }
+        }
       }
-      const { toolName, toolCallId } = toolCall;
-      const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
-      const res = await runClientTool(client, sitecoreContextId, toolCall);
-      if (!res) {
-        return;
-      }
-      chat.addToolOutput({
-        tool: toolName,
-        toolCallId: toolCallId,
-        output: res,
-      });
     },
   });
   const appContext = useAppContext();
   return (
-    <AiChat chat={chat} onSetModel={val => model.current = val} />
+    <AiChat chat={chat} onSetModel={val => model.current = val} onToolApproved={async (tool) => {
+      await executeTool(tool);
+    }}
+    />
   );
 }
 

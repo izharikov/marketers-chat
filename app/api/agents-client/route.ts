@@ -30,20 +30,24 @@ export async function POST(req: Request) {
         middleware: [devToolsMiddleware()],
     }) : modelName;
 
+    const config = {
+        needsApproval: true,
+    };
+
     const result = streamText({
         model,
         messages: await convertToModelMessages(messages),
         system:
             'You are SitecoreAI assistnant: use available tools.',
         tools: {
-            ...assetTools(),
-            ...componentsTools(),
-            ...contentTools(),
-            ...environmentTools(),
-            ...pagesTools(),
-            ...personalizationTools(),
-            ...sitesTools(),
-            ...jobTools(),
+            ...assetTools(config),
+            ...componentsTools(config),
+            ...contentTools(config),
+            ...environmentTools(config),
+            ...pagesTools(config),
+            ...personalizationTools(config),
+            ...sitesTools(config),
+            ...jobTools(config),
 
         },
         stopWhen: stepCountIs(100),

@@ -494,7 +494,7 @@ const allTools = {
 }
 
 export function runClientTool(client: ClientSDK, sitecoreContextId: string | undefined,
-    toolCall: { toolCallId: string, toolName: string, input: any }
+    toolCall: { toolName: string, input: any }
 ) {
     const tool = allTools[toolCall.toolName as keyof typeof allTools];
     if (!tool) {

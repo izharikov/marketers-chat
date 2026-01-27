@@ -84,9 +84,10 @@ const models = [
 type AiChatProps = {
     chat: ReturnType<typeof useChat>,
     onSetModel: (model: string) => void;
+    onToolApproved?: (tool: ToolUIPart) => void;
 };
 
-const AiChat = ({ chat, onSetModel }: AiChatProps) => {
+const AiChat = ({ chat, onSetModel, onToolApproved }: AiChatProps) => {
     const [input, setInput] = useState('');
     const [model, setModel] = useState<string>(models[0].value);
     useEffect(() => {
@@ -211,6 +212,7 @@ const AiChat = ({ chat, onSetModel }: AiChatProps) => {
                                                                         id: tool.approval?.id!,
                                                                         approved: true,
                                                                     });
+                                                                    onToolApproved?.(tool);
                                                                 }}
                                                                 variant="default"
                                                             >

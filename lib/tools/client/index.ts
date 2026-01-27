@@ -1,82 +1,103 @@
-import { tool } from "ai";
+import { Tool, tool } from "ai";
 import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, pagesToolsConfig, sitesToolsConfig, jobToolsConfig, environmentToolsConfig, personalizationToolsConfig } from "../definitions";
 
-export function assetTools() {
-    return {
-        get_asset_information: tool(assetToolsConfig.get_asset_information),
-        search_assets: tool(assetToolsConfig.search_assets),
-        update_asset: tool(assetToolsConfig.update_asset),
-        upload_asset: tool(assetToolsConfig.upload_asset),
+type ToolConfig = {
+    needsApproval?: boolean;
+}
+
+function wrapTool(commonConfig: ToolConfig) {
+    return function <INPUT>(params: Tool<INPUT, never>) {
+        return tool({
+            ...params,
+            ...commonConfig,
+        });
     };
 }
 
-export function environmentTools() {
+export function assetTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
     return {
-        list_languages: tool(environmentToolsConfig.list_languages)
+        get_asset_information: wrapped(assetToolsConfig.get_asset_information),
+        search_assets: wrapped(assetToolsConfig.search_assets),
+        update_asset: wrapped(assetToolsConfig.update_asset),
+        upload_asset: wrapped(assetToolsConfig.upload_asset),
+    };
+}
+
+export function environmentTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
+    return {
+        list_languages: wrapped(environmentToolsConfig.list_languages)
     }
 }
 
-export function personalizationTools() {
+export function personalizationTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
     return {
-        create_personalization_version: tool(personalizationToolsConfig.create_personalization_version),
-        get_personalization_versions_by_page: tool(personalizationToolsConfig.get_personalization_versions_by_page),
-        get_condition_templates: tool(personalizationToolsConfig.get_condition_templates),
-        get_condition_template_by_id: tool(personalizationToolsConfig.get_condition_template_by_id),
+        create_personalization_version: wrapped(personalizationToolsConfig.create_personalization_version),
+        get_personalization_versions_by_page: wrapped(personalizationToolsConfig.get_personalization_versions_by_page),
+        get_condition_templates: wrapped(personalizationToolsConfig.get_condition_templates),
+        get_condition_template_by_id: wrapped(personalizationToolsConfig.get_condition_template_by_id),
     }
 }
 
-export function jobTools() {
+export function jobTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
     return {
-        revert_job: tool(jobToolsConfig.revert_job),
-        get_job: tool(jobToolsConfig.get_job),
-        list_operations: tool(jobToolsConfig.list_operations),
+        revert_job: wrapped(jobToolsConfig.revert_job),
+        get_job: wrapped(jobToolsConfig.get_job),
+        list_operations: wrapped(jobToolsConfig.list_operations),
     }
 }
 
-export function pagesTools() {
+export function pagesTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
     return {
-        get_page: tool(pagesToolsConfig.get_page),
-        create_page: tool(pagesToolsConfig.create_page),
-        get_page_template_by_id: tool(pagesToolsConfig.get_page_template_by_id),
-        get_allowed_components_by_placeholder: tool(pagesToolsConfig.get_allowed_components_by_placeholder),
-        get_components_on_page: tool(pagesToolsConfig.get_components_on_page),
-        add_component_on_page: tool(pagesToolsConfig.add_component_on_page),
-        set_component_datasource: tool(pagesToolsConfig.set_component_datasource),
-        add_language_to_page: tool(pagesToolsConfig.add_language_to_page),
-        search_site: tool(pagesToolsConfig.search_site),
-        get_page_path_by_live_url: tool(pagesToolsConfig.get_page_path_by_live_url),
-        get_page_screenshot: tool(pagesToolsConfig.get_page_screenshot),
-        get_page_html: tool(pagesToolsConfig.get_page_html),
-        get_page_preview_url: tool(pagesToolsConfig.get_page_preview_url),
+        get_page: wrapped(pagesToolsConfig.get_page),
+        create_page: wrapped(pagesToolsConfig.create_page),
+        get_page_template_by_id: wrapped(pagesToolsConfig.get_page_template_by_id),
+        get_allowed_components_by_placeholder: wrapped(pagesToolsConfig.get_allowed_components_by_placeholder),
+        get_components_on_page: wrapped(pagesToolsConfig.get_components_on_page),
+        add_component_on_page: wrapped(pagesToolsConfig.add_component_on_page),
+        set_component_datasource: wrapped(pagesToolsConfig.set_component_datasource),
+        add_language_to_page: wrapped(pagesToolsConfig.add_language_to_page),
+        search_site: wrapped(pagesToolsConfig.search_site),
+        get_page_path_by_live_url: wrapped(pagesToolsConfig.get_page_path_by_live_url),
+        get_page_screenshot: wrapped(pagesToolsConfig.get_page_screenshot),
+        get_page_html: wrapped(pagesToolsConfig.get_page_html),
+        get_page_preview_url: wrapped(pagesToolsConfig.get_page_preview_url),
     }
 }
 
-export function sitesTools() {
+export function sitesTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
     return {
-        get_sites_list: tool(sitesToolsConfig.get_sites_list),
-        get_site_details: tool(sitesToolsConfig.get_site_details),
-        get_all_pages_by_site: tool(sitesToolsConfig.get_all_pages_by_site),
-        get_site_id_from_item: tool(sitesToolsConfig.get_site_id_from_item),
+        get_sites_list: wrapped(sitesToolsConfig.get_sites_list),
+        get_site_details: wrapped(sitesToolsConfig.get_site_details),
+        get_all_pages_by_site: wrapped(sitesToolsConfig.get_all_pages_by_site),
+        get_site_id_from_item: wrapped(sitesToolsConfig.get_site_id_from_item),
     }
 }
 
-export function contentTools() {
+export function contentTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
     return {
-        create_content_item: tool(contentToolsConfig.create_content_item),
-        delete_content: tool(contentToolsConfig.delete_content),
-        get_content_item_by_id: tool(contentToolsConfig.get_content_item_by_id),
-        update_content: tool(contentToolsConfig.update_content),
-        get_content_item_by_path: tool(contentToolsConfig.get_content_item_by_path),
-        list_available_insert_options: tool(contentToolsConfig.list_available_insert_options),
+        create_content_item: wrapped(contentToolsConfig.create_content_item),
+        delete_content: wrapped(contentToolsConfig.delete_content),
+        get_content_item_by_id: wrapped(contentToolsConfig.get_content_item_by_id),
+        update_content: wrapped(contentToolsConfig.update_content),
+        get_content_item_by_path: wrapped(contentToolsConfig.get_content_item_by_path),
+        list_available_insert_options: wrapped(contentToolsConfig.list_available_insert_options),
     }
 }
 
-export function componentsTools() {
+export function componentsTools(commonConfig?: ToolConfig) {
+    const wrapped = wrapTool(commonConfig ?? {});
     return {
-        create_component_datasource: tool(componentsToolsConfig.create_component_datasource),
-        search_component_datasources: tool(componentsToolsConfig.search_component_datasources),
-        list_components: tool(componentsToolsConfig.list_components),
-        get_component: tool(componentsToolsConfig.get_component),
+        create_component_datasource: wrapped(componentsToolsConfig.create_component_datasource),
+        search_component_datasources: wrapped(componentsToolsConfig.search_component_datasources),
+        list_components: wrapped(componentsToolsConfig.list_components),
+        get_component: wrapped(componentsToolsConfig.get_component),
     }
 }
 
