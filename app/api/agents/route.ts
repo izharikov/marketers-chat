@@ -1,5 +1,4 @@
-import { streamText, UIMessage, convertToModelMessages, tool, stepCountIs, gateway, wrapLanguageModel } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { streamText, UIMessage, convertToModelMessages, stepCountIs, wrapLanguageModel, createGateway } from 'ai';
 import {
     assetTools, componentsTools,
     contentTools, environmentTools, pagesTools,
@@ -21,6 +20,16 @@ export async function POST(req: Request) {
         model: string;
         contextId: string;
     } = await req.json();
+
+    const apiKey = req.headers.get("x-vercel-api-key");
+    if (!apiKey) {
+        return Response.json(
+            { error: "API key is required" },
+            { status: 401 }
+        );
+    }
+
+    const gateway = createGateway({ apiKey });
 
     const model = process.env.NODE_ENV === 'development' ? wrapLanguageModel({
         model: gateway(modelName),

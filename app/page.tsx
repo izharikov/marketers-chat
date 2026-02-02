@@ -1,12 +1,13 @@
 'use client';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, ToolCallPart, ToolUIPart } from 'ai';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
 import { runClientTool } from '@/lib/tools/client';
 
 import AiChat from '@/components/custom/AiChat';
 import { useRef } from 'react';
+import { useApiKey } from '@/components/providers/api-key-provider';
 
 type ToolExecution = 'frontend' | 'backend';
 
@@ -15,6 +16,7 @@ const toolExecution: ToolExecution = 'frontend';
 const ChatBotServerTools = () => {
   const model = useRef<string | undefined>(undefined);
   const appContext = useAppContext();
+  const apiKey = useApiKey('vercel');
   const chat = useChat({
     transport: new DefaultChatTransport({
       api: '/api/agents',
@@ -28,6 +30,7 @@ const ChatBotServerTools = () => {
         const accessToken = await getAccessTokenSilently();
         return {
           Authorization: `Bearer ${accessToken}`,
+          'x-vercel-api-key': apiKey!,
         }
       },
     }),
@@ -42,6 +45,7 @@ const ChatBotServerTools = () => {
 const ChatBotClientTools = () => {
   const client = useMarketplaceClient();
   const model = useRef<string | undefined>(undefined);
+  const apiKey = useApiKey('vercel');
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
@@ -57,9 +61,20 @@ const ChatBotClientTools = () => {
     });
   }
 
+  const toolRejected = async (toolPart: ToolUIPart) => {
+    chat.addToolOutput({
+      tool: toolPart.type.substring('tool-'.length),
+      toolCallId: toolPart.toolCallId,
+      output: 'ERROR: User rejected tool execution.',
+    });
+  }
+
   const chat = useChat({
     transport: new DefaultChatTransport({
       api: '/api/agents-client',
+      headers: {
+        'x-vercel-api-key': apiKey!,
+      },
       body: () => {
         return {
           model: model.current,
@@ -89,6 +104,8 @@ const ChatBotClientTools = () => {
   return (
     <AiChat chat={chat} onSetModel={val => model.current = val} onToolApproved={async (tool) => {
       await executeTool(tool);
+    }} onToolRejected={async (tool) => {
+      await toolRejected(tool);
     }}
     />
   );

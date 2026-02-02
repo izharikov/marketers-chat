@@ -84,10 +84,11 @@ const models = [
 type AiChatProps = {
     chat: ReturnType<typeof useChat>,
     onSetModel: (model: string) => void;
-    onToolApproved?: (tool: ToolUIPart) => void;
+    onToolApproved?: (tool: ToolUIPart) => Promise<void>;
+    onToolRejected?: (tool: ToolUIPart) => Promise<void>;
 };
 
-const AiChat = ({ chat, onSetModel, onToolApproved }: AiChatProps) => {
+const AiChat = ({ chat, onSetModel, onToolApproved, onToolRejected }: AiChatProps) => {
     const [input, setInput] = useState('');
     const [model, setModel] = useState<string>(models[0].value);
     useEffect(() => {
@@ -168,9 +169,13 @@ const AiChat = ({ chat, onSetModel, onToolApproved }: AiChatProps) => {
                                         default:
                                             if (part.type.startsWith('tool')) {
                                                 const tool = part as ToolUIPart;
+                                                let state = tool.state;
+                                                if (tool.output && tool.output.toString().startsWith('ERROR')) {
+                                                    state = 'output-error';
+                                                }
                                                 return <Fragment key={`${message.id}-${tool.toolCallId}`}>
                                                     <Tool defaultOpen={false}>
-                                                        <ToolHeader type={tool.type} state={tool.state} />
+                                                        <ToolHeader type={tool.type} state={state} />
                                                         <ToolContent>
                                                             {!!tool.input && <ToolInput input={tool.input} />}
                                                             {tool.state === 'output-error' && !!tool.rawInput && <ToolInput input={tool.rawInput} />}
@@ -180,46 +185,49 @@ const AiChat = ({ chat, onSetModel, onToolApproved }: AiChatProps) => {
                                                             />}
                                                         </ToolContent>
                                                     </Tool>
-                                                    <Confirmation approval={tool.approval} state={tool.state}>
+                                                    {state === 'approval-requested' && <Confirmation approval={tool.approval} state={tool.state} className='flex-row'>
                                                         <ConfirmationTitle>
-                                                            <ConfirmationRequest>
-                                                                Do you want to execute this tool?
-                                                            </ConfirmationRequest>
-                                                            <ConfirmationAccepted>
-                                                                <CheckIcon className="size-4 text-green-600 dark:text-green-400" />
-                                                                <span>Accepted</span>
-                                                            </ConfirmationAccepted>
-                                                            <ConfirmationRejected>
-                                                                <XIcon className="size-4 text-destructive" />
-                                                                <span>Rejected</span>
-                                                            </ConfirmationRejected>
+                                                            <div className='flex'>
+                                                                <ConfirmationRequest>
+                                                                    Do you want to execute this tool?
+                                                                </ConfirmationRequest>
+                                                                <ConfirmationAccepted>
+                                                                    <CheckIcon className="size-4 text-green-600 dark:text-green-400 my-auto mr-1" />
+                                                                    <span>Accepted</span>
+                                                                </ConfirmationAccepted>
+                                                                <ConfirmationRejected>
+                                                                    <XIcon className="size-4 text-destructive my-auto mr-1" />
+                                                                    <span>Rejected</span>
+                                                                </ConfirmationRejected>
+                                                            </div>
                                                         </ConfirmationTitle>
                                                         <ConfirmationActions>
                                                             <ConfirmationAction
-                                                                onClick={() => {
-                                                                    chat.addToolApprovalResponse({
+                                                                onClick={async () => {
+                                                                    await chat.addToolApprovalResponse({
                                                                         id: tool.approval?.id!,
                                                                         approved: false,
                                                                     });
+                                                                    await onToolRejected?.(tool);
                                                                 }}
                                                                 variant="outline"
                                                             >
                                                                 Reject
                                                             </ConfirmationAction>
                                                             <ConfirmationAction
-                                                                onClick={() => {
-                                                                    chat.addToolApprovalResponse({
+                                                                onClick={async () => {
+                                                                    await chat.addToolApprovalResponse({
                                                                         id: tool.approval?.id!,
                                                                         approved: true,
                                                                     });
-                                                                    onToolApproved?.(tool);
+                                                                    await onToolApproved?.(tool);
                                                                 }}
                                                                 variant="default"
                                                             >
                                                                 Accept
                                                             </ConfirmationAction>
                                                         </ConfirmationActions>
-                                                    </Confirmation>
+                                                    </Confirmation>}
                                                 </Fragment>
                                             }
                                             return null;

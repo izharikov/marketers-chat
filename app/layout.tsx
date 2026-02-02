@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { MarketplaceProvider } from "@/components/providers/marketplace";
 import { AuthProvider } from "@/components/providers/auth";
+import { ApiKeyProvider } from "@/components/providers/api-key-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <MarketplaceProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <ApiKeyProvider name="vercel" description="Vercel (AI Gateway)">
+              {children}
+            </ApiKeyProvider>
+          </AuthProvider>
         </MarketplaceProvider>
       </body>
     </html>

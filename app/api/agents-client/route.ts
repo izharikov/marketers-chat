@@ -1,6 +1,5 @@
-import { streamText, UIMessage, convertToModelMessages, stepCountIs, smoothStream } from 'ai';
+import { streamText, UIMessage, convertToModelMessages, stepCountIs, smoothStream, createGateway, wrapLanguageModel } from 'ai';
 import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
-import { wrapLanguageModel, gateway } from 'ai';
 import { devToolsMiddleware } from '@ai-sdk/devtools';
 import {
     assetTools,
@@ -25,6 +24,15 @@ export async function POST(req: Request) {
         model: string;
     } = await req.json();
 
+    const apiKey = req.headers.get("x-vercel-api-key");
+    if (!apiKey) {
+        return Response.json(
+            { error: "API key is required" },
+            { status: 401 }
+        );
+    }
+
+    const gateway = createGateway({ apiKey });
     const model = process.env.NODE_ENV === 'development' ? wrapLanguageModel({
         model: gateway(modelName),
         middleware: [devToolsMiddleware()],
