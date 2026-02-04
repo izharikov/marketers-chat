@@ -12,6 +12,7 @@ export function clientTool<TInput>(config: ToolConfig<TInput>) {
 
 export async function clientQuery<K extends QueryKey>(client: ClientSDK, query: K, params: QueryOptions<K>) {
     try {
+        console.log('query', query, params);
         const res = await client.query(query, params);
         if (res.isSuccess) {
             if (typeof res.data === 'string') {

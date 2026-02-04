@@ -10,7 +10,8 @@ import {
     pagesTools,
     personalizationTools,
     sitesTools
-} from '@/lib/tools/client';
+} from '@/lib/tools/xmc/client';
+import { vercelAiToolsDefinition } from '@/lib/tools/client-side';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
     }) : modelName;
 
     const config = {
-        needsApproval: true,
+        needsApproval: false,
     };
 
     const result = streamText({
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
             ...personalizationTools(config),
             ...sitesTools(config),
             ...jobTools(config),
-
+            ...vercelAiToolsDefinition,
         },
         stopWhen: stepCountIs(100),
         providerOptions: {

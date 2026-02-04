@@ -3,11 +3,12 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
-import { runClientTool } from '@/lib/tools/client';
+import { runClientTool } from '@/lib/tools/xmc/client';
 
 import AiChat from '@/components/custom/AiChat';
 import { useRef } from 'react';
 import { useApiKey } from '@/components/providers/api-key-provider';
+import { executeClientTool } from '@/lib/tools/client-side';
 
 type ToolExecution = 'frontend' | 'backend';
 
@@ -50,7 +51,10 @@ const ChatBotClientTools = () => {
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
     const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
-    const res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
+    let res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
+    if (!res) {
+      res = await executeClientTool(client, toolName, toolPart.input);
+    }
     if (!res) {
       return;
     }
@@ -84,8 +88,14 @@ const ChatBotClientTools = () => {
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     onFinish: async ({ message, finishReason }) => {
       // if tool was finished because of tool call
-      if (finishReason === 'tool-calls') {
-        const toolPart = message.parts.reverse()[0] as ToolUIPart;
+      if (finishReason !== 'tool-calls') {
+        return;
+      }
+      for (const part of message.parts) {
+        if (!part.type.startsWith('tool')) {
+          continue;
+        }
+        const toolPart = part as ToolUIPart;
         // ensure it is a tool call
         if (toolPart.type.startsWith('tool')) {
           // if approve was requested - should be handled in Confirmation section
@@ -98,7 +108,7 @@ const ChatBotClientTools = () => {
           }
         }
       }
-    },
+    }
   });
   const appContext = useAppContext();
   return (
