@@ -1,11 +1,11 @@
 import { Tool, tool } from "ai";
 import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, pagesToolsConfig, sitesToolsConfig, jobToolsConfig, environmentToolsConfig, personalizationToolsConfig } from "../definitions";
 
-type ToolConfig = {
+export type ToolDefinitionConfig = {
     needsApproval?: boolean;
 }
 
-function wrapTool(commonConfig: ToolConfig) {
+function wrapTool(commonConfig: ToolDefinitionConfig) {
     return function <INPUT>(params: Tool<INPUT, never>) {
         return tool({
             ...params,
@@ -14,7 +14,7 @@ function wrapTool(commonConfig: ToolConfig) {
     };
 }
 
-export function assetTools(commonConfig?: ToolConfig) {
+export function assetTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         get_asset_information: wrapped(assetToolsConfig.get_asset_information),
@@ -24,14 +24,14 @@ export function assetTools(commonConfig?: ToolConfig) {
     };
 }
 
-export function environmentTools(commonConfig?: ToolConfig) {
+export function environmentTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         list_languages: wrapped(environmentToolsConfig.list_languages)
     }
 }
 
-export function personalizationTools(commonConfig?: ToolConfig) {
+export function personalizationTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         create_personalization_version: wrapped(personalizationToolsConfig.create_personalization_version),
@@ -41,7 +41,7 @@ export function personalizationTools(commonConfig?: ToolConfig) {
     }
 }
 
-export function jobTools(commonConfig?: ToolConfig) {
+export function jobTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         revert_job: wrapped(jobToolsConfig.revert_job),
@@ -50,7 +50,7 @@ export function jobTools(commonConfig?: ToolConfig) {
     }
 }
 
-export function pagesTools(commonConfig?: ToolConfig) {
+export function pagesTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         get_page: wrapped(pagesToolsConfig.get_page),
@@ -69,7 +69,7 @@ export function pagesTools(commonConfig?: ToolConfig) {
     }
 }
 
-export function sitesTools(commonConfig?: ToolConfig) {
+export function sitesTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         get_sites_list: wrapped(sitesToolsConfig.get_sites_list),
@@ -79,7 +79,7 @@ export function sitesTools(commonConfig?: ToolConfig) {
     }
 }
 
-export function contentTools(commonConfig?: ToolConfig) {
+export function contentTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         create_content_item: wrapped(contentToolsConfig.create_content_item),
@@ -91,7 +91,7 @@ export function contentTools(commonConfig?: ToolConfig) {
     }
 }
 
-export function componentsTools(commonConfig?: ToolConfig) {
+export function componentsTools(commonConfig?: ToolDefinitionConfig) {
     const wrapped = wrapTool(commonConfig ?? {});
     return {
         create_component_datasource: wrapped(componentsToolsConfig.create_component_datasource),
