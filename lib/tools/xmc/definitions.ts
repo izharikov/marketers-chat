@@ -146,14 +146,16 @@ export const pagesToolsConfig = {
         }),
     },
     add_component_on_page: {
-        description: 'Adds a component to a specific placeholder on a page.',
+        description: 'Adds a component to a specific placeholder on a page. Fields - to specify datasource fields for the component.',
         inputSchema: z.object({
             pageId: z.string().describe('The unique identifier of the page.'),
             componentRenderingId: z.string().describe('The rendering ID of the component.'),
             placeholderPath: z.string().describe('The path of the placeholder.'),
             componentItemName: z.string().describe('The item name of the component.'),
             language: z.string().describe('The language of the page.'),
-            fields: z.record(z.string(), fieldSchema).describe('The fields for the component.'),
+            fields: z.record(z.string(), fieldSchema)
+                .default({})
+                .describe('The fields for the component. Example: { "Text": "Hello world", "MaxItems": 5 }. If no fields exist, return {}.'),
         }),
     },
     set_component_datasource: {

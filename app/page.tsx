@@ -9,6 +9,7 @@ import AiChat from '@/components/custom/AiChat';
 import { useRef } from 'react';
 import { useApiKey } from '@/components/providers/api-key-provider';
 import { executeClientTool } from '@/lib/tools/client-side';
+import { Capability } from '@/lib/tools/xmc';
 
 type ToolExecution = 'frontend' | 'backend';
 
@@ -46,6 +47,7 @@ const ChatBotServerTools = () => {
 const ChatBotClientTools = () => {
   const client = useMarketplaceClient();
   const model = useRef<string | undefined>(undefined);
+  const capabilities = useRef<Capability[]>([]);
   const apiKey = useApiKey('vercel');
 
   const executeTool = async (toolPart: ToolUIPart) => {
@@ -82,6 +84,7 @@ const ChatBotClientTools = () => {
       body: () => {
         return {
           model: model.current,
+          capabilities: capabilities.current,
         }
       }
     }),
@@ -112,11 +115,13 @@ const ChatBotClientTools = () => {
   });
   const appContext = useAppContext();
   return (
-    <AiChat chat={chat} onSetModel={val => model.current = val} onToolApproved={async (tool) => {
-      await executeTool(tool);
-    }} onToolRejected={async (tool) => {
-      await toolRejected(tool);
-    }}
+    <AiChat chat={chat} onSetModel={val => model.current = val}
+      onCapabilitiesChange={val => capabilities.current = val}
+      onToolApproved={async (tool) => {
+        await executeTool(tool);
+      }} onToolRejected={async (tool) => {
+        await toolRejected(tool);
+      }}
     />
   );
 }

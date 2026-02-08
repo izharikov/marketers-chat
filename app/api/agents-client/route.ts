@@ -78,6 +78,7 @@ export async function POST(req: Request) {
                         'get_components_on_page',
                         'get_allowed_components_by_placeholder',
                         'add_component_on_page',
+                        'get_component',
                         'update_content',
                         'reload_current_page',
                     ];
