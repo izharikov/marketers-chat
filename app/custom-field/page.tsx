@@ -44,9 +44,15 @@ const JsonEditor = ({ value, onChange, className }: { value: string; onChange: (
         }
     };
 
+    const calculatedWidth = useMemo(() => {
+        const lines = value.split('\n');
+        const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+        return Math.max(800, (longestLine * 8.4) + 64); // Minimum 800px, 8.4px per char
+    }, [value]);
+
     return (
-        <div className={cn("relative font-mono text-sm border rounded-md overflow-hidden bg-background", className)}>
-            <div className="absolute inset-0 pointer-events-none overflow-hidden" ref={preRef}>
+        <div className={cn("relative font-mono text-sm border rounded-md overflow-hidden bg-background", className)} style={{ width: `${calculatedWidth}px` }}>
+            <div className="absolute inset-0 pointer-events-none overflow-x-auto overflow-y-hidden" ref={preRef}>
                 <CodeBlock
                     code={value}
                     language="json"
@@ -138,8 +144,7 @@ const DiffView = ({ oldCode, newCode, className }: { oldCode: string; newCode: s
             <div
                 ref={leftRef}
                 onScroll={syncScroll}
-                className="h-full border rounded-md overflow-auto relative bg-background scrollbar-hide"
-                style={{ scrollbarWidth: 'none' }}
+                className="h-full border rounded-md overflow-scroll relative bg-background"
             >
                 <div className="min-w-max">
                     <CodeBlock
@@ -153,8 +158,7 @@ const DiffView = ({ oldCode, newCode, className }: { oldCode: string; newCode: s
             <div
                 ref={rightRef}
                 onScroll={syncScroll}
-                className="h-full border border-primary/30 rounded-md overflow-auto relative bg-background shadow-sm scrollbar-hide"
-                style={{ scrollbarWidth: 'none' }}
+                className="h-full border border-primary/30 rounded-md overflow-scroll relative bg-background shadow-sm"
             >
                 <div className="min-w-max">
                     <CodeBlock
@@ -265,7 +269,7 @@ export const CustomFieldPage = () => {
     };
 
     const handleAccept = async () => {
-        if (newValue) {
+        if (newValue && newValue != existingValue) {
             await client.setValue(newValue);
             setExistingValue(newValue);
             setNewValue(undefined);
@@ -312,11 +316,13 @@ export const CustomFieldPage = () => {
                     ) : (
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-muted-foreground px-1">Existing Field Value</label>
-                            <JsonEditor
-                                value={existingValue}
-                                onChange={setExistingValue}
-                                className="h-[400px]"
-                            />
+                            <div className="w-full overflow-auto">
+                                <JsonEditor
+                                    value={existingValue}
+                                    onChange={setExistingValue}
+                                    className="h-[400px]"
+                                />
+                            </div>
                         </div>
                     )}
                     {(
@@ -352,7 +358,7 @@ export const CustomFieldPage = () => {
                                     <XIcon className="size-4" />
                                     Reject
                                 </Button>
-                                <Button onClick={handleAccept} className="gap-2">
+                                <Button onClick={handleAccept} className="gap-2" disabled={newValue === existingValue}>
                                     <CheckIcon className="size-4" />
                                     Accept & Save
                                 </Button>
