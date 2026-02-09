@@ -11,7 +11,8 @@ export async function POST(req: Request) {
     const {
         messages,
         currentFieldValue,
-        pageInfo,
+        site,
+        currentPage,
         layout,
     } = await req.json();
     const model = process.env.NODE_ENV === 'development' ? wrapLanguageModel({
@@ -27,38 +28,47 @@ export async function POST(req: Request) {
             EventSchema,
             ProductSchema,
             LocalBusinessSchema,
-            BreadcrumbListSchema,
             PersonSchema,
             RecipeSchema,
             VideoObjectSchema,
             ReviewSchema,
             CourseSchema,
             JobPostingSchema,
+            ...(!currentPage.isHome ? [BreadcrumbListSchema] : []),
         ]))
     });
 
     const schema = jsonSchema(zodSchema.toJSONSchema() as JSONSchema7);
     const result = streamText({
         model,
-        system: `You are an expert in structured data and schema markup. Your goal is to implement schema.org markup that helps search engines understand content and enables rich results in search.
+        system: `You are an expert in structured data and schema markup for SitecoreAI website.
+Your goal is to implement schema.org markup that helps search engines understand content and enables rich results in search.
 
-        When implementing schema, understand:
+When implementing schema, understand:
 - Page Type - What kind of page? What's the primary content? What rich results are possible?
 - Current State - Any existing schema? Errors in implementation? Which rich results already appearing?
 - Goals - Which rich results are you targeting? What's the business value?
 
-        Page information: ${JSON.stringify(pageInfo)}
-        Layout: ${JSON.stringify(layout)}
+# IMPORTANT (!!)
+- MAX count of same @type is 1
 
-        Current value: ${currentFieldValue}
-        `,
+## Site information (use host for url)
+${JSON.stringify(site)}
+
+## Current page content
+${JSON.stringify(currentPage)}
+
+## Page Layout (components and datasources)
+${JSON.stringify(layout)}
+`,
         output: Output.object({
             schema,
         }),
         messages: await convertToModelMessages(messages),
         providerOptions: {
             openai: {
-                reasoningEffort: 'minimal',
+                reasoningEffort: 'low',
+                // reasoningEffort: 'minimal',
                 strictJsonSchema: true,
                 include: ['reasoning.encrypted_content'],
             } satisfies OpenAIResponsesProviderOptions

@@ -179,6 +179,8 @@ export const CustomFieldPage = () => {
     const currentFieldValue = useRef<string>("");
     const pageInfoRef = useRef({});
     const pageLayoutRef = useRef({});
+    const siteRef = useRef({});
+    const pageRef = useRef({});
 
     const { messages, status, sendMessage, setMessages } = useChat({
         transport: new DefaultChatTransport({
@@ -188,8 +190,9 @@ export const CustomFieldPage = () => {
             },
             body: () => ({
                 currentFieldValue: currentFieldValue.current,
-                pageInfo: pageInfoRef.current,
                 layout: pageLayoutRef.current,
+                site: siteRef.current,
+                currentPage: pageRef.current,
             })
         })
     });
@@ -237,8 +240,8 @@ export const CustomFieldPage = () => {
         setMessages([]);
         setNewValue(undefined);
 
-        const placeholders = await getRenderPageResult(client, pageContext, sitecoreContextId!);
-        if (!placeholders) {
+        const information = await getRenderPageResult(client, pageContext, sitecoreContextId!);
+        if (!information) {
             console.error("Failed to get render page result");
             setIsLoading(false);
             return;
@@ -250,7 +253,9 @@ export const CustomFieldPage = () => {
             route: pageContext.pageInfo?.route,
             site: pageContext.pageInfo?.site,
         } : {};
-        pageLayoutRef.current = placeholders;
+        pageLayoutRef.current = information.placeholders;
+        siteRef.current = information.site;
+        pageRef.current = information.page;
         // return;
         await sendMessage({
             role: 'user',
@@ -400,13 +405,31 @@ const getRenderPageResult = async (client: ClientSDK, pageContext: PagesContext 
             }
         });
 
-        console.log('renderedResult', renderedResult);
         const route = (renderedResult?.data?.data?.layout as any)?.item?.rendered?.sitecore?.route;
 
-        console.log('sanitizeLayout', sanitizeLayout(route?.placeholders))
+        const site = await client.query('xmc.xmapp.retrieveSite', {
+            params: {
+                path: {
+                    siteId: siteInfo.id!,
+                },
+                query: {
+                    sitecoreContextId,
+                }
+            }
+        });
+        console.log('pageInfo', pageInfo);
+        console.log('siteInfo', siteInfo);
+
         return {
             placeholders: sanitizeLayout(route?.placeholders),
-            fields: route?.fields,
+            page: {
+                fields: route?.fields,
+                isHome: pageInfo.id === siteInfo.startItemId,
+            },
+            site: {
+                host: 'https://' + site?.data?.data?.hosts?.[0]?.targetHostname,
+                // TODO: add item path info
+            }
         }
     } catch (e) {
         console.error("Error fetching rendered result", e);
