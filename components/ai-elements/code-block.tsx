@@ -18,6 +18,7 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
   showLineNumbers?: boolean;
+  highlightLines?: { line: number; color: string }[];
 };
 
 type CodeBlockContextType = {
@@ -49,14 +50,28 @@ const lineNumberTransformer: ShikiTransformer = {
   },
 };
 
+const createHighlightTransformer = (highlights: { line: number; color: string }[]): ShikiTransformer => ({
+  name: "line-highlight",
+  line(node, line) {
+    const highlight = highlights.find(h => h.line === line);
+    if (highlight) {
+      if (!node.properties.className) node.properties.className = [];
+      const classList = node.properties.className as string[];
+      classList.push("w-full", "inline-block");
+      node.properties.style = cn(node.properties.style as string, `background-color: ${highlight.color}`);
+    }
+  },
+});
+
 export async function highlightCode(
   code: string,
   language: BundledLanguage,
-  showLineNumbers = false
+  showLineNumbers = false,
+  highlightLines: { line: number; color: string }[] = []
 ) {
-  const transformers: ShikiTransformer[] = showLineNumbers
-    ? [lineNumberTransformer]
-    : [];
+  const transformers: ShikiTransformer[] = [];
+  if (showLineNumbers) transformers.push(lineNumberTransformer);
+  if (highlightLines.length > 0) transformers.push(createHighlightTransformer(highlightLines));
 
   return await Promise.all([
     codeToHtml(code, {
@@ -76,6 +91,7 @@ export const CodeBlock = ({
   code,
   language,
   showLineNumbers = false,
+  highlightLines = [],
   className,
   children,
   ...props
@@ -85,18 +101,11 @@ export const CodeBlock = ({
   const mounted = useRef(false);
 
   useEffect(() => {
-    highlightCode(code, language, showLineNumbers).then(([light, dark]) => {
-      if (!mounted.current) {
-        setHtml(light);
-        setDarkHtml(dark);
-        mounted.current = true;
-      }
+    highlightCode(code, language, showLineNumbers, highlightLines).then(([light, dark]) => {
+      setHtml(light);
+      setDarkHtml(dark);
     });
-
-    return () => {
-      mounted.current = false;
-    };
-  }, [code, language, showLineNumbers]);
+  }, [code, language, showLineNumbers, highlightLines]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

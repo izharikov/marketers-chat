@@ -6,7 +6,7 @@ import { useChat } from "@ai-sdk/react";
 import { type UIMessage, parsePartialJson } from "ai";
 import { ClientSDK, PagesContext } from "@sitecore-marketplace-sdk/client";
 import { DefaultChatTransport } from "ai";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,13 +18,16 @@ import {
     ReasoningContent,
     ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
+import { diffLines } from 'diff';
+import { sanitizeLayout } from "@/lib/sitecore";
 
 /**
  * Extracts the first JSON code block or raw JSON string from an AI message.
  */
 async function extractJsonFromMessage(message: UIMessage) {
     const text = message.parts.filter(part => part.type === 'text')[0]?.text;
-    return JSON.stringify(await parsePartialJson(text), null, 2);
+    const val = await parsePartialJson(text);
+    return JSON.stringify((val.value as { items: unknown[] })?.items, null, 2);
 }
 
 /**
@@ -67,6 +70,105 @@ const JsonEditor = ({ value, onChange, className }: { value: string; onChange: (
     );
 };
 
+/**
+ * A specialized Diff view with synced scrolling and aligned git-style highlighting.
+ */
+const DiffView = ({ oldCode, newCode, className }: { oldCode: string; newCode: string; className?: string }) => {
+    const leftRef = useRef<HTMLDivElement>(null);
+    const rightRef = useRef<HTMLDivElement>(null);
+
+    const syncScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const source = e.currentTarget;
+        const target = source === leftRef.current ? rightRef.current : leftRef.current;
+        if (target) {
+            target.scrollTop = source.scrollTop;
+            target.scrollLeft = source.scrollLeft;
+        }
+    };
+
+    // Calculate robust aligned diff
+    const { alignedOld, alignedNew, oldHighlights, newHighlights } = useMemo(() => {
+        const diff = diffLines(oldCode, newCode);
+
+        const oldLines: string[] = [];
+        const newLines: string[] = [];
+        const oldH: { line: number; color: string }[] = [];
+        const newH: { line: number; color: string }[] = [];
+
+        let oldLineIdx = 1;
+        let newLineIdx = 1;
+
+        diff.forEach(part => {
+            const lines = part.value.split('\n');
+            // Remove trailing empty string from split if it exists
+            if (lines[lines.length - 1] === '') lines.pop();
+
+            if (part.added) {
+                lines.forEach(line => {
+                    newLines.push(line);
+                    newH.push({ line: newLineIdx, color: 'rgba(34, 197, 94, 0.15)' });
+                    newLineIdx++;
+                });
+            } else if (part.removed) {
+                lines.forEach(line => {
+                    oldLines.push(line);
+                    oldH.push({ line: oldLineIdx, color: 'rgba(239, 68, 68, 0.15)' });
+                    oldLineIdx++;
+                });
+            } else {
+                lines.forEach(line => {
+                    oldLines.push(line);
+                    newLines.push(line);
+                    oldLineIdx++;
+                    newLineIdx++;
+                });
+            }
+        });
+
+        return {
+            alignedOld: oldLines.join('\n'),
+            alignedNew: newLines.join('\n'),
+            oldHighlights: oldH,
+            newHighlights: newH
+        };
+    }, [oldCode, newCode]);
+
+    return (
+        <div className={cn("grid grid-cols-2 gap-4", className)}>
+            <div
+                ref={leftRef}
+                onScroll={syncScroll}
+                className="h-full border rounded-md overflow-auto relative bg-background scrollbar-hide"
+                style={{ scrollbarWidth: 'none' }}
+            >
+                <div className="min-w-max">
+                    <CodeBlock
+                        code={alignedOld}
+                        language="json"
+                        highlightLines={oldHighlights}
+                        className="border-none bg-transparent! p-0! m-0! [&>pre]:p-4! [&>pre]:bg-transparent!"
+                    />
+                </div>
+            </div>
+            <div
+                ref={rightRef}
+                onScroll={syncScroll}
+                className="h-full border border-primary/30 rounded-md overflow-auto relative bg-background shadow-sm scrollbar-hide"
+                style={{ scrollbarWidth: 'none' }}
+            >
+                <div className="min-w-max">
+                    <CodeBlock
+                        code={alignedNew}
+                        language="json"
+                        highlightLines={newHighlights}
+                        className="border-none bg-transparent! p-0! m-0! [&>pre]:p-4! [&>pre]:bg-transparent!"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export const CustomFieldPage = () => {
     const client = useMarketplaceClient();
     const appContext = useAppContext();
@@ -74,6 +176,9 @@ export const CustomFieldPage = () => {
     const apiKey = useApiKey('vercel');
 
     const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
+    const currentFieldValue = useRef<string>("");
+    const pageInfoRef = useRef({});
+    const pageLayoutRef = useRef({});
 
     const { messages, status, sendMessage, setMessages } = useChat({
         transport: new DefaultChatTransport({
@@ -81,7 +186,11 @@ export const CustomFieldPage = () => {
             headers: {
                 'x-vercel-api-key': apiKey!,
             },
-            body: {}
+            body: () => ({
+                currentFieldValue: currentFieldValue.current,
+                pageInfo: pageInfoRef.current,
+                layout: pageLayoutRef.current,
+            })
         })
     });
 
@@ -118,6 +227,10 @@ export const CustomFieldPage = () => {
         }
     }, [messages]);
 
+    useEffect(() => {
+        currentFieldValue.current = existingValue;
+    }, [existingValue]);
+
     const handleGenerate = async () => {
         setIsLoading(true);
         // Reset chat and new value
@@ -130,15 +243,18 @@ export const CustomFieldPage = () => {
             setIsLoading(false);
             return;
         }
-
+        pageInfoRef.current = pageContext ? {
+            url: pageContext.pageInfo?.url,
+            title: pageContext.pageInfo?.title,
+            language: pageContext.pageInfo?.language,
+            route: pageContext.pageInfo?.route,
+            site: pageContext.pageInfo?.site,
+        } : {};
+        pageLayoutRef.current = placeholders;
+        // return;
         await sendMessage({
             role: 'user',
-            parts: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(placeholders),
-                }
-            ]
+            parts: [{ type: 'text', text: 'Generate' }],
         });
         setIsLoading(false);
     };
@@ -157,7 +273,9 @@ export const CustomFieldPage = () => {
         setMessages([]);
     };
 
-    if (isLoading && !existingValue && status !== 'streaming') {
+    if (isLoading && !existingValue && (status === 'streaming' || status === 'submitted')) {
+        // Continue showing loading if streaming just started
+    } else if (isLoading && !existingValue) {
         return <div className="p-8 flex items-center justify-center">Loading...</div>;
     }
 
@@ -180,18 +298,11 @@ export const CustomFieldPage = () => {
                                 <span>Existing Value</span>
                                 <span>Generated Value (Preview)</span>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 h-[400px]">
-                                <CodeBlock
-                                    code={existingValue || "// No existing value"}
-                                    language="json"
-                                    className="h-full border rounded-md"
-                                />
-                                <CodeBlock
-                                    code={newValue}
-                                    language="json"
-                                    className="h-full border border-primary/50 shadow-sm rounded-md"
-                                />
-                            </div>
+                            <DiffView
+                                oldCode={existingValue || "// No existing value"}
+                                newCode={newValue}
+                                className="h-[400px]"
+                            />
                         </div>
                     ) : (
                         <div className="space-y-2">
@@ -199,8 +310,32 @@ export const CustomFieldPage = () => {
                             <JsonEditor
                                 value={existingValue}
                                 onChange={setExistingValue}
-                                className="h-[500px]"
+                                className="h-[400px]"
                             />
+                        </div>
+                    )}
+                    {(
+                        <div className="space-y-4">
+                            {(messages[messages.length - 1]?.parts ?? []).map((part, i) => {
+                                if (part.type === 'reasoning') {
+                                    return (
+                                        <Reasoning
+                                            key={`reasoning-${i}`}
+                                            className="w-full"
+                                            isStreaming={status === 'streaming' && i === messages[messages.length - 1].parts.length - 1}
+                                        >
+                                            <ReasoningTrigger />
+                                            <ReasoningContent>{part.text}</ReasoningContent>
+                                        </Reasoning>
+                                    );
+                                }
+                                return null;
+                            })}
+                            {status === 'streaming' && !newValue && <Card className="border-primary/20 bg-primary/5">
+                                <CardContent className="p-4 text-sm text-center animate-pulse">
+                                    Analyzing page structure and generating JSON-LD...
+                                </CardContent>
+                            </Card>}
                         </div>
                     )}
                 </CardContent>
@@ -225,10 +360,10 @@ export const CustomFieldPage = () => {
                     </div>
                     <Button
                         onClick={handleGenerate}
-                        disabled={status === 'streaming'}
+                        disabled={status === 'streaming' || status === 'submitted'}
                         className="gap-2"
                     >
-                        {status === 'streaming' ? "Generating..." : (
+                        {(status === 'streaming' || status === 'submitted') ? "Generating..." : (
                             <>
                                 <Sparkles className="size-4" />
                                 Generate Schema
@@ -237,31 +372,6 @@ export const CustomFieldPage = () => {
                     </Button>
                 </CardFooter>
             </Card>
-
-            {(
-                <div className="space-y-4">
-                    {messages[messages.length - 1]?.parts.map((part, i) => {
-                        if (part.type === 'reasoning') {
-                            return (
-                                <Reasoning
-                                    key={`reasoning-${i}`}
-                                    className="w-full"
-                                    isStreaming={status === 'streaming' && i === messages[messages.length - 1].parts.length - 1}
-                                >
-                                    <ReasoningTrigger />
-                                    <ReasoningContent>{part.text}</ReasoningContent>
-                                </Reasoning>
-                            );
-                        }
-                        return null;
-                    })}
-                    {status === 'streaming' && !newValue && <Card className="border-primary/20 bg-primary/5">
-                        <CardContent className="p-4 text-sm text-center animate-pulse">
-                            Analyzing page structure and generating JSON-LD...
-                        </CardContent>
-                    </Card>}
-                </div>
-            )}
         </div>
     );
 };
@@ -290,7 +400,14 @@ const getRenderPageResult = async (client: ClientSDK, pageContext: PagesContext 
             }
         });
 
-        return (renderedResult?.data?.data?.layout as any)?.item?.rendered?.sitecore?.route?.placeholders;
+        console.log('renderedResult', renderedResult);
+        const route = (renderedResult?.data?.data?.layout as any)?.item?.rendered?.sitecore?.route;
+
+        console.log('sanitizeLayout', sanitizeLayout(route?.placeholders))
+        return {
+            placeholders: sanitizeLayout(route?.placeholders),
+            fields: route?.fields,
+        }
     } catch (e) {
         console.error("Error fetching rendered result", e);
         return null;
