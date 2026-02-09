@@ -1,6 +1,5 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
-import { gateway, jsonSchema, JSONSchema7, Output, streamText, wrapLanguageModel } from "ai";
-import layout from './index.json';
+import { convertToModelMessages, gateway, jsonSchema, JSONSchema7, Output, streamText, wrapLanguageModel } from "ai";
 import z from "zod/v4";
 import { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { ArticleSchema, ProductSchema, LocalBusinessSchema, BreadcrumbListSchema, PersonSchema, RecipeSchema, VideoObjectSchema, ReviewSchema, CourseSchema, JobPostingSchema } from "./schema-definitions";
@@ -8,7 +7,8 @@ import { ArticleSchema, ProductSchema, LocalBusinessSchema, BreadcrumbListSchema
 export const maxDuration = 30;
 
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
+    const { messages } = await req.json();
     const model = process.env.NODE_ENV === 'development' ? wrapLanguageModel({
         model: gateway('openai/gpt-5-nano'),
         middleware: [devToolsMiddleware()],
@@ -32,17 +32,16 @@ export async function GET(req: Request) {
     const schema = jsonSchema(zodSchema.toJSONSchema() as JSONSchema7);
     const result = streamText({
         model,
-        prompt: `Generate schema.org JSON-LD for the following page content:
+        system: `Generate schema.org JSON-LD for the following page content:
 
         Page url: https://website.com/ai/ai-test
         Title: AI test
 
-        Layout:
-        ${JSON.stringify(layout)}
         `,
         output: Output.object({
             schema,
         }),
+        messages: await convertToModelMessages(messages),
         providerOptions: {
             openai: {
                 reasoningEffort: 'minimal',
