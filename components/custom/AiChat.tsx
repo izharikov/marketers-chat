@@ -19,6 +19,8 @@ import {
     MessageResponse,
     MessageActions,
     MessageAction,
+    MessageAttachments,
+    MessageAttachment,
 } from '@/components/ai-elements/message';
 import {
     PromptInput,
@@ -59,7 +61,7 @@ import {
     ModelSelectorName,
     ModelSelectorTrigger,
 } from '@/components/ai-elements/model-selector';
-import { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import {
     CheckIcon,
@@ -86,6 +88,7 @@ import {
 } from '@/components/ai-elements/reasoning';
 import { Loader } from '@/components/ai-elements/loader';
 import { ToolUIPart } from 'ai';
+import { Attachment, AttachmentItem, AttachmentPreview, Attachments } from '../ai-elements/attachments';
 
 const models = [
     {
@@ -167,136 +170,151 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
             <div className="flex flex-col h-full">
                 <Conversation className="h-full">
                     <ConversationContent>
-                        {messages.map((message) => (
+                        {messages.map((message, messagesIndex) => (
                             <div key={message.id}>
-                                {message.role === 'assistant' && message.parts.filter((part) => part.type === 'source-url').length > 0 && (
-                                    <Sources>
-                                        <SourcesTrigger
-                                            count={
-                                                message.parts.filter(
-                                                    (part) => part.type === 'source-url',
-                                                ).length
-                                            }
-                                        />
-                                        {message.parts.filter((part) => part.type === 'source-url').map((part, i) => (
-                                            <SourcesContent key={`${message.id}-${i}`}>
-                                                <Source
-                                                    key={`${message.id}-${i}`}
-                                                    href={part.url}
-                                                    title={part.url}
-                                                />
-                                            </SourcesContent>
-                                        ))}
-                                    </Sources>
-                                )}
-                                {message.parts.map((part, i) => {
-                                    switch (part.type) {
-                                        case 'text':
-                                            return (
-                                                <Message key={`${message.id}-${i}`} from={message.role}>
-                                                    <MessageContent className='text-base'>
-                                                        <MessageResponse>
-                                                            {part.text}
-                                                        </MessageResponse>
-                                                    </MessageContent>
-                                                    {message.role === 'assistant' && i === messages.length - 1 && (
-                                                        <MessageActions>
-                                                            <MessageAction
-                                                                onClick={() => regenerate()}
-                                                                label="Retry"
-                                                            >
-                                                                <RefreshCcwIcon className="size-3" />
-                                                            </MessageAction>
-                                                            <MessageAction
-                                                                onClick={() =>
-                                                                    navigator.clipboard.writeText(part.text)
-                                                                }
-                                                                label="Copy"
-                                                            >
-                                                                <CopyIcon className="size-3" />
-                                                            </MessageAction>
-                                                        </MessageActions>
-                                                    )}
-                                                </Message>
-                                            );
-                                        case 'reasoning':
-                                            return (
-                                                <Reasoning
-                                                    key={`${message.id}-${i}`}
-                                                    className="w-full"
-                                                    isStreaming={status === 'streaming' && i === message.parts.length - 1 && message.id === messages.at(-1)?.id}
-                                                >
-                                                    <ReasoningTrigger />
-                                                    <ReasoningContent>{part.text}</ReasoningContent>
-                                                </Reasoning>
-                                            );
-                                        default:
-                                            if (part.type.startsWith('tool')) {
-                                                const tool = part as ToolUIPart;
-                                                let state = tool.state;
-                                                if (tool.output && tool.output.toString().startsWith('ERROR')) {
-                                                    state = 'output-error';
+                                <Message key={`${message.id}`} from={message.role}>
+                                    {message.role === 'assistant' && message.parts.filter((part) => part.type === 'source-url').length > 0 && (
+                                        <Sources>
+                                            <SourcesTrigger
+                                                count={
+                                                    message.parts.filter(
+                                                        (part) => part.type === 'source-url',
+                                                    ).length
                                                 }
-                                                return <Fragment key={`${message.id}-${tool.toolCallId}`}>
-                                                    <Tool defaultOpen={false}>
-                                                        <ToolHeader type={tool.type} state={state} />
-                                                        <ToolContent>
-                                                            {!!tool.input && <ToolInput input={tool.input} />}
-                                                            {tool.state === 'output-error' && !!tool.rawInput && <ToolInput input={tool.rawInput} />}
-                                                            {!!(tool.output || tool.errorText) && <ToolOutput
-                                                                output={tool.output}
-                                                                errorText={tool.errorText}
-                                                            />}
-                                                        </ToolContent>
-                                                    </Tool>
-                                                    {state === 'approval-requested' && <Confirmation approval={tool.approval} state={tool.state} className='flex-row'>
-                                                        <ConfirmationTitle>
-                                                            <div className='flex'>
-                                                                <ConfirmationRequest>
-                                                                    Do you want to execute this tool?
-                                                                </ConfirmationRequest>
-                                                                <ConfirmationAccepted>
-                                                                    <CheckIcon className="size-4 text-green-600 dark:text-green-400 my-auto mr-1" />
-                                                                    <span>Accepted</span>
-                                                                </ConfirmationAccepted>
-                                                                <ConfirmationRejected>
-                                                                    <XIcon className="size-4 text-destructive my-auto mr-1" />
-                                                                    <span>Rejected</span>
-                                                                </ConfirmationRejected>
-                                                            </div>
-                                                        </ConfirmationTitle>
-                                                        <ConfirmationActions>
-                                                            <ConfirmationAction
-                                                                onClick={async () => {
-                                                                    await chat.addToolApprovalResponse({
-                                                                        id: tool.approval?.id!,
-                                                                        approved: false,
-                                                                    });
-                                                                    await onToolRejected?.(tool);
-                                                                }}
-                                                                variant="outline"
-                                                            >
-                                                                Reject
-                                                            </ConfirmationAction>
-                                                            <ConfirmationAction
-                                                                onClick={async () => {
-                                                                    await chat.addToolApprovalResponse({
-                                                                        id: tool.approval?.id!,
-                                                                        approved: true,
-                                                                    });
-                                                                    await onToolApproved?.(tool);
-                                                                }}
-                                                                variant="default"
-                                                            >
-                                                                Accept
-                                                            </ConfirmationAction>
-                                                        </ConfirmationActions>
-                                                    </Confirmation>}
-                                                </Fragment>
-                                            }
-                                            return null;
-                                    }
-                                })}
+                                            />
+                                            {message.parts.filter((part) => part.type === 'source-url').map((part, i) => (
+                                                <SourcesContent key={`${message.id}-${i}`}>
+                                                    <Source
+                                                        key={`${message.id}-${i}`}
+                                                        href={part.url}
+                                                        title={part.url}
+                                                    />
+                                                </SourcesContent>
+                                            ))}
+                                        </Sources>
+                                    )}
+                                    {
+                                        message.parts.filter((part) => part.type === 'file').length > 0 && (
+                                            <MessageAttachments>
+                                                <Attachments variant="inline">
+                                                    {message.parts.filter((part) => part.type === 'file').map((part, i) => (
+                                                        <AttachmentItem
+                                                            key={`${message.id}-${i}`}
+                                                            data={{ id: `${message.id}-${i}`, ...part }}
+                                                        />
+                                                    ))}
+                                                </Attachments>
+                                            </MessageAttachments>
+                                        )}
+                                    {message.parts.map((part, i) => {
+                                        switch (part.type) {
+                                            case 'text':
+                                                return (
+                                                    <React.Fragment key={`${message.id}-${i}`}>
+                                                        <MessageContent className='text-base'>
+                                                            <MessageResponse>
+                                                                {part.text}
+                                                            </MessageResponse>
+                                                        </MessageContent>
+                                                        {message.role === 'assistant' && messagesIndex === messages.length - 1 && i === message.parts.length - 1 && (
+                                                            <MessageActions>
+                                                                <MessageAction
+                                                                    onClick={() => regenerate()}
+                                                                    label="Retry"
+                                                                >
+                                                                    <RefreshCcwIcon className="size-3" />
+                                                                </MessageAction>
+                                                                <MessageAction
+                                                                    onClick={() =>
+                                                                        navigator.clipboard.writeText(part.text)
+                                                                    }
+                                                                    label="Copy"
+                                                                >
+                                                                    <CopyIcon className="size-3" />
+                                                                </MessageAction>
+                                                            </MessageActions>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            case 'reasoning':
+                                                return (
+                                                    <Reasoning
+                                                        key={`${message.id}-${i}`}
+                                                        className="w-full"
+                                                        isStreaming={status === 'streaming' && i === message.parts.length - 1 && message.id === messages.at(-1)?.id}
+                                                    >
+                                                        <ReasoningTrigger />
+                                                        <ReasoningContent>{part.text}</ReasoningContent>
+                                                    </Reasoning>
+                                                );
+                                            default:
+                                                if (part.type.startsWith('tool')) {
+                                                    const tool = part as ToolUIPart;
+                                                    let state = tool.state;
+                                                    if (tool.output && tool.output.toString().startsWith('ERROR')) {
+                                                        state = 'output-error';
+                                                    }
+                                                    return <Fragment key={`${message.id}-${tool.toolCallId}`}>
+                                                        <Tool defaultOpen={false}>
+                                                            <ToolHeader type={tool.type} state={state} />
+                                                            <ToolContent>
+                                                                {!!tool.input && <ToolInput input={tool.input} />}
+                                                                {tool.state === 'output-error' && !!tool.rawInput && <ToolInput input={tool.rawInput} />}
+                                                                {!!(tool.output || tool.errorText) && <ToolOutput
+                                                                    output={tool.output}
+                                                                    errorText={tool.errorText}
+                                                                />}
+                                                            </ToolContent>
+                                                        </Tool>
+                                                        {state === 'approval-requested' && <Confirmation approval={tool.approval} state={tool.state} className='flex-row'>
+                                                            <ConfirmationTitle>
+                                                                <div className='flex'>
+                                                                    <ConfirmationRequest>
+                                                                        Do you want to execute this tool?
+                                                                    </ConfirmationRequest>
+                                                                    <ConfirmationAccepted>
+                                                                        <CheckIcon className="size-4 text-green-600 dark:text-green-400 my-auto mr-1" />
+                                                                        <span>Accepted</span>
+                                                                    </ConfirmationAccepted>
+                                                                    <ConfirmationRejected>
+                                                                        <XIcon className="size-4 text-destructive my-auto mr-1" />
+                                                                        <span>Rejected</span>
+                                                                    </ConfirmationRejected>
+                                                                </div>
+                                                            </ConfirmationTitle>
+                                                            <ConfirmationActions>
+                                                                <ConfirmationAction
+                                                                    onClick={async () => {
+                                                                        await chat.addToolApprovalResponse({
+                                                                            id: tool.approval?.id!,
+                                                                            approved: false,
+                                                                        });
+                                                                        await onToolRejected?.(tool);
+                                                                    }}
+                                                                    variant="outline"
+                                                                >
+                                                                    Reject
+                                                                </ConfirmationAction>
+                                                                <ConfirmationAction
+                                                                    onClick={async () => {
+                                                                        await chat.addToolApprovalResponse({
+                                                                            id: tool.approval?.id!,
+                                                                            approved: true,
+                                                                        });
+                                                                        await onToolApproved?.(tool);
+                                                                    }}
+                                                                    variant="default"
+                                                                >
+                                                                    Accept
+                                                                </ConfirmationAction>
+                                                            </ConfirmationActions>
+                                                        </Confirmation>}
+                                                    </Fragment>
+                                                }
+                                                return null;
+                                        }
+                                    })}
+                                </Message>
                             </div>
                         ))}
                         {status === 'submitted' && <Loader />}
