@@ -6,11 +6,16 @@ import { ArticleSchema, ProductSchema, LocalBusinessSchema, BreadcrumbListSchema
 
 export const maxDuration = 30;
 
+function schemaItem<T>(schema: z.ZodType<T>) {
+    return z.union([
+        z.literal('Ignore').describe('If current page doesn\'t suit to this schema'),
+        schema,
+    ]);
+}
 
 export async function POST(req: Request) {
     const {
         messages,
-        currentFieldValue,
         site,
         currentPage,
         layout,
@@ -21,21 +26,20 @@ export async function POST(req: Request) {
     }) : 'openai/gpt-5-nano';
 
     const zodSchema = z.object({
-        items: z.array(z.union([
-            ArticleSchema,
-            WebsiteSchema,
-            FAQPageSchema,
-            EventSchema,
-            ProductSchema,
-            LocalBusinessSchema,
-            PersonSchema,
-            RecipeSchema,
-            VideoObjectSchema,
-            ReviewSchema,
-            CourseSchema,
-            JobPostingSchema,
-            ...(!currentPage.isHome ? [BreadcrumbListSchema] : []),
-        ]))
+        article: schemaItem(ArticleSchema),
+        faqPage: schemaItem(FAQPageSchema),
+        event: schemaItem(EventSchema),
+        product: schemaItem(ProductSchema),
+        localBusiness: schemaItem(LocalBusinessSchema),
+        person: schemaItem(PersonSchema),
+        recipe: schemaItem(RecipeSchema),
+        videoObject: schemaItem(VideoObjectSchema),
+        review: schemaItem(ReviewSchema),
+        course: schemaItem(CourseSchema),
+        jobPosting: schemaItem(JobPostingSchema),
+        ...(currentPage.isHome ?
+            { website: schemaItem(WebsiteSchema) }
+            : { breadcrumbList: schemaItem(BreadcrumbListSchema) }),
     });
 
     const schema = jsonSchema(zodSchema.toJSONSchema() as JSONSchema7);
@@ -50,7 +54,7 @@ When implementing schema, understand:
 - Goals - Which rich results are you targeting? What's the business value?
 
 # IMPORTANT (!!)
-- MAX count of same @type is 1
+- Be strict and don't generate schema if it doesn't suit to @type (e.g. DON'T generate schema for @type=Article if page is not article)
 
 ## Site information (use host for url)
 ${JSON.stringify(site)}
@@ -69,7 +73,7 @@ ${JSON.stringify(layout)}
             openai: {
                 reasoningEffort: 'low',
                 // reasoningEffort: 'minimal',
-                strictJsonSchema: true,
+                // strictJsonSchema: true,
                 include: ['reasoning.encrypted_content'],
             } satisfies OpenAIResponsesProviderOptions
         }

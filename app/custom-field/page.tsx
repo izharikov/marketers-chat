@@ -9,7 +9,6 @@ import { DefaultChatTransport } from "ai";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CodeBlock } from "@/components/ai-elements/code-block";
 import { cn } from "@/lib/utils";
 import { CheckIcon, XIcon, Sparkles } from "lucide-react";
@@ -24,10 +23,12 @@ import { sanitizeLayout } from "@/lib/sitecore";
 /**
  * Extracts the first JSON code block or raw JSON string from an AI message.
  */
-async function extractJsonFromMessage(message: UIMessage) {
+async function extractResultFromMessage(message: UIMessage) {
     const text = message.parts.filter(part => part.type === 'text')[0]?.text;
     const val = await parsePartialJson(text);
-    return JSON.stringify((val.value as { items: unknown[] })?.items, null, 2);
+    const aiResult = (val.value as Record<string, unknown>) ?? {};
+    const result = Object.values(aiResult).filter((v) => typeof v === 'object');
+    return JSON.stringify(result, null, 2);
 }
 
 /**
@@ -224,7 +225,7 @@ export const CustomFieldPage = () => {
         const lastMessage = messages[messages.length - 1];
         if (lastMessage?.role === 'assistant') {
             const updateValue = async () => {
-                const extracted = await extractJsonFromMessage(lastMessage);
+                const extracted = await extractResultFromMessage(lastMessage);
                 const length = newValue?.length || 0;
                 if (extracted && length < extracted.length) {
                     setNewValue(extracted);
