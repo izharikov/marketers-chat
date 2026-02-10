@@ -256,9 +256,10 @@ export const pagesTools = {
     get_allowed_components_by_placeholder: clientTool({
         ...pagesToolsConfig.get_allowed_components_by_placeholder,
         execute: async (client, sitecoreContextId, { pageId, placeholderName, language }) => {
+            const fixedPlaceholder = placeholderName.split('/').findLast((p) => p !== '');
             return await clientQuery(client, 'xmc.agent.pagesGetAllowedComponentsByPlaceholder', {
                 params: {
-                    path: { pageId, placeholderName },
+                    path: { pageId, placeholderName: fixedPlaceholder! },
                     query: { language, sitecoreContextId },
                 }
             });
