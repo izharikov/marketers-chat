@@ -73,7 +73,8 @@ import {
     ImageIcon,
     UsersIcon,
     ZapIcon,
-    Wrench
+    Wrench,
+    Ellipsis
 } from 'lucide-react';
 import {
     Source,
@@ -87,10 +88,9 @@ import {
     ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
 import { Loader } from '@/components/ai-elements/loader';
-import { FinishReason, ToolUIPart } from 'ai';
-import { Attachment, AttachmentItem, AttachmentPreview, Attachments } from '../ai-elements/attachments';
-import { ApplicationContext } from '@sitecore-marketplace-sdk/client';
-import { useAppContext, useMarketplaceClient } from '../providers/marketplace';
+import { ToolUIPart } from 'ai';
+import { AttachmentItem, Attachments } from '../ai-elements/attachments';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 const models = [
     {
@@ -172,7 +172,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
     }, [capabilities]);
 
 
-    const { messages, regenerate, status } = chat;
+    const { messages, setMessages, regenerate, status } = chat;
     const toolApproval = messages[messages.length - 1]?.parts
         .filter(part => part.type.startsWith('tool'))
         .some(part => (part as ToolUIPart).state === 'approval-requested');
@@ -181,6 +181,23 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
     return (
         <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
             <div className="flex flex-col h-full">
+                <div className='flex flex-col'>
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger>
+                                <Ellipsis />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem onClick={() => setMessages([])}>
+                                        <RefreshCcwIcon />
+                                        Restart chat
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
                 <Conversation className="h-full">
                     <ConversationContent>
                         {messages.map((message, messagesIndex) => (
