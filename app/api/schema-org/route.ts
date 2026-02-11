@@ -72,6 +72,7 @@ ${JSON.stringify(layout)}
         }),
         messages: await convertToModelMessages(messages),
         providerOptions,
+        abortSignal: req.signal,
     });
     return result.toUIMessageStreamResponse();
 }

@@ -1,12 +1,12 @@
 'use client';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
+import { DefaultChatTransport, FinishReason, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
 import { runClientTool } from '@/lib/tools/xmc/client';
 
 import AiChat from '@/components/custom/AiChat';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useApiKey } from '@/components/providers/api-key-provider';
 import { executeClientSideTool } from '@/lib/tools/client-side';
 import { Capability } from '@/lib/tools/xmc';
@@ -57,7 +57,7 @@ const ChatBotClientTools = () => {
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
-    const sitecoreContextId = ''; //appContext?.resourceAccess?.[0]?.context?.preview;
+    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
     try {
       let res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
       if (!res) {
@@ -100,6 +100,7 @@ const ChatBotClientTools = () => {
         return {
           model: model.current,
           capabilities: capabilities.current,
+          needsApproval: true,
         }
       }
     }),

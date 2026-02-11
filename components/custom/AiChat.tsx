@@ -87,7 +87,7 @@ import {
     ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
 import { Loader } from '@/components/ai-elements/loader';
-import { ToolUIPart } from 'ai';
+import { FinishReason, ToolUIPart } from 'ai';
 import { Attachment, AttachmentItem, AttachmentPreview, Attachments } from '../ai-elements/attachments';
 import { ApplicationContext } from '@sitecore-marketplace-sdk/client';
 import { useAppContext, useMarketplaceClient } from '../providers/marketplace';
@@ -170,10 +170,14 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
     useEffect(() => {
         onCapabilitiesChange?.(capabilities);
     }, [capabilities]);
-    useEffect(() => {
-        console.log('set model', model);
-    }, []);
+
+
     const { messages, regenerate, status } = chat;
+    const toolApproval = messages[messages.length - 1]?.parts
+        .filter(part => part.type.startsWith('tool'))
+        .some(part => (part as ToolUIPart).state === 'approval-requested');
+    const statusComputed = status === 'ready' && toolApproval ? 'submitted' : status;
+    const submitEnabled = !toolApproval && ((status === 'ready' && input.length > 0) || status === 'streaming' || status === 'submitted');
     return (
         <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
             <div className="flex flex-col h-full">
@@ -304,7 +308,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                             return null;
                                     }
                                 })}
-                                {status === 'ready' && message.role === 'assistant' && messagesIndex === messages.length - 1 && (
+                                {statusComputed === 'ready' && message.role === 'assistant' && messagesIndex === messages.length - 1 && (
                                     <MessageActions>
                                         <MessageAction
                                             onClick={() => regenerate()}
@@ -432,7 +436,12 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                 </ModelSelectorContent>
                             </ModelSelector>
                         </PromptInputTools>
-                        <PromptInputSubmit disabled={!input && !status} status={status} />
+                        <PromptInputSubmit disabled={!submitEnabled} status={statusComputed} onClick={(event) => {
+                            if (status === 'streaming' || status === 'submitted') {
+                                chat.stop();
+                                event.preventDefault();
+                            }
+                        }} />
                     </PromptInputFooter>
                 </PromptInput>
             </div>

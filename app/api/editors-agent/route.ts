@@ -58,12 +58,14 @@ export async function POST(req: Request) {
         capabilities,
         toolExecution = 'frontend',
         contextId,
+        needsApproval,
     }: {
         messages: UIMessage[];
         model: string;
         capabilities: Capability[],
         toolExecution: 'frontend' | 'backend';
         contextId: string | undefined;
+        needsApproval: boolean;
     } = await req.json();
 
     const apiKey = req.headers.get("x-vercel-api-key");
@@ -82,7 +84,7 @@ export async function POST(req: Request) {
     const { model, providerOptions } = retrieveModel(modelName, apiKey);
 
     const config = {
-        needsApproval: false,
+        needsApproval,
     };
 
     const agent = new ToolLoopAgent({
@@ -96,6 +98,7 @@ export async function POST(req: Request) {
     const stream = await agent.stream({
         messages: await convertToModelMessages(messages),
         experimental_transform: smoothStream(),
+        abortSignal: req.signal,
     });
     return stream.toUIMessageStreamResponse({
         sendSources: true,
