@@ -8,7 +8,7 @@ import { runClientTool } from '@/lib/tools/xmc/client';
 import AiChat from '@/components/custom/AiChat';
 import { useRef } from 'react';
 import { useApiKey } from '@/components/providers/api-key-provider';
-import { executeClientTool } from '@/lib/tools/client-side';
+import { executeClientSideTool } from '@/lib/tools/client-side';
 import { Capability } from '@/lib/tools/xmc';
 
 type ToolExecution = 'frontend' | 'backend';
@@ -21,7 +21,7 @@ const ChatBotServerTools = () => {
   const apiKey = useApiKey('vercel');
   const chat = useChat({
     transport: new DefaultChatTransport({
-      api: '/api/agents',
+      api: '/api/editors-agent',
       body: () => {
         return {
           model: model.current,
@@ -40,7 +40,12 @@ const ChatBotServerTools = () => {
   });
   const { getAccessTokenSilently } = useAuth();
   return (
-    <AiChat chat={chat} onSetModel={val => model.current = val} />
+    <AiChat
+      chat={chat}
+      onSetModel={val => model.current = val}
+      selectedCapabilities={['page_layout']}
+      availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization']}
+    />
   );
 }
 
@@ -52,19 +57,29 @@ const ChatBotClientTools = () => {
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
-    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
-    let res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
-    if (!res) {
-      res = await executeClientTool(client, toolName, toolPart.input);
+    const sitecoreContextId = ''; //appContext?.resourceAccess?.[0]?.context?.preview;
+    try {
+      let res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
+      if (!res) {
+        res = await executeClientSideTool(client, toolName, toolPart.input);
+      }
+      if (!res) {
+        return;
+      }
+      chat.addToolOutput({
+        tool: toolName,
+        toolCallId: toolPart.toolCallId,
+        output: res,
+      });
+    } catch (e) {
+      console.error('Error executing tool', toolName, e);
+      chat.addToolOutput({
+        state: "output-error",
+        tool: toolName,
+        toolCallId: toolPart.toolCallId,
+        errorText: e?.toString()!,
+      });
     }
-    if (!res) {
-      return;
-    }
-    chat.addToolOutput({
-      tool: toolName,
-      toolCallId: toolPart.toolCallId,
-      output: res,
-    });
   }
 
   const toolRejected = async (toolPart: ToolUIPart) => {
@@ -77,7 +92,7 @@ const ChatBotClientTools = () => {
 
   const chat = useChat({
     transport: new DefaultChatTransport({
-      api: '/api/agents-client',
+      api: '/api/editors-agent',
       headers: {
         'x-vercel-api-key': apiKey!,
       },
@@ -115,13 +130,17 @@ const ChatBotClientTools = () => {
   });
   const appContext = useAppContext();
   return (
-    <AiChat chat={chat} onSetModel={val => model.current = val}
+    <AiChat
+      chat={chat}
+      onSetModel={val => model.current = val}
       onCapabilitiesChange={val => capabilities.current = val}
       onToolApproved={async (tool) => {
         await executeTool(tool);
       }} onToolRejected={async (tool) => {
         await toolRejected(tool);
       }}
+      selectedCapabilities={['sites']}
+      availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization']}
     />
   );
 }

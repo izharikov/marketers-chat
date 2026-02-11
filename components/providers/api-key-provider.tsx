@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ApiKeyModal } from "@/components/custom/api-key-modal";
 import { useAppContext, useMarketplaceClient } from "@/components/providers/marketplace";
-import { getApiKey, saveApiKey } from "@/lib/storage/api-key-storage";
+import { getApiKey, saveApiKey } from "@/lib/sitecore/storage/api-key-storage";
 
 /**
  * Supported API key names

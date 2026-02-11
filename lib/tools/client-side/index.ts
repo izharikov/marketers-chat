@@ -18,7 +18,11 @@ const tools = {
         inputSchema: z.object({}),
         execute: async (client: ClientSDK) => {
             const response = await client.query('pages.context');
-            return response.data?.pageInfo;
+            if (response.isError || !response.data) {
+                throw response.error;
+            }
+
+            return response.data.pageInfo;
         },
     }),
     get_current_site_context: define({
@@ -26,7 +30,10 @@ const tools = {
         inputSchema: z.object({}),
         execute: async (client: ClientSDK) => {
             const response = await client.query('site.context');
-            return response.data?.siteInfo;
+            if (response.isError || !response.data) {
+                throw response.error;
+            }
+            return response.data.siteInfo;
         },
     }),
     reload_current_page: define({
@@ -51,13 +58,13 @@ const tools = {
     }),
 }
 
-export const vercelAiToolsDefinition = {
+export const clientSideTools = {
     get_current_page_context: tool({ ...tools.get_current_page_context, execute: undefined }),
     reload_current_page: tool({ ...tools.reload_current_page, execute: undefined }),
     navigate_to_another_page: tool({ ...tools.navigate_to_another_page, execute: undefined }),
 }
 
-export async function executeClientTool(client: ClientSDK, tool: string, input: any) {
+export async function executeClientSideTool(client: ClientSDK, tool: string, input: any) {
     const toolFunction = tools[tool as keyof typeof tools] as ToolConfig<any>;
     if (!toolFunction) {
         throw new Error('Tool not found');

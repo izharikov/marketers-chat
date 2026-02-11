@@ -1,8 +1,7 @@
-import { devToolsMiddleware } from "@ai-sdk/devtools";
-import { convertToModelMessages, gateway, jsonSchema, JSONSchema7, Output, streamText, wrapLanguageModel } from "ai";
+import { convertToModelMessages, jsonSchema, JSONSchema7, Output, streamText } from "ai";
 import z from "zod/v4";
-import { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { ArticleSchema, ProductSchema, LocalBusinessSchema, BreadcrumbListSchema, PersonSchema, RecipeSchema, VideoObjectSchema, ReviewSchema, CourseSchema, JobPostingSchema, WebsiteSchema, FAQPageSchema, EventSchema } from "./schema-definitions";
+import { retrieveModel } from "@/lib/ai/registry";
 
 export const maxDuration = 30;
 
@@ -20,11 +19,14 @@ export async function POST(req: Request) {
         currentPage,
         layout,
     } = await req.json();
-    const model = process.env.NODE_ENV === 'development' ? wrapLanguageModel({
-        model: gateway('openai/gpt-5-nano'),
-        middleware: [devToolsMiddleware()],
-    }) : 'openai/gpt-5-nano';
-
+    const apiKey = req.headers.get("x-vercel-api-key");
+    if (!apiKey) {
+        return Response.json(
+            { error: "API key is required" },
+            { status: 401 }
+        );
+    }
+    const { model, providerOptions } = retrieveModel('openai/gpt-5-nano', apiKey);
     const zodSchema = z.object({
         article: schemaItem(ArticleSchema),
         faqPage: schemaItem(FAQPageSchema),
@@ -69,14 +71,7 @@ ${JSON.stringify(layout)}
             schema,
         }),
         messages: await convertToModelMessages(messages),
-        providerOptions: {
-            openai: {
-                reasoningEffort: 'low',
-                // reasoningEffort: 'minimal',
-                // strictJsonSchema: true,
-                include: ['reasoning.encrypted_content'],
-            } satisfies OpenAIResponsesProviderOptions
-        }
+        providerOptions,
     });
     return result.toUIMessageStreamResponse();
 }

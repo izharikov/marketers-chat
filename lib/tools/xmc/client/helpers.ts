@@ -12,11 +12,14 @@ export function clientTool<TInput>(config: ToolConfig<TInput>) {
 
 export async function clientQuery<K extends QueryKey>(client: ClientSDK, query: K, params: QueryOptions<K>) {
     try {
-        console.log('query', query, params);
         const res = await client.query(query, params);
         if (res.isSuccess) {
             if (typeof res.data === 'string') {
                 return res.data;
+            }
+
+            if (res.data && 'error' in res.data) {
+                throw JSON.stringify(res.data.error);
             }
 
             return {
@@ -26,22 +29,20 @@ export async function clientQuery<K extends QueryKey>(client: ClientSDK, query: 
             }
         }
 
-        console.log('error', res.error, res.data);
-        return {
-            error: res.error,
-            data: res.data,
-        }
+        throw res.error;
     } catch (error) {
-        console.log('Error fetching data', error);
-        return 'Error occurred while fetching data';
+        throw error;
     }
 }
 
 export async function clientMutate<K extends MutationKey>(client: ClientSDK, mutation: K, params: MutationOptions<K>) {
     try {
         const res = await client.mutate(mutation, params);
-        if (typeof res === 'string') {
+        if (typeof res !== 'object') {
             return res;
+        }
+        if ('error' in res) {
+            throw res.error;
         }
 
         return {
@@ -49,9 +50,10 @@ export async function clientMutate<K extends MutationKey>(client: ClientSDK, mut
             request: null,
             response: null,
         }
+
     } catch (error) {
         console.log('Error mutating data', error);
-        return 'Error occurred while mutating data';
+        throw error;
     }
 }
 

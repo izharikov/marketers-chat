@@ -863,6 +863,7 @@ export const PromptInputTextarea = ({
   };
 
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
+    console.log('handle paste');
     const items = event.clipboardData?.items;
     if (!items) {
       return;
@@ -875,6 +876,17 @@ export const PromptInputTextarea = ({
         const file = item.getAsFile();
         if (file) {
           files.push(file);
+        }
+      } else if (item.kind === "string") {
+        if (item.type.match("^text/plain")) {
+          event.preventDefault();
+          item.getAsString((text) => {
+            const textarea = event.target as HTMLTextAreaElement;
+            const trimmedText = text.trim();
+            const start = textarea.selectionStart;
+            textarea.value = textarea.value.substring(0, start) + trimmedText + textarea.value.substring(textarea.selectionEnd);
+            textarea.selectionStart = textarea.selectionEnd = start + trimmedText.length;
+          });
         }
       }
     }

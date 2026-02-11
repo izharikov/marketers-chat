@@ -327,3 +327,15 @@ export const componentsToolsConfig = {
     }
 }
 
+export type ToolName = keyof typeof assetToolsConfig |
+    keyof typeof pagesToolsConfig |
+    keyof typeof personalizationToolsConfig |
+    keyof typeof sitesToolsConfig |
+    keyof typeof environmentToolsConfig |
+    keyof typeof jobToolsConfig |
+    keyof typeof componentsToolsConfig |
+    keyof typeof contentToolsConfig |
+    'get_current_page_context' |
+    'reload_current_page' |
+    'navigate_to_another_page'
+    ;
