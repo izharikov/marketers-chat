@@ -6,18 +6,24 @@ import { useAppContext, useMarketplaceClient } from '@/components/providers/mark
 import { runClientTool } from '@/lib/tools/xmc/client';
 
 import AiChat from '@/components/custom/AiChat';
-import { useRef, useState } from 'react';
-import { useApiKey } from '@/components/providers/app-settings-provider';
+import { useEffect, useRef, useState } from 'react';
+import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
 import { executeClientSideTool } from '@/lib/tools/client-side';
 import { Capability } from '@/lib/tools/xmc';
 import { toast } from 'sonner';
 
 type ToolExecution = 'frontend' | 'backend';
 
-const toolExecution: ToolExecution = 'frontend';
+const toolExecution: ToolExecution = 'backend';
 
 const ChatBotServerTools = () => {
+  const { localSettings } = useAppSettings();
   const model = useRef<string | undefined>(undefined);
+  const capabilities = useRef<Capability[]>([]);
+  const needsApproval = useRef<boolean>(localSettings.needsToolApproval);
+  useEffect(() => {
+    needsApproval.current = localSettings.needsToolApproval;
+  }, [localSettings]);
   const appContext = useAppContext();
   const apiKey = useApiKey('vercel');
   const chat = useChat({
@@ -26,7 +32,10 @@ const ChatBotServerTools = () => {
       body: () => {
         return {
           model: model.current,
+          toolExecution,
           contextId: appContext?.resourceAccess?.[0]?.context?.preview,
+          capabilities: capabilities.current,
+          needsApproval: needsApproval.current,
         }
       },
       headers: async () => {
@@ -37,23 +46,56 @@ const ChatBotServerTools = () => {
         }
       },
     }),
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+    sendAutomaticallyWhen: (opts) => {
+      return lastAssistantMessageIsCompleteWithApprovalResponses(opts) || lastAssistantMessageIsCompleteWithToolCalls(opts);
+    },
+    onToolCall: async ({ toolCall }) => {
+      const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview!;
+      const { toolName, toolCallId, input } = toolCall;
+      try {
+        const res = await executeClientSideTool({ client, sitecoreContextId }, toolName, input, true);
+        if (!res) {
+          return;
+        }
+        chat.addToolOutput({
+          tool: toolName,
+          toolCallId,
+          output: res,
+        });
+      } catch (e) {
+        console.error('Error executing tool', toolName, e);
+        chat.addToolOutput({
+          state: "output-error",
+          tool: toolName,
+          toolCallId,
+          errorText: e?.toString()!,
+        });
+      }
+    }
   });
   const { getAccessTokenSilently } = useAuth();
+  const client = useMarketplaceClient();
+
   return (
     <AiChat
       chat={chat}
       onSetModel={val => model.current = val}
       selectedCapabilities={['page_layout']}
       availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization']}
+      onCapabilitiesChange={val => capabilities.current = val}
     />
   );
 }
 
 const ChatBotClientTools = () => {
   const client = useMarketplaceClient();
+  const { localSettings } = useAppSettings();
   const model = useRef<string | undefined>(undefined);
   const capabilities = useRef<Capability[]>([]);
+  const needsApproval = useRef<boolean>(localSettings.needsToolApproval);
+  useEffect(() => {
+    needsApproval.current = localSettings.needsToolApproval;
+  }, [localSettings]);
   const apiKey = useApiKey('vercel');
 
   const executeTool = async (toolPart: ToolUIPart) => {
@@ -101,7 +143,7 @@ const ChatBotClientTools = () => {
         return {
           model: model.current,
           capabilities: capabilities.current,
-          needsApproval: false,
+          needsApproval: needsApproval.current,
         }
       }
     }),

@@ -7,28 +7,23 @@ import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
 import { retrieveModel } from '@/lib/ai/registry';
 import { writeText } from '@/lib/ai/helpers';
 
-function frontendToolsFactory(config: clientTools.ToolDefinitionConfig) {
-    return {
-        ...clientTools.assetTools(config),
-        ...clientTools.componentsTools(config),
-        ...clientTools.contentTools(config),
-        ...clientTools.environmentTools(config),
-        ...clientTools.pagesTools(config),
-        ...clientTools.personalizationTools(config),
-        ...clientTools.sitesTools(config),
-        ...clientTools.jobTools(config),
-        ...clientSideTools,
-    }
-};
-
-type ToolName = keyof ReturnType<typeof frontendToolsFactory>;
 type ToolExecution = 'frontend' | 'backend';
 
 async function createTools(toolExecution: ToolExecution, config: clientTools.ToolDefinitionConfig,
     accessToken: string | undefined, contextId: string | undefined) {
     switch (toolExecution) {
         case 'frontend':
-            return frontendToolsFactory(config);
+            return {
+                ...clientTools.assetTools(config),
+                ...clientTools.componentsTools(config),
+                ...clientTools.contentTools(config),
+                ...clientTools.environmentTools(config),
+                ...clientTools.pagesTools(config),
+                ...clientTools.personalizationTools(config),
+                ...clientTools.sitesTools(config),
+                ...clientTools.jobTools(config),
+                ...clientSideTools,
+            };
         case 'backend':
             const xmcClient = await experimental_createXMCClient({
                 getAccessToken: async () => {
@@ -36,14 +31,14 @@ async function createTools(toolExecution: ToolExecution, config: clientTools.Too
                 },
             });
             return {
-                ...serverTools.assetTools(xmcClient, contextId!),
-                ...serverTools.componentsTools(xmcClient, contextId!),
-                ...serverTools.contentTools(xmcClient, contextId!),
-                ...serverTools.environmentTools(xmcClient, contextId!),
-                ...serverTools.pagesTools(xmcClient, contextId!),
-                ...serverTools.personalizationTools(xmcClient, contextId!),
+                ...serverTools.assetTools(xmcClient, contextId!, config),
+                ...serverTools.componentsTools(xmcClient, contextId!, config),
+                ...serverTools.contentTools(xmcClient, contextId!, config),
+                ...serverTools.environmentTools(xmcClient, contextId!, config),
+                ...serverTools.pagesTools(xmcClient, contextId!, config),
+                ...serverTools.personalizationTools(xmcClient, contextId!, config),
                 ...serverTools.sitesTools(xmcClient, contextId!, config),
-                ...serverTools.jobTools(xmcClient, contextId!),
+                ...serverTools.jobTools(xmcClient, contextId!, config),
                 ...clientSideTools
             }
     }
@@ -90,33 +85,31 @@ export async function POST(req: Request) {
             execute: async ({ writer }) => {
                 const toolCallId = `revert-${jobId}`;
                 const toolName = 'revert_operation';
-                if (toolExecution === 'frontend') {
+                writer.write({
+                    type: 'start-step',
+                });
+                const toolPart = messages[messages.length - 1].parts.find(part => part.type === `tool-${toolName}`) as ToolUIPart;
+                const state = toolPart?.state;
+                if (state === 'output-available' || state === 'output-error') {
+                    writeText(writer, `text-${jobId}`, state === 'output-available' ? 'Reverted job' : 'Error reverting job');
                     writer.write({
-                        type: 'start-step',
+                        type: 'finish',
+                        finishReason: 'stop',
                     });
-                    const toolPart = messages[messages.length - 1].parts.find(part => part.type === `tool-${toolName}`) as ToolUIPart;
-                    const state = toolPart?.state;
-                    if (state === 'output-available' || state === 'output-error') {
-                        writeText(writer, `text-${jobId}`, state === 'output-available' ? 'Reverted job' : 'Error reverting job');
-                        writer.write({
-                            type: 'finish',
-                            finishReason: 'stop',
-                        });
-                        return;
-                    } else if (!state) {
-                        writer.write({
-                            type: 'tool-input-available',
-                            toolCallId,
-                            toolName,
-                            input: {
-                                jobId,
-                            },
-                        });
-                        writer.write({
-                            type: 'finish',
-                            finishReason: 'tool-calls',
-                        });
-                    }
+                    return;
+                } else if (!state) {
+                    writer.write({
+                        type: 'tool-input-available',
+                        toolCallId,
+                        toolName,
+                        input: {
+                            jobId,
+                        },
+                    });
+                    writer.write({
+                        type: 'finish',
+                        finishReason: 'tool-calls',
+                    });
                 }
             },
             originalMessages: messages,

@@ -32,7 +32,7 @@ export default function RootLayout({
       >
         <MarketplaceProvider>
           <AuthProvider>
-            <AppSettingsProvider name="vercel" description="Vercel (AI Gateway)">
+            <AppSettingsProvider requestedKeys={["vercel"]}>
               {children}
             </AppSettingsProvider>
           </AuthProvider>

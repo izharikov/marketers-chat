@@ -10,7 +10,6 @@ import {
     componentsToolsConfig
 } from "../definitions";
 import { clientQuery, clientMutate, clientTool, mutateWithJobId } from "./helpers";
-import { v4 as uuid } from 'uuid';
 
 const sitesTools = {
     get_sites_list: clientTool({
@@ -105,7 +104,7 @@ const assetTools = {
                     body: { fields, language, name, altText },
                     headers: {
                         'x-sc-job-id': jobId,
-                    }
+                    },
                 }
             }));
         },
@@ -115,15 +114,18 @@ const assetTools = {
         execute: async (client, sitecoreContextId, { fileUrl, name, itemPath, language, extension, siteName }) => {
             const arrayBuffer = await fetch(fileUrl).then(res => res.arrayBuffer());
             const file = new Blob([arrayBuffer]);
-            return await clientMutate(client, 'xmc.agent.assetsUploadAsset', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.assetsUploadAsset', {
                 params: {
                     query: { sitecoreContextId },
                     body: {
                         file,
                         upload_request: JSON.stringify({ name, itemPath, language, extension, siteName })
-                    }
+                    },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                 }
-            });
+            }));
         },
     }),
 }
@@ -145,13 +147,16 @@ const personalizationTools = {
     create_personalization_version: clientTool({
         ...personalizationToolsConfig.create_personalization_version,
         execute: async (client, sitecoreContextId, { pageId, name, variant_name, audience_name, condition_template_id, condition_params, language }) => {
-            return await clientMutate(client, 'xmc.agent.personalizationCreatePersonalizationVersion', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.personalizationCreatePersonalizationVersion', {
                 params: {
                     path: { pageId },
                     query: { sitecoreContextId },
                     body: { name, variant_name, audience_name, condition_template_id, condition_params, language },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                 }
-            });
+            }));
         },
     }),
     get_personalization_versions_by_page: clientTool({
@@ -239,12 +244,15 @@ const pagesTools = {
     create_page: clientTool({
         ...pagesToolsConfig.create_page,
         execute: async (client, sitecoreContextId, { templateId, name, parentId, language, fields }) => {
-            return await clientMutate(client, 'xmc.agent.pagesCreatePage', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.pagesCreatePage', {
                 params: {
                     query: { sitecoreContextId },
                     body: { templateId, name, parentId, language, fields },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    },
                 }
-            });
+            }));
         },
     }),
     get_page_template_by_id: clientTool({
@@ -298,25 +306,31 @@ const pagesTools = {
     set_component_datasource: clientTool({
         ...pagesToolsConfig.set_component_datasource,
         execute: async (client, sitecoreContextId, { pageId, componentId, datasourceId, language }) => {
-            return await clientMutate(client, 'xmc.agent.pagesSetComponentDatasource', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.pagesSetComponentDatasource', {
                 params: {
                     path: { pageId, componentId },
                     query: { sitecoreContextId },
                     body: { datasourceId, language },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
                 }
-            });
+            }));
         },
     }),
     add_language_to_page: clientTool({
         ...pagesToolsConfig.add_language_to_page,
         execute: async (client, sitecoreContextId, { pageId, language }) => {
-            return await clientMutate(client, 'xmc.agent.pagesAddLanguageToPage', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.pagesAddLanguageToPage', {
                 params: {
                     path: { pageId },
                     query: { sitecoreContextId },
                     body: { language },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
                 }
-            });
+            }));
         },
     }),
     search_site: clientTool({
@@ -378,23 +392,29 @@ export const contentTools = {
     create_content_item: clientTool({
         ...contentToolsConfig.create_content_item,
         execute: async (client, sitecoreContextId, { templateId, name, parentId, language, fields }) => {
-            return await clientMutate(client, 'xmc.agent.contentCreateContentItem', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.contentCreateContentItem', {
                 params: {
                     query: { sitecoreContextId },
                     body: { templateId, name, parentId, language, fields },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
                 }
-            });
+            }));
         },
     }),
     delete_content: clientTool({
         ...contentToolsConfig.delete_content,
         execute: async (client, sitecoreContextId, { itemId, language }) => {
-            return await clientMutate(client, 'xmc.agent.contentDeleteContent', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.contentDeleteContent', {
                 params: {
                     path: { itemId },
                     query: { language, sitecoreContextId },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
                 }
-            });
+            }));
         },
     }),
     get_content_item_by_id: clientTool({
@@ -411,13 +431,16 @@ export const contentTools = {
     update_content: clientTool({
         ...contentToolsConfig.update_content,
         execute: async (client, sitecoreContextId, { itemId, fields, language, createNewVersion, siteName }) => {
-            return await clientMutate(client, 'xmc.agent.contentUpdateContent', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.contentUpdateContent', {
                 params: {
                     path: { itemId },
                     query: { sitecoreContextId },
                     body: { fields, language, createNewVersion, siteName },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
                 }
-            });
+            }));
         },
     }),
     get_content_item_by_path: clientTool({
@@ -447,13 +470,16 @@ const clientComponentsTools = {
     create_component_datasource: clientTool({
         ...componentsToolsConfig.create_component_datasource,
         execute: async (client, sitecoreContextId, { componentId, siteName, dataFields, children, language }) => {
-            return await clientMutate(client, 'xmc.agent.componentsCreateComponentDatasource', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.componentsCreateComponentDatasource', {
                 params: {
                     path: { componentId },
                     query: { sitecoreContextId },
                     body: { siteName, dataFields, children, language },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
                 }
-            });
+            }));
         },
     }),
     search_component_datasources: clientTool({

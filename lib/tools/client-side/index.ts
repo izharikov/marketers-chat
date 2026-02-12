@@ -97,9 +97,12 @@ export const clientSideTools = {
     navigate_to_another_page: tool({ ...tools.navigate_to_another_page, execute: undefined }),
 };
 
-export async function executeClientSideTool({ client, sitecoreContextId }: { client: ClientSDK, sitecoreContextId: string }, tool: string, input: any) {
+export async function executeClientSideTool({ client, sitecoreContextId }: { client: ClientSDK, sitecoreContextId: string }, tool: string, input: any, ignoreNotFound: boolean = false) {
     const toolFunction = tools[tool as keyof typeof tools] as ToolConfig<any>;
     if (!toolFunction) {
+        if (ignoreNotFound) {
+            return;
+        }
         throw new Error('Tool not found');
     }
     return toolFunction.execute({ client, sitecoreContextId }, toolFunction.inputSchema.parse(input));

@@ -16,9 +16,20 @@ function wrapTool(commonConfig: ToolConfig) {
     };
 }
 
-async function wrapAgentCall<TResult extends { data: any }>(call: (jobId: string) => Promise<TResult>) {
+async function wrapAgentCall<TResult extends { data: any }>(call: () => Promise<TResult>) {
+    const response = await call();
+    if ('error' in response) {
+        throw response.error;
+    }
+    return { ...response.data };
+};
+
+async function callWithJobId<TResult extends { data: any }>(call: (jobId: string) => Promise<TResult>) {
     const jobId = uuidv4();
     const response = await call(jobId);
+    if ('error' in response) {
+        throw response.error;
+    }
     return { ...response.data, jobId };
 };
 
@@ -28,12 +39,9 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string, 
         get_asset_information: wrapped({
             ...assetToolsConfig.get_asset_information,
             execute: async ({ assetId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.assetsGetAssetInformation({
+                return await wrapAgentCall(async () => client.agent.assetsGetAssetInformation({
                     query: {
                         sitecoreContextId,
-                    },
-                    headers: {
-                        'x-sc-job-id': jobId,
                     },
                     path: {
                         assetId,
@@ -44,10 +52,7 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string, 
         search_assets: wrapped({
             ...assetToolsConfig.search_assets,
             execute: async ({ query, language, type }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.assetsSearchAssets({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.assetsSearchAssets({
                     query: {
                         sitecoreContextId,
                         query,
@@ -60,7 +65,7 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string, 
         update_asset: wrapped({
             ...assetToolsConfig.update_asset,
             execute: async ({ assetId, fields, language, name, altText }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.assetsUpdateAsset({
+                return await callWithJobId(async (jobId) => client.agent.assetsUpdateAsset({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -84,7 +89,7 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string, 
             execute: async ({ fileUrl, name, itemPath, language, extension, siteName }) => {
                 const arrayBuffer = await fetch(fileUrl).then(res => res.arrayBuffer());
                 const file = new Blob([arrayBuffer]);
-                return await wrapAgentCall(async (jobId) => client.agent.assetsUploadAsset({
+                return await callWithJobId(async (jobId) => client.agent.assetsUploadAsset({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -101,15 +106,13 @@ export function assetTools(client: experimental_XMC, sitecoreContextId: string, 
     }
 }
 
-export function environmentTools(client: experimental_XMC, sitecoreContextId: string) {
+export function environmentTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        list_languages: tool({
+        list_languages: wrapped({
             ...environmentToolsConfig.list_languages,
             execute: async () => {
-                return await wrapAgentCall(async (jobId) => client.agent.environmentsListLanguages({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.environmentsListLanguages({
                     query: {
                         sitecoreContextId,
                     },
@@ -119,12 +122,13 @@ export function environmentTools(client: experimental_XMC, sitecoreContextId: st
     }
 }
 
-export function personalizationTools(client: experimental_XMC, sitecoreContextId: string) {
+export function personalizationTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        create_personalization_version: tool({
+        create_personalization_version: wrapped({
             ...personalizationToolsConfig.create_personalization_version,
             execute: async ({ pageId, name, variant_name, audience_name, condition_template_id, condition_params, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.personalizationCreatePersonalizationVersion({
+                return await callWithJobId(async (jobId) => client.agent.personalizationCreatePersonalizationVersion({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -145,13 +149,10 @@ export function personalizationTools(client: experimental_XMC, sitecoreContextId
                 }));
             }
         }),
-        get_personalization_versions_by_page: tool({
+        get_personalization_versions_by_page: wrapped({
             ...personalizationToolsConfig.get_personalization_versions_by_page,
             execute: async ({ pageId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.personalizationGetPersonalizationVersionsByPage({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.personalizationGetPersonalizationVersionsByPage({
                     path: {
                         pageId,
                     },
@@ -161,26 +162,20 @@ export function personalizationTools(client: experimental_XMC, sitecoreContextId
                 }));
             }
         }),
-        get_condition_templates: tool({
+        get_condition_templates: wrapped({
             ...personalizationToolsConfig.get_condition_templates,
             execute: async () => {
-                return await wrapAgentCall(async (jobId) => client.agent.personalizationGetConditionTemplates({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.personalizationGetConditionTemplates({
                     query: {
                         sitecoreContextId,
                     },
                 }));
             }
         }),
-        get_condition_template_by_id: tool({
+        get_condition_template_by_id: wrapped({
             ...personalizationToolsConfig.get_condition_template_by_id,
             execute: async ({ templateId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.personalizationGetConditionTemplateById({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.personalizationGetConditionTemplateById({
                     path: {
                         template_id: templateId,
                     },
@@ -193,15 +188,13 @@ export function personalizationTools(client: experimental_XMC, sitecoreContextId
     }
 }
 
-export function jobTools(client: experimental_XMC, sitecoreContextId: string) {
+export function jobTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        revert_job: tool({
+        revert_job: wrapped({
             ...jobToolsConfig.revert_job,
             execute: async ({ jobId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.jobsRevertJob({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.jobsRevertJob({
                     path: {
                         jobId,
                     },
@@ -211,13 +204,10 @@ export function jobTools(client: experimental_XMC, sitecoreContextId: string) {
                 }));
             }
         }),
-        get_job: tool({
+        get_job: wrapped({
             ...jobToolsConfig.get_job,
             execute: async ({ jobId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.jobsGetJob({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.jobsGetJob({
                     path: {
                         jobId,
                     },
@@ -227,13 +217,10 @@ export function jobTools(client: experimental_XMC, sitecoreContextId: string) {
                 }));
             }
         }),
-        list_operations: tool({
+        list_operations: wrapped({
             ...jobToolsConfig.list_operations,
             execute: async ({ jobId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.jobsListOperations({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.jobsListOperations({
                     path: {
                         jobId,
                     },
@@ -246,15 +233,13 @@ export function jobTools(client: experimental_XMC, sitecoreContextId: string) {
     }
 }
 
-export function pagesTools(client: experimental_XMC, sitecoreContextId: string) {
+export function pagesTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        get_page: tool({
+        get_page: wrapped({
             ...pagesToolsConfig.get_page,
             execute: async ({ pageId, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPage({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesGetPage({
                     path: {
                         pageId,
                     },
@@ -265,10 +250,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        create_page: tool({
+        create_page: wrapped({
             ...pagesToolsConfig.create_page,
             execute: async ({ templateId, name, parentId, language, fields }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesCreatePage({
+                return await callWithJobId(async (jobId) => client.agent.pagesCreatePage({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -285,13 +270,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_page_template_by_id: tool({
+        get_page_template_by_id: wrapped({
             ...pagesToolsConfig.get_page_template_by_id,
             execute: async ({ templateId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPageTemplateById({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesGetPageTemplateById({
                     query: {
                         templateId,
                         sitecoreContextId,
@@ -299,16 +281,14 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_allowed_components_by_placeholder: tool({
+        get_allowed_components_by_placeholder: wrapped({
             ...pagesToolsConfig.get_allowed_components_by_placeholder,
             execute: async ({ pageId, placeholderName, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetAllowedComponentsByPlaceholder({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                const fixedPlaceholder = placeholderName.split('/').findLast((p) => p !== '');
+                return await wrapAgentCall(async () => client.agent.pagesGetAllowedComponentsByPlaceholder({
                     path: {
                         pageId,
-                        placeholderName,
+                        placeholderName: fixedPlaceholder!,
                     },
                     query: {
                         language,
@@ -317,13 +297,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_components_on_page: tool({
+        get_components_on_page: wrapped({
             ...pagesToolsConfig.get_components_on_page,
             execute: async ({ pageId, language, version }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetComponentsOnPage({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesGetComponentsOnPage({
                     path: {
                         pageId,
                     },
@@ -335,10 +312,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        add_component_on_page: tool({
+        add_component_on_page: wrapped({
             ...pagesToolsConfig.add_component_on_page,
             execute: async ({ pageId, componentId, placeholderPath, componentItemName, language, fields }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesAddComponentOnPage({
+                return await callWithJobId(async (jobId) => client.agent.pagesAddComponentOnPage({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -358,10 +335,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        set_component_datasource: tool({
+        set_component_datasource: wrapped({
             ...pagesToolsConfig.set_component_datasource,
             execute: async ({ pageId, componentId, datasourceId, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesSetComponentDatasource({
+                return await callWithJobId(async (jobId) => client.agent.pagesSetComponentDatasource({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -379,10 +356,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        add_language_to_page: tool({
+        add_language_to_page: wrapped({
             ...pagesToolsConfig.add_language_to_page,
             execute: async ({ pageId, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesAddLanguageToPage({
+                return await callWithJobId(async (jobId) => client.agent.pagesAddLanguageToPage({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -398,13 +375,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        search_site: tool({
+        search_site: wrapped({
             ...pagesToolsConfig.search_site,
             execute: async ({ search_query, site_name, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesSearchSite({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesSearchSite({
                     query: {
                         search_query,
                         site_name,
@@ -414,13 +388,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_page_path_by_live_url: tool({
+        get_page_path_by_live_url: wrapped({
             ...pagesToolsConfig.get_page_path_by_live_url,
             execute: async ({ live_url }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPagePathByLiveUrl({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesGetPagePathByLiveUrl({
                     query: {
                         live_url,
                         sitecoreContextId,
@@ -428,13 +399,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_page_screenshot: tool({
+        get_page_screenshot: wrapped({
             ...pagesToolsConfig.get_page_screenshot,
             execute: async ({ pageId, version, language, width, height }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPageScreenshot({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesGetPageScreenshot({
                     path: {
                         pageId,
                     },
@@ -448,13 +416,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_page_html: tool({
+        get_page_html: wrapped({
             ...pagesToolsConfig.get_page_html,
             execute: async ({ pageId, language, version }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPageHtml({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesGetPageHtml({
                     path: {
                         pageId,
                     },
@@ -466,13 +431,10 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                 }));
             }
         }),
-        get_page_preview_url: tool({
+        get_page_preview_url: wrapped({
             ...pagesToolsConfig.get_page_preview_url,
             execute: async ({ pageId, language, version }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.pagesGetPagePreviewUrl({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.pagesGetPagePreviewUrl({
                     path: {
                         pageId,
                     },
@@ -493,10 +455,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string, 
         get_sites_list: wrapped({
             ...sitesToolsConfig.get_sites_list,
             execute: async () => {
-                return await wrapAgentCall(async (jobId) => client.agent.sitesGetSitesList({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.sitesGetSitesList({
                     query: {
                         sitecoreContextId,
                     }
@@ -506,10 +465,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string, 
         get_site_details: wrapped({
             ...sitesToolsConfig.get_site_details,
             execute: async ({ siteId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.sitesGetSiteDetails({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.sitesGetSiteDetails({
                     path: {
                         siteId,
                     },
@@ -522,10 +478,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string, 
         get_all_pages_by_site: wrapped({
             ...sitesToolsConfig.get_all_pages_by_site,
             execute: async ({ siteName, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.sitesGetAllPagesBySite({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.sitesGetAllPagesBySite({
                     path: {
                         siteName,
                     },
@@ -539,10 +492,7 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string, 
         get_site_id_from_item: wrapped({
             ...sitesToolsConfig.get_site_id_from_item,
             execute: async ({ itemId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.sitesGetSiteIdFromItem({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.sitesGetSiteIdFromItem({
                     path: {
                         itemId,
                     },
@@ -555,12 +505,13 @@ export function sitesTools(client: experimental_XMC, sitecoreContextId: string, 
     }
 }
 
-export function contentTools(client: experimental_XMC, sitecoreContextId: string) {
+export function contentTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        create_content_item: tool({
+        create_content_item: wrapped({
             ...contentToolsConfig.create_content_item,
             execute: async ({ templateId, name, parentId, language, fields }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.contentCreateContentItem({
+                return await callWithJobId(async (jobId) => client.agent.contentCreateContentItem({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -577,10 +528,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 }));
             }
         }),
-        delete_content: tool({
+        delete_content: wrapped({
             ...contentToolsConfig.delete_content,
             execute: async ({ itemId, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.contentDeleteContent({
+                return await callWithJobId(async (jobId) => client.agent.contentDeleteContent({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -594,13 +545,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 }));
             }
         }),
-        get_content_item_by_id: tool({
+        get_content_item_by_id: wrapped({
             ...contentToolsConfig.get_content_item_by_id,
             execute: async ({ itemId, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.contentGetContentItemById({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.contentGetContentItemById({
                     path: {
                         itemId,
                     },
@@ -611,10 +559,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 }));
             }
         }),
-        update_content: tool({
+        update_content: wrapped({
             ...contentToolsConfig.update_content,
             execute: async ({ itemId, fields, language, createNewVersion, siteName }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.contentUpdateContent({
+                return await callWithJobId(async (jobId) => client.agent.contentUpdateContent({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -633,13 +581,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 }));
             }
         }),
-        get_content_item_by_path: tool({
+        get_content_item_by_path: wrapped({
             ...contentToolsConfig.get_content_item_by_path,
             execute: async ({ item_path, failOnNotFound, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.contentGetContentItemByPath({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.contentGetContentItemByPath({
                     query: {
                         item_path,
                         failOnNotFound,
@@ -649,13 +594,10 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
                 }));
             }
         }),
-        list_available_insert_options: tool({
+        list_available_insert_options: wrapped({
             ...contentToolsConfig.list_available_insert_options,
             execute: async ({ itemId, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.contentListAvailableInsertoptions({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.contentListAvailableInsertoptions({
                     path: {
                         itemId,
                     },
@@ -669,12 +611,13 @@ export function contentTools(client: experimental_XMC, sitecoreContextId: string
     }
 }
 
-export function componentsTools(client: experimental_XMC, sitecoreContextId: string) {
+export function componentsTools(client: experimental_XMC, sitecoreContextId: string, config?: ToolConfig) {
+    const wrapped = wrapTool(config ?? {});
     return {
-        create_component_datasource: tool({
+        create_component_datasource: wrapped({
             ...componentsToolsConfig.create_component_datasource,
             execute: async ({ componentId, siteName, dataFields, children, language }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.componentsCreateComponentDatasource({
+                return await callWithJobId(async (jobId) => client.agent.componentsCreateComponentDatasource({
                     headers: {
                         'x-sc-job-id': jobId,
                     },
@@ -693,13 +636,10 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                 }));
             }
         }),
-        search_component_datasources: tool({
+        search_component_datasources: wrapped({
             ...componentsToolsConfig.search_component_datasources,
             execute: async ({ componentId, term }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.componentsSearchComponentDatasources({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.componentsSearchComponentDatasources({
                     path: {
                         componentId,
                     },
@@ -710,13 +650,10 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                 }));
             }
         }),
-        list_components: tool({
+        list_components: wrapped({
             ...componentsToolsConfig.list_components,
             execute: async ({ site_name }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.componentsListComponents({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.componentsListComponents({
                     query: {
                         site_name,
                         sitecoreContextId,
@@ -724,13 +661,10 @@ export function componentsTools(client: experimental_XMC, sitecoreContextId: str
                 }));
             }
         }),
-        get_component: tool({
+        get_component: wrapped({
             ...componentsToolsConfig.get_component,
             execute: async ({ componentId }) => {
-                return await wrapAgentCall(async (jobId) => client.agent.componentsGetComponent({
-                    headers: {
-                        'x-sc-job-id': jobId,
-                    },
+                return await wrapAgentCall(async () => client.agent.componentsGetComponent({
                     path: {
                         componentId,
                     },

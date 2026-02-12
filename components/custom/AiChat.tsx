@@ -109,16 +109,6 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Toaster } from '../ui/sonner';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
 import { useAppSettings } from '../providers/app-settings-provider';
 
 
@@ -220,13 +210,13 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
         //         {
         //             type: 'tool-test',
         //             toolCallId: 'tool-test',
-        //             state: 'input-available',
+        //             state: 'output-available',
         //             input: {
         //                 text: 'Hello',
         //             },
         //             output: {
         //                 text: 'Hello',
-        //                 jobId: '123',
+        //                 jobId: 'f3045dc1-4126-4c81-93a8-91a8b297d265',
         //             },
         //         }
         //     ]
