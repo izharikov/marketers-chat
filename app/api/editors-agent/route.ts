@@ -1,10 +1,11 @@
-import { UIMessage, convertToModelMessages, smoothStream, ToolLoopAgent } from 'ai';
+import { UIMessage, convertToModelMessages, smoothStream, ToolLoopAgent, createUIMessageStream, createUIMessageStreamResponse, ToolUIPart } from 'ai';
 import * as clientTools from '@/lib/tools/xmc/client';
 import * as serverTools from '@/lib/tools/xmc/server';
 import { clientSideTools } from '@/lib/tools/client-side';
 import { buildSystem, Capability, toolsMapping } from '@/lib/tools/xmc';
 import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
 import { retrieveModel } from '@/lib/ai/registry';
+import { writeText } from '@/lib/ai/helpers';
 
 function frontendToolsFactory(config: clientTools.ToolDefinitionConfig) {
     return {
@@ -79,6 +80,48 @@ export async function POST(req: Request) {
 
     if (toolExecution === 'backend' && (!accessToken || !contextId)) {
         throw new Error('Access token and sitecore context ID are required for backend tool execution.');
+    }
+
+    const lastUserMessage = messages.findLast(msg => msg.role === 'user');
+    const revert = lastUserMessage?.parts.find(part => part.type === 'data-revert');
+    if (revert) {
+        const jobId = (revert as { data: { jobId: string } }).data.jobId;
+        const stream = createUIMessageStream({
+            execute: async ({ writer }) => {
+                const toolCallId = `revert-${jobId}`;
+                const toolName = 'revert_operation';
+                if (toolExecution === 'frontend') {
+                    writer.write({
+                        type: 'start-step',
+                    });
+                    const toolPart = messages[messages.length - 1].parts.find(part => part.type === `tool-${toolName}`) as ToolUIPart;
+                    const state = toolPart?.state;
+                    if (state === 'output-available' || state === 'output-error') {
+                        writeText(writer, `text-${jobId}`, state === 'output-available' ? 'Reverted job' : 'Error reverting job');
+                        writer.write({
+                            type: 'finish',
+                            finishReason: 'stop',
+                        });
+                        return;
+                    } else if (!state) {
+                        writer.write({
+                            type: 'tool-input-available',
+                            toolCallId,
+                            toolName,
+                            input: {
+                                jobId,
+                            },
+                        });
+                        writer.write({
+                            type: 'finish',
+                            finishReason: 'tool-calls',
+                        });
+                    }
+                }
+            },
+            originalMessages: messages,
+        });
+        return createUIMessageStreamResponse({ stream });
     }
 
     const { model, providerOptions } = retrieveModel(modelName, apiKey);

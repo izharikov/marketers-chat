@@ -337,7 +337,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
         }),
         add_component_on_page: tool({
             ...pagesToolsConfig.add_component_on_page,
-            execute: async ({ pageId, componentRenderingId, placeholderPath, componentItemName, language, fields }) => {
+            execute: async ({ pageId, componentId, placeholderPath, componentItemName, language, fields }) => {
                 return await wrapAgentCall(async (jobId) => client.agent.pagesAddComponentOnPage({
                     headers: {
                         'x-sc-job-id': jobId,
@@ -346,7 +346,7 @@ export function pagesTools(client: experimental_XMC, sitecoreContextId: string) 
                         pageId,
                     },
                     body: {
-                        componentRenderingId,
+                        componentRenderingId: componentId,
                         placeholderPath,
                         componentItemName,
                         language,

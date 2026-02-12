@@ -10,6 +10,7 @@ import { useRef, useState } from 'react';
 import { useApiKey } from '@/components/providers/api-key-provider';
 import { executeClientSideTool } from '@/lib/tools/client-side';
 import { Capability } from '@/lib/tools/xmc';
+import { toast } from 'sonner';
 
 type ToolExecution = 'frontend' | 'backend';
 
@@ -57,11 +58,11 @@ const ChatBotClientTools = () => {
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
-    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
+    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview!;
     try {
       let res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
       if (!res) {
-        res = await executeClientSideTool(client, toolName, toolPart.input);
+        res = await executeClientSideTool({ client, sitecoreContextId }, toolName, toolPart.input);
       }
       if (!res) {
         return;
@@ -100,11 +101,14 @@ const ChatBotClientTools = () => {
         return {
           model: model.current,
           capabilities: capabilities.current,
-          needsApproval: true,
+          needsApproval: false,
         }
       }
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    onError: (error) => {
+      toast('Error in chat');
+    },
     onFinish: async ({ message, finishReason }) => {
       // if tool was finished because of tool call
       if (finishReason !== 'tool-calls') {
@@ -115,19 +119,19 @@ const ChatBotClientTools = () => {
           continue;
         }
         const toolPart = part as ToolUIPart;
-        // ensure it is a tool call
         if (toolPart.type.startsWith('tool')) {
           // if approve was requested - should be handled in Confirmation section
           if (toolPart.state === 'approval-requested') {
             return;
           }
-          // if input is available - run tests
+          // if input is available - run tool
+          console.log('onFinish', toolPart);
           if (toolPart.state === 'input-available') {
             await executeTool(toolPart);
           }
         }
       }
-    }
+    },
   });
   const appContext = useAppContext();
   return (
@@ -140,7 +144,7 @@ const ChatBotClientTools = () => {
       }} onToolRejected={async (tool) => {
         await toolRejected(tool);
       }}
-      selectedCapabilities={['sites']}
+      selectedCapabilities={['page_layout']}
       availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization']}
     />
   );

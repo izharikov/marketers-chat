@@ -56,7 +56,7 @@ export const personalizationToolsConfig = {
     create_personalization_version: {
         description: 'Creates a new personalization definition with one or more variants.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             name: z.string().describe('The name of the personalization version.'),
             variant_name: z.string().describe('The name of the variant.'),
             audience_name: z.string().describe('The name of the audience.'),
@@ -68,7 +68,7 @@ export const personalizationToolsConfig = {
     get_personalization_versions_by_page: {
         description: 'Retrieves all personalization versions configured for a specific page, including their targeting rules and content variations.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
         }),
     },
     get_condition_templates: {
@@ -109,7 +109,7 @@ export const pagesToolsConfig = {
     get_page: {
         description: 'Retrieves comprehensive information about a page including its layout, components, placeholders, and available actions.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             language: z.string().describe('The language of the page.'),
         }),
     },
@@ -132,7 +132,7 @@ export const pagesToolsConfig = {
     get_allowed_components_by_placeholder: {
         description: 'Retrieves a list of components that are allowed to be added to a specific placeholder on a page.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             placeholderName: z.string().describe('The name of the placeholder.'),
             language: z.string().describe('The language of the page.'),
         }),
@@ -140,7 +140,7 @@ export const pagesToolsConfig = {
     get_components_on_page: {
         description: 'Retrieves a list of components that are currently added to a specific page.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             language: z.string().describe('The language of the page.'),
             version: z.number().describe('The version of the page.'),
         }),
@@ -148,8 +148,8 @@ export const pagesToolsConfig = {
     add_component_on_page: {
         description: 'Adds a component to a specific placeholder on a page. Fields - to specify datasource fields for the component.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
-            componentRenderingId: z.string().describe('The rendering ID of the component.'),
+            pageId: z.string().describe('Page uuid'),
+            componentId: z.string().describe('The component id.'),
             placeholderPath: z.string().describe('The path of the placeholder.'),
             componentItemName: z.string().describe('The item name of the component.'),
             language: z.string().describe('The language of the page.'),
@@ -161,7 +161,7 @@ export const pagesToolsConfig = {
     set_component_datasource: {
         description: 'Sets the datasource for a component on a page.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             componentId: z.string().describe('The unique identifier of the component.'),
             datasourceId: z.string().describe('The unique identifier of the datasource.'),
             language: z.string().describe('The language of the page.'),
@@ -170,7 +170,7 @@ export const pagesToolsConfig = {
     add_language_to_page: {
         description: 'Creates a language version of an existing page.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             language: z.string().describe('The language to add.'),
         }),
     },
@@ -191,7 +191,7 @@ export const pagesToolsConfig = {
     get_page_screenshot: {
         description: 'Captures and returns a screenshot of the specified page.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             version: z.number().describe('The version of the page.'),
             language: z.string().describe('The language of the page.'),
             width: z.number().describe('The width of the screenshot.'),
@@ -201,7 +201,7 @@ export const pagesToolsConfig = {
     get_page_html: {
         description: 'Retrieves the HTML content of a specific page.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             language: z.string().describe('The language of the page.'),
             version: z.number().describe('The version of the page.'),
         }),
@@ -209,7 +209,7 @@ export const pagesToolsConfig = {
     get_page_preview_url: {
         description: 'Retrieves the preview URL of a specific page.',
         inputSchema: z.object({
-            pageId: z.string().describe('The unique identifier of the page.'),
+            pageId: z.string().describe('Page uuid'),
             language: z.string().describe('The language of the page.'),
             version: z.number().describe('The version of the page.'),
         }),

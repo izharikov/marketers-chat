@@ -885,6 +885,7 @@ export const PromptInputTextarea = ({
             const trimmedText = text.trim();
             const start = textarea.selectionStart;
             textarea.value = textarea.value.substring(0, start) + trimmedText + textarea.value.substring(textarea.selectionEnd);
+            onChange?.({ target: textarea } as ChangeEvent<HTMLTextAreaElement>)
             textarea.selectionStart = textarea.selectionEnd = start + trimmedText.length;
           });
         }

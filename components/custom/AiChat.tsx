@@ -74,7 +74,11 @@ import {
     UsersIcon,
     ZapIcon,
     Wrench,
-    Ellipsis
+    Ellipsis,
+    ArrowLeftCircle,
+    ArrowDownLeft,
+    Undo2,
+    Undo
 } from 'lucide-react';
 import {
     Source,
@@ -88,9 +92,22 @@ import {
     ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
 import { Loader } from '@/components/ai-elements/loader';
-import { ToolUIPart } from 'ai';
+import { ToolUIPart, UIMessage } from 'ai';
 import { AttachmentItem, Attachments } from '../ai-elements/attachments';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Button } from '../ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Toaster } from '../ui/sonner';
 
 const models = [
     {
@@ -172,24 +189,73 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
     }, [capabilities]);
 
 
-    const { messages, setMessages, regenerate, status } = chat;
-    const toolApproval = messages[messages.length - 1]?.parts
+    const { messages, setMessages, regenerate, status, sendMessage } = chat;
+    const lastMessage = messages[messages.length - 1];
+    const toolApproval = lastMessage?.parts
         .filter(part => part.type.startsWith('tool'))
         .some(part => (part as ToolUIPart).state === 'approval-requested');
     const statusComputed = status === 'ready' && toolApproval ? 'submitted' : status;
-    const submitEnabled = !toolApproval && ((status === 'ready' && input.length > 0) || status === 'streaming' || status === 'submitted');
+    const revertInProgress = lastMessage?.role === 'assistant' &&
+        lastMessage?.parts.some(part => part.type === 'tool-revert_operation') && !lastMessage?.parts.some(part => part.type === 'text');
+    const submitEnabled = !revertInProgress && !toolApproval && ((status === 'ready' && input.length > 0) || status === 'streaming' || status === 'submitted');
+    // console.log('status', status === 'ready' && input.length > 0)
+    const initialMessages: UIMessage[] = [
+        // {
+        //     id: 'message',
+        //     role: 'assistant',
+        //     parts: [
+        //         {
+        //             type: 'tool-test',
+        //             toolCallId: 'tool-test',
+        //             state: 'output-available',
+        //             input: {
+        //                 text: 'Hello',
+        //             },
+        //             output: {
+        //                 text: 'Hello',
+        //                 jobId: '123',
+        //             },
+        //         }
+        //     ]
+        // }
+    ]
+
+    useEffect(() => {
+        setMessages(initialMessages)
+    }, []);
+
+    const handleRevert = (jobId: string, tool: ToolUIPart) => {
+        sendMessage({
+            role: 'user',
+            parts: [
+                {
+                    type: 'text',
+                    text: '`revert_operation(\'' + jobId + '\')`'
+                },
+                {
+                    type: 'data-revert',
+                    data: {
+                        jobId,
+                    }
+                }
+            ]
+        })
+    }
+
     return (
         <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
             <div className="flex flex-col h-full">
                 <div className='flex flex-col'>
                     <div className="flex justify-end">
                         <DropdownMenu>
-                            <DropdownMenuTrigger>
-                                <Ellipsis />
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size='icon-sm'>
+                                    <Ellipsis />
+                                </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem onClick={() => setMessages([])}>
+                                    <DropdownMenuItem onClick={() => setMessages(initialMessages)}>
                                         <RefreshCcwIcon />
                                         Restart chat
                                     </DropdownMenuItem>
@@ -198,6 +264,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                         </DropdownMenu>
                     </div>
                 </div>
+                <Toaster />
                 <Conversation className="h-full">
                     <ConversationContent>
                         {messages.map((message, messagesIndex) => (
@@ -265,9 +332,38 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                                 if (tool.output && tool.output.toString().startsWith('ERROR')) {
                                                     state = 'output-error';
                                                 }
+                                                const jobId = (tool.output as { jobId: string })?.jobId;
                                                 return <Fragment key={`${message.id}-${tool.toolCallId}`}>
                                                     <Tool defaultOpen={false}>
-                                                        <ToolHeader type={tool.type} state={state} />
+                                                        <ToolHeader type={tool.type} state={state} >
+                                                            {jobId && state === 'output-available' &&
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <Button variant={"outline"} size={'icon-xs'} className='px-4' onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                        }}>
+                                                                            <Undo className='size-4' />
+                                                                        </Button>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>Are you sure you want to revert this?</AlertDialogTitle>
+                                                                            <AlertDialogDescription>
+                                                                                This action cannot be undone.
+                                                                            </AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleRevert(jobId, tool);
+                                                                            }}>Continue</AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+
+                                                            }
+                                                        </ToolHeader>
                                                         <ToolContent>
                                                             {!!tool.input && <ToolInput input={tool.input} />}
                                                             {tool.state === 'output-error' && !!tool.rawInput && <ToolInput input={tool.rawInput} />}
@@ -325,24 +421,26 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                             return null;
                                     }
                                 })}
-                                {statusComputed === 'ready' && message.role === 'assistant' && messagesIndex === messages.length - 1 && (
-                                    <MessageActions>
-                                        <MessageAction
-                                            onClick={() => regenerate()}
-                                            label="Retry"
-                                        >
-                                            <RefreshCcwIcon className="size-3" />
-                                        </MessageAction>
-                                        <MessageAction
-                                            onClick={() =>
-                                                navigator.clipboard.writeText(message.parts.map(part => part.type === 'text' ? part.text : '').join(''))
-                                            }
-                                            label="Copy"
-                                        >
-                                            <CopyIcon className="size-3" />
-                                        </MessageAction>
-                                    </MessageActions>
-                                )}
+                                {statusComputed === 'ready' && message.role === 'assistant' && messagesIndex === messages.length - 1
+                                    && !message.parts.some(part => part.type === 'tool-revert')
+                                    && (
+                                        <MessageActions>
+                                            <MessageAction
+                                                onClick={() => regenerate()}
+                                                label="Retry"
+                                            >
+                                                <RefreshCcwIcon className="size-3" />
+                                            </MessageAction>
+                                            <MessageAction
+                                                onClick={() =>
+                                                    navigator.clipboard.writeText(message.parts.map(part => part.type === 'text' ? part.text : '').join(''))
+                                                }
+                                                label="Copy"
+                                            >
+                                                <CopyIcon className="size-3" />
+                                            </MessageAction>
+                                        </MessageActions>
+                                    )}
                             </Message>
                         ))}
                         {status === 'submitted' && <Loader />}
@@ -360,7 +458,9 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                     </PromptInputHeader>
                     <PromptInputBody>
                         <PromptInputTextarea
-                            onChange={(e) => setInput(e.target.value)}
+                            onChange={(e) => {
+                                setInput(e.target.value)
+                            }}
                             value={input}
                         />
                     </PromptInputBody>

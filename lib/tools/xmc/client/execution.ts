@@ -9,9 +9,10 @@ import {
     contentToolsConfig,
     componentsToolsConfig
 } from "../definitions";
-import { clientQuery, clientMutate, clientTool } from "./helpers";
+import { clientQuery, clientMutate, clientTool, mutateWithJobId } from "./helpers";
+import { v4 as uuid } from 'uuid';
 
-export const sitesTools = {
+const sitesTools = {
     get_sites_list: clientTool({
         ...sitesToolsConfig.get_sites_list,
         execute: async (client, sitecoreContextId) => {
@@ -72,7 +73,7 @@ export const sitesTools = {
     }),
 }
 
-export const assetTools = {
+const assetTools = {
     get_asset_information: clientTool({
         ...assetToolsConfig.get_asset_information,
         execute: async (client, sitecoreContextId, { assetId }) => {
@@ -97,13 +98,16 @@ export const assetTools = {
     update_asset: clientTool({
         ...assetToolsConfig.update_asset,
         execute: async (client, sitecoreContextId, { assetId, fields, language, name, altText }) => {
-            return await clientMutate(client, 'xmc.agent.assetsUpdateAsset', {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.assetsUpdateAsset', {
                 params: {
                     path: { assetId },
                     query: { sitecoreContextId },
                     body: { fields, language, name, altText },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
                 }
-            });
+            }));
         },
     }),
     upload_asset: clientTool({
@@ -124,7 +128,7 @@ export const assetTools = {
     }),
 }
 
-export const environmentTools = {
+const environmentTools = {
     list_languages: clientTool({
         ...environmentToolsConfig.list_languages,
         execute: async (client, sitecoreContextId) => {
@@ -137,7 +141,7 @@ export const environmentTools = {
     }),
 }
 
-export const personalizationTools = {
+const personalizationTools = {
     create_personalization_version: clientTool({
         ...personalizationToolsConfig.create_personalization_version,
         execute: async (client, sitecoreContextId, { pageId, name, variant_name, audience_name, condition_template_id, condition_params, language }) => {
@@ -184,7 +188,7 @@ export const personalizationTools = {
     }),
 }
 
-export const jobTools = {
+const jobTools = {
     revert_job: clientTool({
         ...jobToolsConfig.revert_job,
         execute: async (client, sitecoreContextId, { jobId }) => {
@@ -220,7 +224,7 @@ export const jobTools = {
     }),
 }
 
-export const pagesTools = {
+const pagesTools = {
     get_page: clientTool({
         ...pagesToolsConfig.get_page,
         execute: async (client, sitecoreContextId, { pageId, language }) => {
@@ -278,14 +282,17 @@ export const pagesTools = {
     }),
     add_component_on_page: clientTool({
         ...pagesToolsConfig.add_component_on_page,
-        execute: async (client, sitecoreContextId, { pageId, componentRenderingId, placeholderPath, componentItemName, language, fields }) => {
-            return await clientMutate(client, 'xmc.agent.pagesAddComponentOnPage', {
+        execute: async (client, sitecoreContextId, { pageId, componentId, placeholderPath, componentItemName, language, fields }) => {
+            return await mutateWithJobId((jobId) => clientMutate(client, 'xmc.agent.pagesAddComponentOnPage', {
                 params: {
                     path: { pageId },
                     query: { sitecoreContextId },
-                    body: { componentRenderingId, placeholderPath, componentItemName, language, fields },
-                }
-            });
+                    body: { componentRenderingId: componentId, placeholderPath, componentItemName, language, fields },
+                    headers: {
+                        'x-sc-job-id': jobId,
+                    }
+                },
+            }));
         },
     }),
     set_component_datasource: clientTool({
@@ -436,7 +443,7 @@ export const contentTools = {
     }),
 }
 
-export const clientComponentsTools = {
+const clientComponentsTools = {
     create_component_datasource: clientTool({
         ...componentsToolsConfig.create_component_datasource,
         execute: async (client, sitecoreContextId, { componentId, siteName, dataFields, children, language }) => {

@@ -1,5 +1,6 @@
 import { ClientSDK, QueryKey, QueryOptions, MutationKey, MutationOptions } from "@sitecore-marketplace-sdk/client";
 import { z } from "zod/v4";
+import { v4 as uuid } from 'uuid';
 
 export type ToolConfig<TInput> = {
     inputSchema: z.ZodType<TInput>;
@@ -42,11 +43,12 @@ export async function clientMutate<K extends MutationKey>(client: ClientSDK, mut
             return res;
         }
         if ('error' in res) {
-            throw res.error;
+            throw JSON.stringify(res.error);
         }
 
         return {
             ...res as object,
+            success: true,
             request: null,
             response: null,
         }
@@ -55,5 +57,20 @@ export async function clientMutate<K extends MutationKey>(client: ClientSDK, mut
         console.log('Error mutating data', error);
         throw error;
     }
+}
+
+type ClientMutateReturn = Awaited<ReturnType<typeof clientMutate>>;
+
+export async function mutateWithJobId<TResult extends ClientMutateReturn>(execute: (jobId: string) => Promise<TResult>) {
+    const jobId = uuid();
+    const result = await execute(jobId);
+    if (typeof result === 'object' && 'success' in result && result.success) {
+        return {
+            ...result,
+            jobId,
+        };
+    }
+
+    throw result;
 }
 
