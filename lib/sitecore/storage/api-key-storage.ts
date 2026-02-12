@@ -126,7 +126,6 @@ export async function saveApiKey(
 
     let itemId: string | null = null;
 
-    debugger;
     if (checkResult?.data?.data) {
       const data = checkResult.data?.data as any;
       if (data?.item?.itemId) {

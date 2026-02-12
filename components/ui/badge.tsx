@@ -11,6 +11,7 @@ const badgeVariants = cva(
       variant: {
         default: "font-normal",
         bold: "uppercase font-bold",
+        secondary: "font-normal bg-secondary-bg text-secondary-fg",
       },
       size: {
         sm: "text-sm h-4",

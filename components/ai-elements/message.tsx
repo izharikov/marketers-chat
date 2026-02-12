@@ -313,6 +313,11 @@ export const MessageResponse = memo(
         "contents [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className
       )}
+      components={{
+        p: ({ children }) => (
+          <p className="mb-0">{children}</p>
+        ),
+      }}
       {...props}
     />
   ),

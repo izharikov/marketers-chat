@@ -1,4 +1,6 @@
-export type Capability = 'page_layout' | 'assets' | 'personalization';
+import { ToolName } from "./definitions";
+
+export type Capability = 'page_layout' | 'assets' | 'personalization' | 'sites';
 
 export const systemInstructions = {
     system: `# You are SitecoreAI assistnant. Don't annoy user with too many questions. Decide by yourself most steps.
@@ -33,9 +35,35 @@ You can add, edit, and remove components and manage their datasources.
         `,
         assets: 'TODO',
         personalization: 'TODO',
+        sites: 'TODO',
     },
 }
 
 export const buildSystem: (capabilities: Capability[]) => string = (capabilities) => {
     return systemInstructions.system + '\n\n' + capabilities.map((capability) => systemInstructions.capabilities[capability]).join('\n\n');
+}
+
+export const toolsMapping: Record<Capability, ToolName[]> = {
+    page_layout: [
+        'get_current_page_context',
+        'get_components_on_page',
+        'get_allowed_components_by_placeholder',
+        'add_component_on_page',
+        'get_component',
+        'update_content',
+        'reload_current_page',
+        'get_site_id_from_item',
+    ],
+    assets: ['get_asset_information', 'search_assets', 'update_asset', 'upload_asset'],
+    personalization: [
+        'create_personalization_version',
+        'get_personalization_versions_by_page',
+        'get_condition_templates',
+        'get_condition_template_by_id'
+    ],
+    sites: [
+        'get_sites_list',
+        'get_site_details',
+        'get_all_pages_by_site',
+    ],
 }
