@@ -1,6 +1,6 @@
 'use client';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, FinishReason, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
 import { runClientTool } from '@/lib/tools/xmc/client';

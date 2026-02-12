@@ -29,7 +29,7 @@ function ApiKeyInput(props: React.ComponentProps<"input"> & { label: string }) {
     const [showPassword, setShowPassword] = useState(false)
     return (
         <div className="w-full max-w-sm space-y-2">
-            <Label htmlFor={props.id}>{props.label}</Label>
+            <Label htmlFor={props.id} tabIndex={1}>{props.label}</Label>
             <div className="relative">
                 <Input
                     className="bg-background pr-[2.2rem]"
@@ -53,6 +53,10 @@ function ApiKeyInput(props: React.ComponentProps<"input"> & { label: string }) {
         </div>
     )
 }
+
+const labels: Record<string, string> = {
+    vercel: 'Vercel Gateway API Key',
+};
 
 export function AppSettingsModal({
     isOpen,
@@ -117,7 +121,7 @@ export function AppSettingsModal({
                                 <div key={name} className="grid w-full items-center gap-1.5">
                                     <ApiKeyInput
                                         id={`key-${name}`}
-                                        label={name}
+                                        label={labels[name] || name}
                                         value={tempKeys[name] || ""}
                                         onChange={(e) => handleKeyChange(name, e.target.value)}
                                     />

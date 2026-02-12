@@ -12,6 +12,8 @@ import {
   ClientSDK,
 } from "@sitecore-marketplace-sdk/client";
 import { XMC } from "@sitecore-marketplace-sdk/xmc";
+import { Loader } from '@/components/ai-elements/loader';
+import { toast, Toaster } from "sonner";
 
 interface ClientSDKProviderProps {
   children: ReactNode;
@@ -26,7 +28,7 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
   const [client, setClient] = useState<ClientSDK | null>(null);
   const [appContext, setAppContext] = useState<ApplicationContext | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (client) {
@@ -61,18 +63,20 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
   }, []);
 
   if (loading) {
-    return <div>Attempting to connect to Sitecore Marketplace...</div>;
+    return <div className="flex">
+      <div className='relative mx-auto h-[100px]'>
+        <Loader className='absolute bottom-0 left-0' />
+      </div>
+    </div>
   }
 
   if (error) {
+    useEffect(() => {
+      toast.error(error, { duration: Infinity, position: 'top-left' });
+    }, []);
     return (
       <div>
-        <h1>Error initializing Marketplace SDK</h1>
-        <div>{error}</div>
-        <div>
-          Please check if the client SDK is loaded inside Sitecore Marketplace
-          parent window and you have properly set your app's extention points.
-        </div>
+        <Toaster />
       </div>
     );
   }

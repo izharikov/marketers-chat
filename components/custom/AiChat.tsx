@@ -108,7 +108,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Toaster } from '../ui/sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { useAppSettings } from '../providers/app-settings-provider';
 
 
