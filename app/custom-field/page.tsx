@@ -1,5 +1,5 @@
 'use client';
-import { useApiKey } from "@/components/providers/api-key-provider";
+import { useApiKey } from "@/components/providers/app-settings-provider";
 import { useAppContext, useMarketplaceClient } from "@/components/providers/marketplace";
 import { usePagesContext } from "@/lib/hooks/useQuery";
 import { useChat } from "@ai-sdk/react";

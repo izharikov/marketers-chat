@@ -7,7 +7,7 @@ import { runClientTool } from '@/lib/tools/xmc/client';
 
 import AiChat from '@/components/custom/AiChat';
 import { useRef, useState } from 'react';
-import { useApiKey } from '@/components/providers/api-key-provider';
+import { useApiKey } from '@/components/providers/app-settings-provider';
 import { executeClientSideTool } from '@/lib/tools/client-side';
 import { Capability } from '@/lib/tools/xmc';
 import { toast } from 'sonner';
@@ -125,7 +125,6 @@ const ChatBotClientTools = () => {
             return;
           }
           // if input is available - run tool
-          console.log('onFinish', toolPart);
           if (toolPart.state === 'input-available') {
             await executeTool(toolPart);
           }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { ApiKeyModal } from "@/components/custom/api-key-modal";
+import { AppSettingsModal } from "@/components/custom/api-key-modal";
 import { useAppContext, useMarketplaceClient } from "@/components/providers/marketplace";
 import { getApiKey, saveApiKey } from "@/lib/sitecore/storage/api-key-storage";
 
@@ -41,28 +41,29 @@ function useApiKeyStorage(name: ApiKey) {
     return { apiKey, saveKey, loading };
 }
 
-interface ApiKeyContextType {
+interface AppSettingsContextType {
     keys: Record<string, string>;
+    setModalOpen: (open: boolean) => void;
 }
 
-const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
+const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
 
-export interface ApiKeyProviderProps {
+export interface AppSettingsProviderProps {
     name: ApiKey;
     description: string;
     children: React.ReactNode;
 }
 
-export function ApiKeyProvider({
+export function AppSettingsProvider({
     name,
     description,
     children,
-}: ApiKeyProviderProps) {
+}: AppSettingsProviderProps) {
     const { apiKey, saveKey, loading } = useApiKeyStorage(name);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Consume parent context if it exists to support nesting/multiple keys
-    const parentContext = useContext(ApiKeyContext);
+    const parentContext = useContext(AppSettingsContext);
 
     useEffect(() => {
         if (!loading && !apiKey) {
@@ -84,16 +85,16 @@ export function ApiKeyProvider({
     };
 
     return (
-        <ApiKeyContext.Provider value={{ keys: mergedKeys }}>
+        <AppSettingsContext.Provider value={{ keys: mergedKeys, setModalOpen: setIsModalOpen }}>
             {apiKey ? children : null}
-            <ApiKeyModal
+            <AppSettingsModal
                 description={description}
                 isOpen={isModalOpen}
                 onOpenChange={setIsModalOpen}
                 onSave={handleSave}
                 isClosable={!!apiKey}
             />
-        </ApiKeyContext.Provider>
+        </AppSettingsContext.Provider>
     );
 }
 
@@ -101,9 +102,14 @@ export function ApiKeyProvider({
  * Hook to access an API key by name from the nearest ApiKeyProvider.
  */
 export function useApiKey(name: ApiKey): string | undefined {
-    const context = useContext(ApiKeyContext);
+    const context = useContext(AppSettingsContext);
     if (context === undefined) {
         throw new Error("useApiKey must be used within an ApiKeyProvider");
     }
     return context.keys[name];
+}
+
+export function useAppSettings() {
+    const context = useContext(AppSettingsContext);
+    return { setModalOpen: context?.setModalOpen };
 }

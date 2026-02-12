@@ -61,7 +61,7 @@ import {
     ModelSelectorName,
     ModelSelectorTrigger,
 } from '@/components/ai-elements/model-selector';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import {
     CheckIcon,
@@ -78,7 +78,8 @@ import {
     ArrowLeftCircle,
     ArrowDownLeft,
     Undo2,
-    Undo
+    Undo,
+    Settings
 } from 'lucide-react';
 import {
     Source,
@@ -108,6 +109,18 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Toaster } from '../ui/sonner';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { useAppSettings } from '../providers/app-settings-provider';
+
 
 const models = [
     {
@@ -170,6 +183,7 @@ type AiChatProps = {
 };
 
 const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onToolRejected, selectedCapabilities, availabelCapabilities }: AiChatProps) => {
+    const { setModalOpen } = useAppSettings();
     const [input, setInput] = useState('');
     const [model, setModel] = useState<string>(models[0].id);
     const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
@@ -191,14 +205,13 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
 
     const { messages, setMessages, regenerate, status, sendMessage } = chat;
     const lastMessage = messages[messages.length - 1];
-    const toolApproval = lastMessage?.parts
+    const toolRunningOrApproval = lastMessage?.parts
         .filter(part => part.type.startsWith('tool'))
-        .some(part => (part as ToolUIPart).state === 'approval-requested');
-    const statusComputed = status === 'ready' && toolApproval ? 'submitted' : status;
+        .some(part => (part as ToolUIPart).state === 'approval-requested' || (part as ToolUIPart).state === 'input-available');
+    const statusComputed = status === 'ready' && toolRunningOrApproval ? 'streaming' : status;
     const revertInProgress = lastMessage?.role === 'assistant' &&
         lastMessage?.parts.some(part => part.type === 'tool-revert_operation') && !lastMessage?.parts.some(part => part.type === 'text');
-    const submitEnabled = !revertInProgress && !toolApproval && ((status === 'ready' && input.length > 0) || status === 'streaming' || status === 'submitted');
-    // console.log('status', status === 'ready' && input.length > 0)
+    const submitEnabled = !revertInProgress && !toolRunningOrApproval && ((status === 'ready' && input.length > 0) || status === 'streaming' || status === 'submitted');
     const initialMessages: UIMessage[] = [
         // {
         //     id: 'message',
@@ -207,7 +220,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
         //         {
         //             type: 'tool-test',
         //             toolCallId: 'tool-test',
-        //             state: 'output-available',
+        //             state: 'input-available',
         //             input: {
         //                 text: 'Hello',
         //             },
@@ -245,7 +258,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
     return (
         <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
             <div className="flex flex-col h-full">
-                <div className='flex flex-col'>
+                <div className='flex flex-col mb-2 border-b'>
                     <div className="flex justify-end">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -255,6 +268,10 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuGroup>
+                                    <DropdownMenuItem onClick={() => setModalOpen?.(true)}>
+                                        <Settings />
+                                        Settings
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setMessages(initialMessages)}>
                                         <RefreshCcwIcon />
                                         Restart chat
@@ -443,7 +460,9 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                     )}
                             </Message>
                         ))}
-                        {status === 'submitted' && <Loader />}
+                        {statusComputed === 'submitted' && <div className='relative mx-auto h-[20px]'>
+                            <Loader className='absolute bottom-0 left-0' />
+                        </div>}
                     </ConversationContent>
                     <ConversationScrollButton />
                 </Conversation>

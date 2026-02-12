@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-interface ApiKeyModalProps {
+interface AppSettingsModalProps {
     description: string;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
@@ -21,14 +21,14 @@ interface ApiKeyModalProps {
     isClosable?: boolean;
 }
 
-export function ApiKeyModal({
+export function AppSettingsModal({
     description,
     isOpen,
     onOpenChange,
     onSave,
     defaultValue = "",
     isClosable = true,
-}: ApiKeyModalProps) {
+}: AppSettingsModalProps) {
     const [inputValue, setInputValue] = useState(defaultValue);
 
     const handleSave = () => {
@@ -47,15 +47,15 @@ export function ApiKeyModal({
         >
             <DialogContent showCloseButton={isClosable}>
                 <DialogHeader>
-                    <DialogTitle>API Key Required</DialogTitle>
+                    <DialogTitle>App Settings</DialogTitle>
                     <DialogDescription>
-                        {`API key ${description} is missing, please provide it:`}
+                        {`Configure those settings`}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
                     <Input
                         type="password"
-                        placeholder={`Enter ${description} API key`}
+                        placeholder={`Enter ${description}`}
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSave()}
@@ -64,7 +64,7 @@ export function ApiKeyModal({
                 </div>
                 <DialogFooter>
                     <Button onClick={handleSave} disabled={!inputValue.trim()}>
-                        Save API Key
+                        Save
                     </Button>
                 </DialogFooter>
             </DialogContent>
