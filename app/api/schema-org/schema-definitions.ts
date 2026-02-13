@@ -1,10 +1,15 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
+
+export const NULL = z.literal(null)
+    .describe('Null value')
+    .meta({ id: 'NULL' })
+    ;
 
 // Utility function for optional fields in Vercel AI SDK
 function optional<T>(schema: z.ZodType<T>) {
     return z.union([
         schema,
-        z.literal('[NULL]')
+        NULL,
     ]);
 }
 
@@ -17,7 +22,7 @@ const ImageObjectSchema = z.object({
     url: z.string().describe('URL of the image'),
     width: optional(z.number().describe('Width of the image in pixels')),
     height: optional(z.number().describe('Height of the image in pixels')),
-});
+}).meta({ id: 'ImageObjectSchema' });
 
 const PostalAddressSchema = z.object({
     '@type': z.literal('PostalAddress'),
@@ -26,19 +31,19 @@ const PostalAddressSchema = z.object({
     addressRegion: optional(z.string().describe('State, province, or region')),
     postalCode: optional(z.string()),
     addressCountry: optional(z.string().describe('Country name or ISO code')),
-});
+}).meta({ id: 'PostalAddressSchema' });
 
 const GeoCoordinatesSchema = z.object({
     '@type': z.literal('GeoCoordinates'),
     latitude: z.number().describe('Latitude in decimal degrees'),
     longitude: z.number().describe('Longitude in decimal degrees'),
-});
+}).meta({ id: 'GeoCoordinatesSchema' });
 
 const PersonSchema = z.object({
     '@type': z.literal('Person'),
     name: z.string(),
     url: optional(z.string()),
-});
+}).meta({ id: 'PersonSchema' });
 
 const OrganizationBaseSchema = z.object({
     '@type': z.literal('Organization'),
@@ -48,7 +53,7 @@ const OrganizationBaseSchema = z.object({
         z.string(),
         ImageObjectSchema,
     ])),
-});
+}).meta({ id: 'OrganizationBaseSchema' });
 
 const OfferSchema = z.object({
     '@type': z.literal('Offer'),
@@ -62,7 +67,7 @@ const OfferSchema = z.object({
     validFrom: optional(z.string().describe('ISO 8601 date when the offer becomes valid')),
     priceValidUntil: optional(z.string().describe('ISO 8601 date when the price expires')),
     itemCondition: optional(z.string().describe('Condition URL from schema.org vocabulary (e.g., https://schema.org/NewCondition)')),
-});
+}).meta({ id: 'OfferSchema' });
 
 const RatingSchema = z.object({
     '@type': z.literal('Rating'),
@@ -78,7 +83,7 @@ const RatingSchema = z.object({
         z.string(),
         z.number(),
     ]).describe('Worst possible rating (default is 1)')),
-});
+}).meta({ id: 'RatingSchema' });
 
 const AggregateRatingSchema = z.object({
     '@type': z.literal('AggregateRating'),
@@ -102,7 +107,7 @@ const AggregateRatingSchema = z.object({
         z.string(),
         z.number(),
     ]).describe('Worst possible rating (default is 1)')),
-});
+}).meta({ id: 'AggregateRatingSchema' });
 
 const PlaceSchema = z.object({
     '@type': z.literal('Place'),
@@ -112,17 +117,17 @@ const PlaceSchema = z.object({
         PostalAddressSchema,
     ])),
     geo: optional(GeoCoordinatesSchema),
-});
+}).meta({ id: 'PlaceSchema' });
 
 const VirtualLocationSchema = z.object({
     '@type': z.literal('VirtualLocation'),
     url: z.string().describe('URL where the event can be attended virtually'),
-});
+}).meta({ id: 'VirtualLocationSchema' });
 
 const BrandSchema = z.object({
     '@type': z.literal('Brand'),
     name: z.string(),
-});
+}).meta({ id: 'BrandSchema' });
 
 const OpeningHoursSpecificationSchema = z.object({
     '@type': z.literal('OpeningHoursSpecification'),
@@ -132,19 +137,19 @@ const OpeningHoursSpecificationSchema = z.object({
     ]).describe('Day(s) of the week (e.g., Monday, Tuesday)'),
     opens: z.string().describe('Opening time in HH:MM format (e.g., 09:00)'),
     closes: z.string().describe('Closing time in HH:MM format (e.g., 17:00)'),
-});
+}).meta({ id: 'OpeningHoursSpecificationSchema' });
 
 const HowToStepSchema = z.object({
     '@type': z.literal('HowToStep'),
     text: z.string(),
     name: optional(z.string()),
     url: optional(z.string()),
-});
+}).meta({ id: 'HowToStepSchema' });
 
 const NutritionInformationSchema = z.object({
     '@type': z.literal('NutritionInformation'),
     calories: optional(z.string().describe('Calorie count (e.g., "250 calories")')),
-});
+}).meta({ id: 'NutritionInformationSchema' });
 
 const ContactPointSchema = z.object({
     '@type': z.literal('ContactPoint'),
@@ -155,7 +160,7 @@ const ContactPointSchema = z.object({
         z.string(),
         z.array(z.string()),
     ]).describe('Language code(s) available for this contact point (e.g., en, es)')),
-});
+}).meta({ id: 'ContactPointSchema' });
 
 const MonetaryAmountSchema = z.object({
     '@type': z.literal('MonetaryAmount'),
@@ -168,7 +173,7 @@ const MonetaryAmountSchema = z.object({
             unitText: z.string().describe('Unit of measurement (e.g., HOUR, MONTH, YEAR)'),
         }),
     ]),
-});
+}).meta({ id: 'MonetaryAmountSchema' });
 
 // ============================================
 // REQUESTED SCHEMAS (Exported)
@@ -223,7 +228,7 @@ export const EventSchema = z.object({
         OfferSchema,
         z.array(OfferSchema),
     ])),
-}).describe('An event happening at a certain time and location, such as a concert, lecture, or festival');
+}).meta({ id: 'EventSchema' });
 
 export const FAQPageSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -236,7 +241,7 @@ export const FAQPageSchema = z.object({
             text: z.string().describe('The answer text (can include HTML markup)'),
         }),
     })),
-}).describe('A page containing a list of frequently asked questions and their answers');
+}).meta({ id: 'FAQPageSchema' });
 
 export const WebsiteSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -253,7 +258,7 @@ export const WebsiteSchema = z.object({
         'query-input': z.string().describe('Required query input format (e.g., required name=search_term_string)'),
     }).describe('Sitelinks search box functionality')),
     publisher: optional(OrganizationBaseSchema),
-}).describe('A website, representing the entire site rather than a single page');
+}).meta({ id: 'WebsiteSchema' });
 
 export const OrganizationSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -282,7 +287,7 @@ export const OrganizationSchema = z.object({
         PersonSchema,
         z.array(PersonSchema),
     ])),
-}).describe('An organization such as a company, nonprofit, government, school, or other group');
+}).meta({ id: 'OrganizationSchema' });
 
 // ============================================
 // TOP 10 MOST POPULAR SCHEMAS (Exported)
@@ -312,7 +317,7 @@ export const ArticleSchema = z.object({
     dateModified: optional(z.string().describe('ISO 8601 date when the article was last modified')),
     description: optional(z.string()),
     articleBody: optional(z.string().describe('Full text content of the article')),
-}).describe('An article, such as a news article, blog post, or scholarly paper');
+}).meta({ id: 'ArticleSchema' });
 
 export const ProductSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -347,7 +352,7 @@ export const ProductSchema = z.object({
             reviewRating: RatingSchema,
         })),
     ])),
-}).describe('Any offered product or service, including physical items, digital products, courses, etc.');
+}).meta({ id: 'ProductSchema' });
 
 export const LocalBusinessSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -368,7 +373,7 @@ export const LocalBusinessSchema = z.object({
         z.array(OpeningHoursSpecificationSchema),
     ])),
     aggregateRating: optional(AggregateRatingSchema),
-}).describe('A physical business or branch of an organization, such as a restaurant, store, or medical practice');
+}).meta({ id: 'LocalBusinessSchema' });
 
 export const BreadcrumbListSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -379,7 +384,7 @@ export const BreadcrumbListSchema = z.object({
         name: z.string(),
         item: optional(z.string().describe('URL of the page (omit for the current page)')),
     })),
-}).describe('A breadcrumb navigation trail showing the page\'s position in the site hierarchy');
+}).meta({ id: 'BreadcrumbListSchema' });
 
 export const PersonExportedSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -399,7 +404,7 @@ export const PersonExportedSchema = z.object({
         z.string(),
         PostalAddressSchema,
     ])),
-}).describe('An individual person, living or deceased');
+}).meta({ id: 'PersonExportedSchema' });
 
 export const RecipeSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -432,7 +437,7 @@ export const RecipeSchema = z.object({
         z.array(HowToStepSchema),
     ]).describe('Step-by-step cooking instructions')),
     aggregateRating: optional(AggregateRatingSchema),
-}).describe('A recipe for preparing a particular dish, including ingredients and instructions');
+}).meta({ id: 'RecipeSchema' });
 
 export const VideoObjectSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -448,7 +453,7 @@ export const VideoObjectSchema = z.object({
     contentUrl: optional(z.string().describe('Direct URL to the video file')),
     embedUrl: optional(z.string().describe('URL to embed the video player')),
     publisher: optional(OrganizationBaseSchema),
-}).describe('A video file or video content');
+}).meta({ id: 'VideoObjectSchema' });
 
 export const ReviewSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -462,7 +467,7 @@ export const ReviewSchema = z.object({
     reviewBody: optional(z.string().describe('The actual review text content')),
     datePublished: optional(z.string().describe('ISO 8601 date when the review was published')),
     publisher: optional(OrganizationBaseSchema),
-}).describe('A review of an item, such as a product, business, or creative work');
+}).meta({ id: 'ReviewSchema' });
 
 export const CourseSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -497,7 +502,7 @@ export const CourseSchema = z.object({
             startDate: optional(z.string()),
         })),
     ]).describe('Specific instance(s) of the course being offered')),
-}).describe('An educational course, including online courses, college courses, or training programs');
+}).meta({ id: 'CourseSchema' });
 
 export const JobPostingSchema = z.object({
     '@context': optional(z.literal('https://schema.org')),
@@ -521,4 +526,4 @@ export const JobPostingSchema = z.object({
         z.array(PlaceSchema),
     ])),
     baseSalary: optional(MonetaryAmountSchema),
-}).describe('A job posting or listing for employment opportunities');
+}).meta({ id: 'JobPostingSchema' });
