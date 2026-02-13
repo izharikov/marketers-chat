@@ -38,13 +38,6 @@ const JsonEditor = ({ value, onChange, className }: { value: string; onChange: (
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const preRef = useRef<HTMLDivElement>(null);
 
-    const handleScroll = () => {
-        if (textareaRef.current && preRef.current) {
-            preRef.current.scrollTop = textareaRef.current.scrollTop;
-            preRef.current.scrollLeft = textareaRef.current.scrollLeft;
-        }
-    };
-
     const calculatedWidth = useMemo(() => {
         const lines = value.split('\n');
         const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
@@ -52,27 +45,26 @@ const JsonEditor = ({ value, onChange, className }: { value: string; onChange: (
     }, [value]);
 
     return (
-        <div className={cn("relative font-mono text-sm border rounded-md overflow-hidden bg-background", className)} style={{ width: `${calculatedWidth}px` }}>
-            <div className="absolute inset-0 pointer-events-none overflow-x-auto overflow-y-hidden" ref={preRef}>
+        <div className={cn("relative font-mono text-sm bg-background h-full", className)}>
+            <div className="inset-0 overflow-hidden relative min-w-full min-h-full" style={{ width: calculatedWidth }} ref={preRef}>
                 <CodeBlock
                     code={value}
                     language="json"
-                    className="border-none bg-transparent! p-0! m-0! [&>pre]:p-4! [&>pre]:bg-transparent!"
+                    className="border-none pointer-events-none bg-transparent! p-0! m-0! [&>pre]:p-4! [&>pre]:bg-transparent!"
+                />
+                <textarea
+                    ref={textareaRef}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    spellCheck={false}
+                    className="absolute top-0 left-0 z-10 w-full h-full p-4 bg-transparent text-transparent caret-foreground resize-none focus:outline-none whitespace-pre overflow-auto block"
+                    style={{
+                        fontFamily: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit',
+                    }}
                 />
             </div>
-            <textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                onScroll={handleScroll}
-                spellCheck={false}
-                className="relative z-10 w-full h-full p-4 bg-transparent text-transparent caret-foreground resize-none focus:outline-none whitespace-pre overflow-auto block"
-                style={{
-                    fontFamily: 'inherit',
-                    fontSize: 'inherit',
-                    lineHeight: 'inherit',
-                }}
-            />
         </div>
     );
 };
@@ -131,6 +123,10 @@ const DiffView = ({ oldCode, newCode, className }: { oldCode: string; newCode: s
                 });
             }
         });
+        const maxLength = Math.max(oldLines.length, newLines.length);
+        while (oldLines.length < maxLength) oldLines.push('');
+        while (newLines.length < maxLength) newLines.push('');
+
 
         return {
             alignedOld: oldLines.join('\n'),
@@ -181,11 +177,11 @@ export const CustomFieldPage = () => {
     const apiKey = useApiKey('vercel');
 
     const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
-    const currentFieldValue = useRef<string>("");
     const pageInfoRef = useRef({});
     const pageLayoutRef = useRef({});
     const siteRef = useRef({});
-    const pageRef = useRef({});
+    const currentPageRef = useRef({});
+    const languageRef = useRef('');
 
     const { messages, status, sendMessage, setMessages } = useChat({
         transport: new DefaultChatTransport({
@@ -194,10 +190,10 @@ export const CustomFieldPage = () => {
                 'x-vercel-api-key': apiKey!,
             },
             body: () => ({
-                currentFieldValue: currentFieldValue.current,
                 layout: pageLayoutRef.current,
                 site: siteRef.current,
-                currentPage: pageRef.current,
+                currentPage: currentPageRef.current,
+                language: languageRef.current,
             })
         })
     });
@@ -235,17 +231,13 @@ export const CustomFieldPage = () => {
         }
     }, [messages]);
 
-    useEffect(() => {
-        currentFieldValue.current = existingValue;
-    }, [existingValue]);
-
     const handleGenerate = async () => {
         setIsLoading(true);
         // Reset chat and new value
         setMessages([]);
         setNewValue(undefined);
 
-        const information = await getRenderPageResult(client, pageContext, sitecoreContextId!);
+        const information = await getPageInformation(client, pageContext, sitecoreContextId!);
         if (!information) {
             console.error("Failed to get render page result");
             setIsLoading(false);
@@ -260,7 +252,8 @@ export const CustomFieldPage = () => {
         } : {};
         pageLayoutRef.current = information.placeholders;
         siteRef.current = information.site;
-        pageRef.current = information.page;
+        currentPageRef.current = information.page;
+        languageRef.current = pageContext?.pageInfo?.language ?? 'en';
         // return;
         await sendMessage({
             role: 'user',
@@ -317,11 +310,10 @@ export const CustomFieldPage = () => {
                     ) : (
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-muted-foreground px-1">Existing Field Value</label>
-                            <div className="w-full overflow-auto">
+                            <div className="border h-[400px] overflow-auto rounded-md w-full">
                                 <JsonEditor
                                     value={existingValue}
                                     onChange={setExistingValue}
-                                    className="h-[400px]"
                                 />
                             </div>
                         </div>
@@ -388,7 +380,7 @@ export const CustomFieldPage = () => {
     );
 };
 
-const getRenderPageResult = async (client: ClientSDK, pageContext: PagesContext | undefined, sitecoreContextId: string) => {
+const getPageInformation = async (client: ClientSDK, pageContext: PagesContext | undefined, sitecoreContextId: string) => {
     if (!pageContext) return;
     const { pageInfo, siteInfo } = pageContext;
     if (!pageInfo || !siteInfo) {
@@ -424,18 +416,18 @@ const getRenderPageResult = async (client: ClientSDK, pageContext: PagesContext 
                 }
             }
         });
-        console.log('pageInfo', pageInfo);
-        console.log('siteInfo', siteInfo);
 
         return {
             placeholders: sanitizeLayout(route?.placeholders),
             page: {
                 fields: route?.fields,
                 isHome: pageInfo.id === siteInfo.startItemId,
+                route: pageInfo.route,
+                templateName: pageInfo.template?.name,
             },
             site: {
+                name: siteInfo.name,
                 host: 'https://' + site?.data?.data?.hosts?.[0]?.targetHostname,
-                // TODO: add item path info
             }
         }
     } catch (e) {

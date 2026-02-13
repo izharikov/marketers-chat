@@ -94,9 +94,9 @@ import {
 } from '@/components/ai-elements/reasoning';
 import { Loader } from '@/components/ai-elements/loader';
 import { ToolUIPart, UIMessage } from 'ai';
-import { AttachmentItem, Attachments } from '../ai-elements/attachments';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { Button } from '../ui/button';
+import { AttachmentItem, Attachments } from '@/components/ai-elements/attachments';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -109,7 +109,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Toaster } from '@/components/ui/sonner';
-import { useAppSettings } from '../providers/app-settings-provider';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
 
 
 const models = [

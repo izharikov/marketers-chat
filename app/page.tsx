@@ -5,7 +5,7 @@ import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
 import { runClientTool } from '@/lib/tools/xmc/client';
 
-import AiChat from '@/components/custom/AiChat';
+import AiChat from '@/components/custom/ai-chat';
 import { useEffect, useRef, useState } from 'react';
 import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
 import { executeClientSideTool } from '@/lib/tools/client-side';
