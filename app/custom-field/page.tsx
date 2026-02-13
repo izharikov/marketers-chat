@@ -19,6 +19,7 @@ import {
 } from '@/components/ai-elements/reasoning';
 import { diffLines } from 'diff';
 import { sanitizeLayout } from "@/lib/sitecore";
+import { Loader } from "@/components/ai-elements/loader";
 
 /**
  * Extracts the first JSON code block or raw JSON string from an AI message.
@@ -279,7 +280,11 @@ export const CustomFieldPage = () => {
     if (isLoading && !existingValue && (status === 'streaming' || status === 'submitted')) {
         // Continue showing loading if streaming just started
     } else if (isLoading && !existingValue) {
-        return <div className="p-8 flex items-center justify-center">Loading...</div>;
+        return <div className="flex">
+            <div className='relative mx-auto h-[100px]'>
+                <Loader className='absolute bottom-0 left-0' />
+            </div>
+        </div>
     }
 
     return (

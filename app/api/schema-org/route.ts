@@ -1,4 +1,4 @@
-import { convertToModelMessages, jsonSchema, JSONSchema7, Output, streamText } from "ai";
+import { convertToModelMessages, jsonSchema, JSONSchema7, Output, streamText, zodSchema } from "ai";
 import z from "zod/v4";
 import { ArticleSchema, ProductSchema, LocalBusinessSchema, BreadcrumbListSchema, RecipeSchema, VideoObjectSchema, ReviewSchema, CourseSchema, JobPostingSchema, WebsiteSchema, FAQPageSchema, EventSchema } from "./schema-definitions";
 import { retrieveModel } from "@/lib/ai/registry";
@@ -7,23 +7,16 @@ export const maxDuration = 30;
 
 function schemaItem(schema: z.ZodObject) {
     return z.object({
-        type: schema.shape['@type'],
         probability: z.int32().describe('Probability percent of @type suits page'),
-        explanation: z.string().describe('explain probability'),
         item: z.union([
             z.literal('Ignore').describe('If low probability'),
             schema,
         ]),
-    })
-    // return z.union([
-    //     z.literal('Ignore').describe('If current page doesn\'t suit to this schema'),
-    //     schema,
-    // ])
+    });
 }
 
 export async function POST(req: Request) {
     const {
-        messages,
         site,
         currentPage,
         layout,
@@ -37,7 +30,7 @@ export async function POST(req: Request) {
         );
     }
     const { model, providerOptions } = retrieveModel('openai/gpt-5-nano', apiKey);
-    const zodSchema = z.object({
+    const originalSchema = z.object({
         article: schemaItem(ArticleSchema),
         faqPage: schemaItem(FAQPageSchema),
         event: schemaItem(EventSchema),
@@ -53,9 +46,8 @@ export async function POST(req: Request) {
             : { breadcrumbList: schemaItem(BreadcrumbListSchema) }),
     });
 
-    const schema = jsonSchema(zodSchema.toJSONSchema({
+    const schema = zodSchema(originalSchema, { useReferences: true });
 
-    }) as JSONSchema7);
     const result = streamText({
         model,
         system: `You are an expert in structured data and schema markup for SitecoreAI website.
@@ -67,7 +59,18 @@ When implementing schema, understand:
 
 # IMPORTANT
 - Be strict and don't generate schema if PAGE CONTENT (fields + layout) doesn't suit to @type (e.g. DON'T generate schema for @type=Article if page is not article)
-- Page langauge and langauge for output: ${language}
+`,
+        output: Output.object({
+            schema,
+        }),
+        messages: await convertToModelMessages([
+            {
+                role: 'user',
+                parts: [
+                    {
+                        type: 'text',
+                        text: `
+## Page language and langauge for output: ${language}
 
 ## Site information (use host for url)
 ${JSON.stringify(site)}
@@ -78,10 +81,10 @@ ${JSON.stringify(currentPage)}
 ## Page Layout (components and datasources)
 ${JSON.stringify(layout)}
 `,
-        output: Output.object({
-            schema,
-        }),
-        messages: await convertToModelMessages(messages),
+                    }
+                ]
+            }
+        ]),
         providerOptions,
         abortSignal: req.signal,
     });
