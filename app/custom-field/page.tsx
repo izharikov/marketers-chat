@@ -3,7 +3,7 @@ import { useApiKey } from "@/components/providers/app-settings-provider";
 import { useAppContext, useMarketplaceClient } from "@/components/providers/marketplace";
 import { usePagesContext } from "@/lib/hooks/useQuery";
 import { useChat } from "@ai-sdk/react";
-import { type UIMessage, parsePartialJson } from "ai";
+import { DeepPartial, type UIMessage, parsePartialJson } from "ai";
 import { ClientSDK, PagesContext } from "@sitecore-marketplace-sdk/client";
 import { DefaultChatTransport } from "ai";
 import { useEffect, useState, useRef, useMemo } from "react";
@@ -20,15 +20,24 @@ import {
 import { diffLines } from 'diff';
 import { sanitizeLayout } from "@/lib/sitecore";
 import { Loader } from "@/components/ai-elements/loader";
+import { PageStructuredData } from "@/lib/api/schema-org";
+import { useFieldValue } from "@/lib/hooks/useFieldValue";
 
 /**
  * Extracts the first JSON code block or raw JSON string from an AI message.
  */
-async function extractResultFromMessage(message: UIMessage) {
+async function extractResultFromMessage(message: UIMessage): Promise<DeepPartial<PageStructuredData>> {
     const text = message.parts.filter(part => part.type === 'text')[0]?.text;
     const val = await parsePartialJson(text);
-    const aiResult = (val.value as Record<string, unknown>) ?? {};
-    const result = Object.values(aiResult).filter((v) => typeof v === 'object');
+    const aiResult = (val.value as DeepPartial<PageStructuredData>) ?? {};
+    return aiResult;
+}
+
+function formatValue(obj: DeepPartial<PageStructuredData> | undefined): string | undefined {
+    if (!obj) {
+        return undefined;
+    }
+    const result = Object.values(obj).filter(v => (v?.probability ?? 0) > 50 && typeof v?.item === 'object').map(v => v?.item);
     return JSON.stringify(result, null, 2);
 }
 
@@ -176,6 +185,7 @@ export const CustomFieldPage = () => {
     const appContext = useAppContext();
     const pageContext = usePagesContext();
     const apiKey = useApiKey('vercel');
+    const [generatedSchema, setGeneratedSchema] = useState<DeepPartial<PageStructuredData>>()
 
     const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
     const pageInfoRef = useRef({});
@@ -199,36 +209,25 @@ export const CustomFieldPage = () => {
         })
     });
 
-    const [existingValue, setExistingValue] = useState<string>("");
-    const [newValue, setNewValue] = useState<string | undefined>(undefined);
+    const newValue = messages.length > 0 ? formatValue(generatedSchema) : undefined;
+    const { existingValue, setExistingValue } = useFieldValue();
     const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        async function fetchValue() {
-            try {
-                const res = await client.getValue();
-                setExistingValue(res || "");
-            } catch (error) {
-                console.error("Failed to fetch existing value", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchValue();
-    }, [client]);
 
     // Update newValue when a new assistant message arrives
     useEffect(() => {
         const lastMessage = messages[messages.length - 1];
         if (lastMessage?.role === 'assistant') {
-            const updateValue = async () => {
-                const extracted = await extractResultFromMessage(lastMessage);
-                const length = newValue?.length || 0;
-                if (extracted && length < extracted.length) {
-                    setNewValue(extracted);
+            let isActive = true;
+            (async () => {
+                const val = await extractResultFromMessage(lastMessage);
+                if (!isActive) {
+                    return;
                 }
+                setGeneratedSchema(val);
+            })();
+            return () => {
+                isActive = false;
             };
-            updateValue();
         }
     }, [messages]);
 
@@ -236,7 +235,6 @@ export const CustomFieldPage = () => {
         setIsLoading(true);
         // Reset chat and new value
         setMessages([]);
-        setNewValue(undefined);
 
         const information = await getPageInformation(client, pageContext, sitecoreContextId!);
         if (!information) {
@@ -267,19 +265,20 @@ export const CustomFieldPage = () => {
         if (newValue && newValue != existingValue) {
             await client.setValue(newValue);
             setExistingValue(newValue);
-            setNewValue(undefined);
             setMessages([]);
         }
     };
 
     const handleReject = () => {
-        setNewValue(undefined);
         setMessages([]);
     };
 
+    console.log('existingValue', existingValue);
+    console.log('isLoading', isLoading);
+
     if (isLoading && !existingValue && (status === 'streaming' || status === 'submitted')) {
         // Continue showing loading if streaming just started
-    } else if (isLoading && !existingValue) {
+    } else if (isLoading && typeof existingValue === undefined) {
         return <div className="flex">
             <div className='relative mx-auto h-[100px]'>
                 <Loader className='absolute bottom-0 left-0' />
@@ -317,7 +316,7 @@ export const CustomFieldPage = () => {
                             <label className="text-sm font-medium text-muted-foreground px-1">Existing Field Value</label>
                             <div className="border h-[400px] overflow-auto rounded-md w-full">
                                 <JsonEditor
-                                    value={existingValue}
+                                    value={existingValue ?? ''}
                                     onChange={setExistingValue}
                                 />
                             </div>
@@ -362,7 +361,7 @@ export const CustomFieldPage = () => {
                                 </Button>
                             </>
                         ) : (
-                            <Button variant="outline" onClick={() => client.setValue(existingValue)}>
+                            <Button variant="outline" onClick={() => client.setValue(existingValue ?? '')}>
                                 Save Manual Changes
                             </Button>
                         )}
@@ -399,6 +398,10 @@ const getPageInformation = async (client: ClientSDK, pageContext: PagesContext |
       layout(site: "${siteInfo.name}", routePath: "${pageInfo.route}", language: "${pageInfo.language}") {
         item {
           rendered
+          fields {
+            name
+            value
+          }
         }
       }
     }`
@@ -409,7 +412,8 @@ const getPageInformation = async (client: ClientSDK, pageContext: PagesContext |
             }
         });
 
-        const route = (renderedResult?.data?.data?.layout as any)?.item?.rendered?.sitecore?.route;
+        const item = (renderedResult?.data?.data?.layout as any)?.item;
+        const route = item?.rendered?.sitecore?.route;
 
         const site = await client.query('xmc.xmapp.retrieveSite', {
             params: {
@@ -429,6 +433,8 @@ const getPageInformation = async (client: ClientSDK, pageContext: PagesContext |
                 isHome: pageInfo.id === siteInfo.startItemId,
                 route: pageInfo.route,
                 templateName: pageInfo.template?.name,
+                created: (item?.fields as any[])?.find(x => x.name === '__Created')?.value,
+                updated: (item?.fields as any[])?.find(x => x.name === '__Updated')?.value,
             },
             site: {
                 name: siteInfo.name,

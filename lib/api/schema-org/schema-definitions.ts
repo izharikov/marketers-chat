@@ -417,7 +417,7 @@ export const RecipeSchema = z.object({
     author: optional(z.object({
         '@type': z.enum(['Person', 'Organization']),
         name: z.string(),
-    })),
+    })).meta({ id: 'RecipeAuthorSchema' }),
     datePublished: optional(z.string().describe('ISO 8601 date when the recipe was published')),
     description: optional(z.string()),
     prepTime: optional(z.string().describe('ISO 8601 duration for preparation time (e.g., PT15M for 15 minutes)')),
