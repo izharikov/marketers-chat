@@ -1,5 +1,5 @@
 'use client';
-import { useApiKey } from "@/components/providers/app-settings-provider";
+import { useApiKey, useAppSettings } from "@/components/providers/app-settings-provider";
 import { useAppContext, useMarketplaceClient } from "@/components/providers/marketplace";
 import { usePagesContext } from "@/lib/hooks/useQuery";
 import { useChat } from "@ai-sdk/react";
@@ -10,8 +10,9 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { CodeBlock } from "@/components/ai-elements/code-block";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from "@/lib/utils";
-import { CheckIcon, XIcon, Sparkles } from "lucide-react";
+import { CheckIcon, XIcon, Sparkles, Ellipsis, Settings } from "lucide-react";
 import {
     Reasoning,
     ReasoningContent,
@@ -185,6 +186,7 @@ export const CustomFieldPage = () => {
     const appContext = useAppContext();
     const pageContext = usePagesContext();
     const apiKey = useApiKey('vercel');
+    const { setModalOpen } = useAppSettings();
     const [generatedSchema, setGeneratedSchema] = useState<DeepPartial<PageStructuredData>>()
 
     const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
@@ -233,6 +235,7 @@ export const CustomFieldPage = () => {
 
     const handleGenerate = async () => {
         setIsLoading(true);
+        setGeneratedSchema(undefined);
         // Reset chat and new value
         setMessages([]);
 
@@ -254,10 +257,7 @@ export const CustomFieldPage = () => {
         currentPageRef.current = information.page;
         languageRef.current = pageContext?.pageInfo?.language ?? 'en';
         // return;
-        await sendMessage({
-            role: 'user',
-            parts: [{ type: 'text', text: 'Generate' }],
-        });
+        await sendMessage();
         setIsLoading(false);
     };
 
@@ -272,9 +272,6 @@ export const CustomFieldPage = () => {
     const handleReject = () => {
         setMessages([]);
     };
-
-    console.log('existingValue', existingValue);
-    console.log('isLoading', isLoading);
 
     if (isLoading && !existingValue && (status === 'streaming' || status === 'submitted')) {
         // Continue showing loading if streaming just started
@@ -293,6 +290,23 @@ export const CustomFieldPage = () => {
                     <CardTitle className="flex items-center gap-2">
                         <Sparkles className="size-5 text-primary" />
                         Schema.org Generator
+                        <div className="flex flex-1 justify-end">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size='icon-sm'>
+                                        <Ellipsis />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem onClick={() => setModalOpen?.(true)}>
+                                            <Settings />
+                                            Settings
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </CardTitle>
                     <CardDescription>
                         Generate and manage JSON-LD structured data for this page to improve SEO.
@@ -339,6 +353,58 @@ export const CustomFieldPage = () => {
                                 }
                                 return null;
                             })}
+                            {generatedSchema && Object.keys(generatedSchema).length > 0 && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Schema Types Analysis</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-0">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead className="border-b bg-muted/50">
+                                                    <tr>
+                                                        <th className="text-left p-3 font-medium text-sm">Type</th>
+                                                        <th className="text-center p-3 font-medium text-sm w-24">Included</th>
+                                                        <th className="text-left p-3 font-medium text-sm">Explanation</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y">
+                                                    {Object.entries(generatedSchema).map(([key, value]) => {
+                                                        const schemaValue = value as any;
+                                                        const probability = schemaValue?.probability ?? 0;
+                                                        const isIncluded = probability > 0 && schemaValue?.item !== null && schemaValue?.item !== undefined;
+
+                                                        return (
+                                                            <tr key={key} className="hover:bg-muted/30">
+                                                                <td className="p-3">
+                                                                    <code className="text-sm bg-muted px-2 py-1 rounded">
+                                                                        {schemaValue?.type || key}
+                                                                    </code>
+                                                                </td>
+                                                                <td className="p-3 text-center">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        {isIncluded ? (
+                                                                            <CheckIcon className="size-5 text-green-600" />
+                                                                        ) : (
+                                                                            <XIcon className="size-5 text-red-600" />
+                                                                        )}
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            {probability}%
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="p-3 text-sm text-muted-foreground">
+                                                                    {schemaValue?.probabilityExplanation || 'No explanation available'}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                             {status === 'streaming' && !newValue && <Card className="border-primary/20 bg-primary/5">
                                 <CardContent className="p-4 text-sm text-center animate-pulse">
                                     Analyzing page structure and generating JSON-LD...
