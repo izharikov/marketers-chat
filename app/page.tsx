@@ -8,9 +8,9 @@ import { executeSitecoreTool } from '@/lib/tools/sitecore/client';
 import AiChat from '@/components/custom/ai-chat';
 import { useEffect, useRef, useState } from 'react';
 import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
-import { executePageBuilderTool } from '@/lib/tools/client-side';
-import { Capability } from '@/lib/tools/sitecore/capabilities';
+import { executePageBuilderTool } from '@/lib/tools/sitecore/page-builder';
 import { toast } from 'sonner';
+import { Capability } from '@/lib/tools/capabilities';
 
 type ToolExecution = 'frontend' | 'backend';
 
@@ -26,6 +26,7 @@ const ChatBotServerTools = () => {
   }, [localSettings]);
   const appContext = useAppContext();
   const apiKey = useApiKey('vercel');
+  const exaApiKey = useApiKey('exa');
   const chat = useChat({
     transport: new DefaultChatTransport({
       api: '/api/editors-agent',
@@ -43,6 +44,7 @@ const ChatBotServerTools = () => {
         return {
           Authorization: `Bearer ${accessToken}`,
           'x-vercel-api-key': apiKey!,
+          'x-exa-api-key': exaApiKey!,
         }
       },
     }),
@@ -81,7 +83,7 @@ const ChatBotServerTools = () => {
       chat={chat}
       onSetModel={val => model.current = val}
       selectedCapabilities={['page_layout']}
-      availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization']}
+      availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization', 'websearch']}
       onCapabilitiesChange={val => capabilities.current = val}
     />
   );
@@ -97,6 +99,7 @@ const ChatBotClientTools = () => {
     needsApproval.current = localSettings.needsToolApproval;
   }, [localSettings]);
   const apiKey = useApiKey('vercel');
+  const exaApiKey = useApiKey('exa');
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
@@ -138,6 +141,7 @@ const ChatBotClientTools = () => {
       api: '/api/editors-agent',
       headers: {
         'x-vercel-api-key': apiKey!,
+        'x-exa-api-key': exaApiKey!,
       },
       body: () => {
         return {
@@ -186,7 +190,7 @@ const ChatBotClientTools = () => {
         await toolRejected(tool);
       }}
       selectedCapabilities={['page_layout']}
-      availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization']}
+      availabelCapabilities={['page_layout', 'sites', 'assets', 'personalization', 'websearch']}
     />
   );
 }

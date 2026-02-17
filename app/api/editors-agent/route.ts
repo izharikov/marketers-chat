@@ -1,10 +1,11 @@
 import { UIMessage, convertToModelMessages, smoothStream, ToolLoopAgent, createUIMessageStream, createUIMessageStreamResponse, ToolUIPart } from 'ai';
-import { pageBuilderTools } from '@/lib/tools/client-side';
+import { pageBuilderTools } from '@/lib/tools/sitecore/page-builder';
 import { createSitecoreTools, CreateSitecoreToolsOptions } from '@/lib/tools/sitecore';
 import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
 import { retrieveModel } from '@/lib/ai/registry';
 import { helpers, writeText } from '@/lib/ai/helpers';
 import { buildSystem, Capability, toolsMapping } from '@/lib/tools/capabilities';
+import { exaTools } from '@/lib/tools/exa';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
     } = await req.json();
 
     const apiKey = req.headers.get("x-vercel-api-key");
+    const exaApiKey = req.headers.get("x-exa-api-key");
     const accessToken = req.headers.get("Authorization")?.split(" ")[1];
     if (!apiKey) {
         return Response.json(
@@ -99,6 +101,7 @@ export async function POST(req: Request) {
         tools: {
             ...createSitecoreTools(options),
             ...pageBuilderTools,
+            ...exaTools({ apiKey: exaApiKey! }),
         },
         activeTools: capabilities.map(cap => toolsMapping[cap]).flat(),
         providerOptions,

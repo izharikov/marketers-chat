@@ -40,7 +40,7 @@ import {
     PromptInputButton,
     PromptInputActionMenuItem,
 } from '@/components/ai-elements/prompt-input';
-import { type Capability } from '@/lib/tools/sitecore';
+
 import {
     Tool,
     ToolContent,
@@ -110,6 +110,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Toaster } from '@/components/ui/sonner';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { Capability } from '@/lib/tools/capabilities';
 
 
 const models = [
@@ -160,6 +161,11 @@ const allCapabilities: { id: Capability; label: string; icon: React.ReactNode }[
         label: 'Personalization',
         icon: <UsersIcon className="size-4" />,
     },
+    {
+        id: 'websearch',
+        label: 'Web Search',
+        icon: <GlobeIcon className="size-4" />,
+    }
 ];
 
 type AiChatProps = {

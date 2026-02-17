@@ -1,7 +1,7 @@
 import { ClientSDK } from "@sitecore-marketplace-sdk/client";
 import { tool } from "ai";
 import { z } from "zod";
-import { ClientSideContext, ClientSideTool } from "../sitecore/types";
+import { ClientSideContext, ClientSideTool } from "../types";
 
 export type ToolConfig<TInput> = {
     description: string;

@@ -1,4 +1,5 @@
-import { PageBuilderToolName } from "./client-side";
+import { ExaToolName } from "./exa";
+import { PageBuilderToolName } from "./sitecore/page-builder";
 import { SitecoreToolName } from "./sitecore/types";
 
 export type Capability = 'page_layout' | 'assets' | 'personalization' | 'sites' | 'websearch';
@@ -68,7 +69,7 @@ You can manage sites and their pages.
 You can search for information on the web.
 
 #### RULES (STRICT):
-- Use 'websearch' to search for information on the web.
+- Use 'web_search' to search for information on the web.
         `,
     },
 }
@@ -77,7 +78,7 @@ export const buildSystem: (capabilities: Capability[]) => string = (capabilities
     return systemInstructions.system + '\n\n' + capabilities.map((capability) => systemInstructions.capabilities[capability]).join('\n\n');
 }
 
-export const toolsMapping: Record<Capability, (SitecoreToolName | PageBuilderToolName)[]> = {
+export const toolsMapping: Record<Capability, (SitecoreToolName | PageBuilderToolName | ExaToolName)[]> = {
     page_layout: [
         'get_current_page_context',
         'get_components_on_page',
@@ -100,5 +101,7 @@ export const toolsMapping: Record<Capability, (SitecoreToolName | PageBuilderToo
         'get_site_details',
         'get_all_pages_by_site',
     ],
-    websearch: [],
+    websearch: [
+        'web_search',
+    ],
 }
