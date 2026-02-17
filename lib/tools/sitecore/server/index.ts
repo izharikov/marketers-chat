@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, pagesToolsConfig, sitesToolsConfig, jobToolsConfig, environmentToolsConfig, personalizationToolsConfig } from "../definitions";
 
 type ToolConfig = {
-    needsApproval?: boolean;
+    needsApproval?: Parameters<typeof tool>[0]['needsApproval'];
 }
 
 function wrapTool(commonConfig: ToolConfig) {

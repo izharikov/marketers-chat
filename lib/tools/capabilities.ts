@@ -1,6 +1,7 @@
-import { ToolName } from "./definitions";
+import { PageBuilderToolName } from "./client-side";
+import { SitecoreToolName } from "./sitecore/types";
 
-export type Capability = 'page_layout' | 'assets' | 'personalization' | 'sites';
+export type Capability = 'page_layout' | 'assets' | 'personalization' | 'sites' | 'websearch';
 
 export const systemInstructions = {
     system: `# You are SitecoreAI assistnant. Don't annoy user with too many questions. Decide by yourself most steps.
@@ -33,9 +34,42 @@ You can add, edit, and remove components and manage their datasources.
 4. Call 'add_component_on_page' ONCE, including ALL datasourceFields.
 5. Reload the page after any change.
         `,
-        assets: 'TODO',
-        personalization: 'TODO',
-        sites: 'TODO',
+        assets: `### Manage assets
+
+You can upload, update, and search for assets.
+
+#### RULES (STRICT):
+- Use 'get_asset_information' to get asset details.
+- Use 'search_assets' to search for assets.
+- Use 'update_asset' to update asset details.
+- Use 'upload_asset' to upload a new asset.
+        `,
+        personalization: `### Manage personalization
+
+You can create and manage personalization versions and conditions.
+
+#### RULES (STRICT):
+- Use 'create_personalization_version' to create a new personalization version.
+- Use 'get_personalization_versions_by_page' to get personalization versions for a page.
+- Use 'get_condition_templates' to get condition templates.
+- Use 'get_condition_template_by_id' to get a specific condition template.
+        `,
+        sites: `### Manage sites
+
+You can manage sites and their pages.
+
+#### RULES (STRICT):
+- Use 'get_sites_list' to get a list of sites.
+- Use 'get_site_details' to get details for a specific site.
+- Use 'get_all_pages_by_site' to get all pages for a site.
+        `,
+        websearch: `### Web search
+
+You can search for information on the web.
+
+#### RULES (STRICT):
+- Use 'websearch' to search for information on the web.
+        `,
     },
 }
 
@@ -43,7 +77,7 @@ export const buildSystem: (capabilities: Capability[]) => string = (capabilities
     return systemInstructions.system + '\n\n' + capabilities.map((capability) => systemInstructions.capabilities[capability]).join('\n\n');
 }
 
-export const toolsMapping: Record<Capability, ToolName[]> = {
+export const toolsMapping: Record<Capability, (SitecoreToolName | PageBuilderToolName)[]> = {
     page_layout: [
         'get_current_page_context',
         'get_components_on_page',
@@ -66,4 +100,5 @@ export const toolsMapping: Record<Capability, ToolName[]> = {
         'get_site_details',
         'get_all_pages_by_site',
     ],
+    websearch: [],
 }

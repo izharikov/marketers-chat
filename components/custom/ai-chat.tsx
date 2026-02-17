@@ -40,7 +40,7 @@ import {
     PromptInputButton,
     PromptInputActionMenuItem,
 } from '@/components/ai-elements/prompt-input';
-import { type Capability } from '@/lib/tools/xmc';
+import { type Capability } from '@/lib/tools/sitecore';
 import {
     Tool,
     ToolContent,

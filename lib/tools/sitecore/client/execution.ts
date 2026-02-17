@@ -10,6 +10,7 @@ import {
     componentsToolsConfig
 } from "../definitions";
 import { clientQuery, clientMutate, clientTool, mutateWithJobId } from "./helpers";
+import { ClientSideContext, ClientSideTool } from "../types";
 
 const sitesTools = {
     get_sites_list: clientTool({
@@ -527,12 +528,20 @@ const allTools = {
     ...clientComponentsTools,
 }
 
-export function runClientTool(client: ClientSDK, sitecoreContextId: string | undefined,
-    toolCall: { toolName: string, input: any }
-) {
-    const tool = allTools[toolCall.toolName as keyof typeof allTools];
-    if (!tool) {
-        return undefined;
+export type ToolName = keyof typeof allTools;
+export type ToolInput<T extends ToolName> = Parameters<typeof allTools[T]>[2];
+
+export async function executeSitecoreTool(context: ClientSideContext, tool: ClientSideTool) {
+    const execute = allTools[tool.toolName as ToolName];
+    if (!execute) {
+        return {
+            success: false,
+            error: `Tool ${tool.toolName} not found`,
+        };
     }
-    return tool(client, sitecoreContextId, toolCall.input);
+
+    return {
+        success: true,
+        result: await execute(context.client, context.sitecoreContextId, tool.input as any),
+    };
 }

@@ -1,51 +1,45 @@
 import { UIMessage, convertToModelMessages, smoothStream, ToolLoopAgent, createUIMessageStream, createUIMessageStreamResponse, ToolUIPart } from 'ai';
-import * as clientTools from '@/lib/tools/xmc/client';
-import * as serverTools from '@/lib/tools/xmc/server';
-import { clientSideTools } from '@/lib/tools/client-side';
-import { buildSystem, Capability, toolsMapping } from '@/lib/tools/xmc';
+import { pageBuilderTools } from '@/lib/tools/client-side';
+import { createSitecoreTools, CreateSitecoreToolsOptions } from '@/lib/tools/sitecore';
 import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
 import { retrieveModel } from '@/lib/ai/registry';
-import { writeText } from '@/lib/ai/helpers';
-
-type ToolExecution = 'frontend' | 'backend';
-
-async function createTools(toolExecution: ToolExecution, config: clientTools.ToolDefinitionConfig,
-    accessToken: string | undefined, contextId: string | undefined) {
-    switch (toolExecution) {
-        case 'frontend':
-            return {
-                ...clientTools.assetTools(config),
-                ...clientTools.componentsTools(config),
-                ...clientTools.contentTools(config),
-                ...clientTools.environmentTools(config),
-                ...clientTools.pagesTools(config),
-                ...clientTools.personalizationTools(config),
-                ...clientTools.sitesTools(config),
-                ...clientTools.jobTools(config),
-                ...clientSideTools,
-            };
-        case 'backend':
-            const xmcClient = await experimental_createXMCClient({
-                getAccessToken: async () => {
-                    return accessToken!;
-                },
-            });
-            return {
-                ...serverTools.assetTools(xmcClient, contextId!, config),
-                ...serverTools.componentsTools(xmcClient, contextId!, config),
-                ...serverTools.contentTools(xmcClient, contextId!, config),
-                ...serverTools.environmentTools(xmcClient, contextId!, config),
-                ...serverTools.pagesTools(xmcClient, contextId!, config),
-                ...serverTools.personalizationTools(xmcClient, contextId!, config),
-                ...serverTools.sitesTools(xmcClient, contextId!, config),
-                ...serverTools.jobTools(xmcClient, contextId!, config),
-                ...clientSideTools
-            }
-    }
-}
+import { helpers, writeText } from '@/lib/ai/helpers';
+import { buildSystem, Capability, toolsMapping } from '@/lib/tools/capabilities';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
+
+function executeRevert({
+    messages,
+    revert,
+}: { messages: UIMessage[], revert: UIMessage['parts'][number] }) {
+    const jobId = (revert as { data: { jobId: string; }; }).data.jobId;
+    const toolCallId = `revert-${jobId}`;
+    const toolName = 'revert_operation';
+    const toolPart = messages.findLast(msg => msg.role === 'assistant')?.parts.find(part => part.type === `tool-${toolName}`) as ToolUIPart;
+    const state = toolPart?.state;
+    const stream = createUIMessageStream({
+        execute: async ({ writer }) => {
+            const { start, finish, toolInput } = helpers(writer);
+            start();
+            if (state === 'output-available' || state === 'output-error') {
+                writeText(writer, `text-${jobId}`, state === 'output-available' ? 'Reverted job' : 'Error reverting job');
+                finish();
+                return;
+            } else if (!state) {
+                toolInput({
+                    toolCallId,
+                    toolName,
+                    input: {
+                        jobId,
+                    },
+                });
+            }
+        },
+        originalMessages: messages,
+    });
+    return createUIMessageStreamResponse({ stream });
+}
 
 export async function POST(req: Request) {
     const {
@@ -80,53 +74,32 @@ export async function POST(req: Request) {
     const lastUserMessage = messages.findLast(msg => msg.role === 'user');
     const revert = lastUserMessage?.parts.find(part => part.type === 'data-revert');
     if (revert) {
-        const jobId = (revert as { data: { jobId: string } }).data.jobId;
-        const stream = createUIMessageStream({
-            execute: async ({ writer }) => {
-                const toolCallId = `revert-${jobId}`;
-                const toolName = 'revert_operation';
-                writer.write({
-                    type: 'start-step',
-                });
-                const toolPart = messages[messages.length - 1].parts.find(part => part.type === `tool-${toolName}`) as ToolUIPart;
-                const state = toolPart?.state;
-                if (state === 'output-available' || state === 'output-error') {
-                    writeText(writer, `text-${jobId}`, state === 'output-available' ? 'Reverted job' : 'Error reverting job');
-                    writer.write({
-                        type: 'finish',
-                        finishReason: 'stop',
-                    });
-                    return;
-                } else if (!state) {
-                    writer.write({
-                        type: 'tool-input-available',
-                        toolCallId,
-                        toolName,
-                        input: {
-                            jobId,
-                        },
-                    });
-                    writer.write({
-                        type: 'finish',
-                        finishReason: 'tool-calls',
-                    });
-                }
-            },
-            originalMessages: messages,
-        });
-        return createUIMessageStreamResponse({ stream });
+        return executeRevert({ messages, revert });
     }
 
     const { model, providerOptions } = retrieveModel(modelName, apiKey);
 
-    const config = {
+    const options: CreateSitecoreToolsOptions = toolExecution === 'frontend' ? {
+        execution: 'client',
         needsApproval,
+    } : {
+        execution: 'server',
+        needsApproval,
+        client: await experimental_createXMCClient({
+            getAccessToken: async () => {
+                return accessToken!;
+            },
+        }),
+        sitecoreContextId: contextId!,
     };
 
     const agent = new ToolLoopAgent({
         model,
         instructions: buildSystem(capabilities),
-        tools: await createTools(toolExecution, config, accessToken, contextId),
+        tools: {
+            ...createSitecoreTools(options),
+            ...pageBuilderTools,
+        },
         activeTools: capabilities.map(cap => toolsMapping[cap]).flat(),
         providerOptions,
     });

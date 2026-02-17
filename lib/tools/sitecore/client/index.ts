@@ -2,7 +2,7 @@ import { Tool, tool } from "ai";
 import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, pagesToolsConfig, sitesToolsConfig, jobToolsConfig, environmentToolsConfig, personalizationToolsConfig } from "../definitions";
 
 export type ToolDefinitionConfig = {
-    needsApproval?: boolean;
+    needsApproval?: Parameters<typeof tool>[0]['needsApproval'];
 }
 
 function wrapTool(commonConfig: ToolDefinitionConfig) {
@@ -101,4 +101,4 @@ export function componentsTools(commonConfig?: ToolDefinitionConfig) {
     }
 }
 
-export { runClientTool } from './execution';
+export { executeSitecoreTool } from './execution';

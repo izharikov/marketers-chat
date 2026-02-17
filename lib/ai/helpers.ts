@@ -15,3 +15,29 @@ export function writeText(writer: UIMessageStreamWriter, id: string, text: strin
         id,
     });
 }
+
+export function helpers(writer: UIMessageStreamWriter) {
+    return {
+        start: () => writer.write({
+            type: 'start-step',
+        }),
+        finish: () => writer.write({
+            type: 'finish',
+            finishReason: 'stop',
+        }),
+        toolInput: ({ toolCallId, toolName, input }: { toolCallId: string, toolName: string, input: any }, finish: boolean = true) => {
+            writer.write({
+                type: 'tool-input-available',
+                toolCallId,
+                toolName,
+                input,
+            });
+            if (finish) {
+                writer.write({
+                    type: 'finish',
+                    finishReason: 'tool-calls',
+                });
+            }
+        }
+    }
+}

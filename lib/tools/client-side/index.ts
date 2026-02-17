@@ -1,11 +1,12 @@
 import { ClientSDK } from "@sitecore-marketplace-sdk/client";
 import { tool } from "ai";
 import { z } from "zod";
+import { ClientSideContext, ClientSideTool } from "../sitecore/types";
 
 export type ToolConfig<TInput> = {
     description: string;
     inputSchema: z.ZodType<TInput>;
-    execute: (opts: { client: ClientSDK, sitecoreContextId: string }, input: TInput) => Promise<any>;
+    execute: (opts: ClientSideContext, input: TInput) => Promise<any>;
 }
 
 function define<TInput>(config: ToolConfig<TInput>) {
@@ -91,19 +92,24 @@ const tools = {
     }),
 }
 
-export const clientSideTools = {
+export const pageBuilderTools = {
     get_current_page_context: tool({ ...tools.get_current_page_context, execute: undefined }),
     reload_current_page: tool({ ...tools.reload_current_page, execute: undefined }),
     navigate_to_another_page: tool({ ...tools.navigate_to_another_page, execute: undefined }),
 };
 
-export async function executeClientSideTool({ client, sitecoreContextId }: { client: ClientSDK, sitecoreContextId: string }, tool: string, input: any, ignoreNotFound: boolean = false) {
-    const toolFunction = tools[tool as keyof typeof tools] as ToolConfig<any>;
+export type PageBuilderToolName = keyof typeof pageBuilderTools;
+
+export async function executePageBuilderTool(context: ClientSideContext, tool: ClientSideTool) {
+    const toolFunction = tools[tool.toolName as keyof typeof pageBuilderTools] as ToolConfig<any>;
     if (!toolFunction) {
-        if (ignoreNotFound) {
-            return;
-        }
-        throw new Error('Tool not found');
+        return {
+            success: false,
+            error: 'Tool not found',
+        };
     }
-    return toolFunction.execute({ client, sitecoreContextId }, toolFunction.inputSchema.parse(input));
+    return {
+        success: true,
+        result: await toolFunction.execute(context, toolFunction.inputSchema.parse(tool.input)),
+    };
 }

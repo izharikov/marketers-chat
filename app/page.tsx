@@ -3,13 +3,13 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
-import { runClientTool } from '@/lib/tools/xmc/client';
+import { executeSitecoreTool } from '@/lib/tools/sitecore/client';
 
 import AiChat from '@/components/custom/ai-chat';
 import { useEffect, useRef, useState } from 'react';
 import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
-import { executeClientSideTool } from '@/lib/tools/client-side';
-import { Capability } from '@/lib/tools/xmc';
+import { executePageBuilderTool } from '@/lib/tools/client-side';
+import { Capability } from '@/lib/tools/sitecore/capabilities';
 import { toast } from 'sonner';
 
 type ToolExecution = 'frontend' | 'backend';
@@ -53,14 +53,14 @@ const ChatBotServerTools = () => {
       const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview!;
       const { toolName, toolCallId, input } = toolCall;
       try {
-        const res = await executeClientSideTool({ client, sitecoreContextId }, toolName, input, true);
-        if (!res) {
+        const res = await executePageBuilderTool({ client, sitecoreContextId }, { toolName, input });
+        if (!res.success) {
           return;
         }
         chat.addToolOutput({
           tool: toolName,
           toolCallId,
-          output: res,
+          output: res.result,
         });
       } catch (e) {
         console.error('Error executing tool', toolName, e);
@@ -102,17 +102,17 @@ const ChatBotClientTools = () => {
     const toolName = toolPart.type.substring('tool-'.length);
     const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview!;
     try {
-      let res = await runClientTool(client, sitecoreContextId, { toolName, input: toolPart.input });
-      if (!res) {
-        res = await executeClientSideTool({ client, sitecoreContextId }, toolName, toolPart.input);
+      let res = await executeSitecoreTool({ client, sitecoreContextId }, { toolName, input: toolPart.input });
+      if (!res.success) {
+        res = await executePageBuilderTool({ client, sitecoreContextId }, { toolName, input: toolPart.input });
       }
-      if (!res) {
-        return;
+      if (!res.success) {
+        throw new Error(res.error);
       }
       chat.addToolOutput({
         tool: toolName,
         toolCallId: toolPart.toolCallId,
-        output: res,
+        output: res.result,
       });
     } catch (e) {
       console.error('Error executing tool', toolName, e);

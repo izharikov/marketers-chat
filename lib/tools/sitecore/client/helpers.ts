@@ -2,12 +2,12 @@ import { ClientSDK, QueryKey, QueryOptions, MutationKey, MutationOptions } from 
 import { z } from "zod/v4";
 import { v4 as uuid } from 'uuid';
 
-export type ToolConfig<TInput> = {
+export type ToolConfig<TInput, TOutput> = {
     inputSchema: z.ZodType<TInput>;
-    execute: (client: ClientSDK, sitecoreContextId: string | undefined, input: TInput) => Promise<any>;
+    execute: (client: ClientSDK, sitecoreContextId: string | undefined, input: TInput) => Promise<TOutput>;
 }
 
-export function clientTool<TInput>(config: ToolConfig<TInput>) {
+export function clientTool<TInput, TOutput>(config: ToolConfig<TInput, TOutput>) {
     return config.execute;
 }
 
