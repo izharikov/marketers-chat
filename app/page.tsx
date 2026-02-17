@@ -6,7 +6,7 @@ import { useAppContext, useMarketplaceClient } from '@/components/providers/mark
 import { executeSitecoreTool } from '@/lib/tools/sitecore/client';
 
 import AiChat from '@/components/custom/ai-chat';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
 import { executePageBuilderTool } from '@/lib/tools/sitecore/page-builder';
 import { toast } from 'sonner';
