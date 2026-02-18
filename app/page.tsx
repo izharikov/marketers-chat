@@ -1,16 +1,22 @@
 'use client';
+import { useEffect, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, lastAssistantMessageIsCompleteWithToolCalls, tool, ToolCallPart, ToolUIPart } from 'ai';
+import {
+  DefaultChatTransport,
+  ToolUIPart,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
+  lastAssistantMessageIsCompleteWithToolCalls
+} from 'ai';
+import { toast } from 'sonner';
+import AiChat from '@/components/custom/ai-chat';
+import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
 import { useAuth } from '@/components/providers/auth';
 import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
-import { executeSitecoreTool } from '@/lib/tools/sitecore/client';
-
-import AiChat from '@/components/custom/ai-chat';
-import { useEffect, useRef } from 'react';
-import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
-import { executePageBuilderTool } from '@/lib/tools/sitecore/page-builder';
-import { toast } from 'sonner';
 import { Capability } from '@/lib/tools/capabilities';
+import { executeSitecoreTool } from '@/lib/tools/sitecore/client';
+import { executePageBuilderTool } from '@/lib/tools/sitecore/page-builder';
+
+
 
 type ToolExecution = 'frontend' | 'backend';
 
@@ -52,7 +58,10 @@ const ChatBotServerTools = () => {
       return lastAssistantMessageIsCompleteWithApprovalResponses(opts) || lastAssistantMessageIsCompleteWithToolCalls(opts);
     },
     onToolCall: async ({ toolCall }) => {
-      const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview!;
+      const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
+      if (!sitecoreContextId) {
+        throw new Error('No sitecore context found');
+      }
       const { toolName, toolCallId, input } = toolCall;
       try {
         const res = await executePageBuilderTool({ client, sitecoreContextId }, { toolName, input });
@@ -67,10 +76,10 @@ const ChatBotServerTools = () => {
       } catch (e) {
         console.error('Error executing tool', toolName, e);
         chat.addToolOutput({
-          state: "output-error",
+          state: 'output-error',
           tool: toolName,
           toolCallId,
-          errorText: e?.toString()!,
+          errorText: e?.toString() || 'Unknown error',
         });
       }
     }
@@ -103,7 +112,10 @@ const ChatBotClientTools = () => {
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
-    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview!;
+    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
+    if (!sitecoreContextId) {
+      throw new Error('No sitecore context found');
+    }
     try {
       let res = await executeSitecoreTool({ client, sitecoreContextId }, { toolName, input: toolPart.input });
       if (!res.success) {
@@ -120,10 +132,10 @@ const ChatBotClientTools = () => {
     } catch (e) {
       console.error('Error executing tool', toolName, e);
       chat.addToolOutput({
-        state: "output-error",
+        state: 'output-error',
         tool: toolName,
         toolCallId: toolPart.toolCallId,
-        errorText: e?.toString()!,
+        errorText: e?.toString() || 'Unknown error',
       });
     }
   }
@@ -153,7 +165,7 @@ const ChatBotClientTools = () => {
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     onError: (error) => {
-      toast('Error in chat');
+      toast('Error in chat: ' + error.message);
     },
     onFinish: async ({ message, finishReason }) => {
       // if tool was finished because of tool call

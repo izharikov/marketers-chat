@@ -1,16 +1,15 @@
-import { ClientSDK } from "@sitecore-marketplace-sdk/client";
 import {
     assetToolsConfig,
+    componentsToolsConfig,
+    contentToolsConfig,
     environmentToolsConfig,
-    personalizationToolsConfig,
     jobToolsConfig,
     pagesToolsConfig,
-    sitesToolsConfig,
-    contentToolsConfig,
-    componentsToolsConfig
-} from "../definitions";
-import { clientQuery, clientMutate, clientTool, mutateWithJobId } from "./helpers";
-import { ClientSideContext, ClientSideTool } from "../types";
+    personalizationToolsConfig,
+    sitesToolsConfig
+} from '../definitions';
+import { ClientSideContext, ClientSideTool } from '../types';
+import { clientMutate, clientQuery, clientTool, mutateWithJobId, ToolConfig } from './helpers';
 
 const sitesTools = {
     get_sites_list: clientTool({
@@ -529,19 +528,19 @@ const allTools = {
 }
 
 export type ToolName = keyof typeof allTools;
-export type ToolInput<T extends ToolName> = Parameters<typeof allTools[T]>[2];
 
 export async function executeSitecoreTool(context: ClientSideContext, tool: ClientSideTool) {
-    const execute = allTools[tool.toolName as ToolName];
-    if (!execute) {
+    const toolDefinition = allTools[tool.toolName as ToolName];
+    if (!toolDefinition) {
         return {
             success: false,
             error: `Tool ${tool.toolName} not found`,
         };
     }
+    const { execute, inputSchema } = toolDefinition as ToolConfig<unknown, unknown>;
 
     return {
         success: true,
-        result: await execute(context.client, context.sitecoreContextId, tool.input as any),
+        result: await execute(context.client, context.sitecoreContextId, inputSchema.parse(tool.input)),
     };
 }

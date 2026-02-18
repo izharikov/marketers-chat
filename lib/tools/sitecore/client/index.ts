@@ -1,5 +1,13 @@
-import { Tool, tool } from "ai";
-import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, pagesToolsConfig, sitesToolsConfig, jobToolsConfig, environmentToolsConfig, personalizationToolsConfig } from "../definitions";
+import { Tool, tool } from 'ai';import {
+    assetToolsConfig,
+    componentsToolsConfig,
+    contentToolsConfig,
+    environmentToolsConfig,
+    jobToolsConfig,
+    pagesToolsConfig,
+    personalizationToolsConfig,
+    sitesToolsConfig
+} from '../definitions';
 
 export type ToolDefinitionConfig = {
     needsApproval?: Parameters<typeof tool>[0]['needsApproval'];

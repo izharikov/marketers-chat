@@ -1,6 +1,6 @@
-import { tool } from "ai";
-import { z } from "zod";
-import { Exa } from "exa-js";
+import { tool } from 'ai';
+import { Exa } from 'exa-js';
+import { z } from 'zod';
 
 
 const webSearch = ({ apiKey }: { apiKey: string }) =>

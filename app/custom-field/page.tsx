@@ -1,28 +1,30 @@
 'use client';
-import { useApiKey, useAppSettings } from "@/components/providers/app-settings-provider";
-import { useAppContext, useMarketplaceClient } from "@/components/providers/marketplace";
-import { usePagesContext } from "@/lib/hooks/useQuery";
-import { useChat } from "@ai-sdk/react";
-import { DeepPartial, type UIMessage, parsePartialJson } from "ai";
-import { ClientSDK, PagesContext } from "@sitecore-marketplace-sdk/client";
-import { DefaultChatTransport } from "ai";
-import { useEffect, useState, useRef, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { CodeBlock } from "@/components/ai-elements/code-block";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { cn } from "@/lib/utils";
-import { CheckIcon, XIcon, Sparkles, Ellipsis, Settings } from "lucide-react";
-import {
-    Reasoning,
-    ReasoningContent,
-    ReasoningTrigger,
-} from '@/components/ai-elements/reasoning';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useChat } from '@ai-sdk/react';
+import { ClientSDK, PagesContext } from '@sitecore-marketplace-sdk/client';
+import { DefaultChatTransport } from 'ai';
+import { DeepPartial, type UIMessage, parsePartialJson } from 'ai';
 import { diffLines } from 'diff';
-import { sanitizeLayout } from "@/lib/sitecore";
-import { Loader } from "@/components/ai-elements/loader";
-import { PageStructuredData } from "@/lib/api/schema-org";
-import { useFieldValue } from "@/lib/hooks/useFieldValue";
+import { CheckIcon, Ellipsis, Settings, Sparkles, XIcon } from 'lucide-react';
+import { CodeBlock } from '@/components/ai-elements/code-block';
+import { Loader } from '@/components/ai-elements/loader';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning';
+import { useApiKey, useAppSettings } from '@/components/providers/app-settings-provider';
+import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { PageStructuredData } from '@/lib/api/schema-org';
+import { useFieldValue } from '@/lib/hooks/useFieldValue';
+import { usePagesContext } from '@/lib/hooks/useQuery';
+import { Component, sanitizeLayout } from '@/lib/sitecore';
+import { cn } from '@/lib/utils';
 
 /**
  * Extracts the first JSON code block or raw JSON string from an AI message.
@@ -56,7 +58,7 @@ const JsonEditor = ({ value, onChange, className }: { value: string; onChange: (
     }, [value]);
 
     return (
-        <div className={cn("relative font-mono text-sm bg-background h-full", className)}>
+        <div className={cn('relative font-mono text-sm bg-background h-full', className)}>
             <div className="inset-0 overflow-hidden relative min-w-full min-h-full" style={{ width: calculatedWidth }} ref={preRef}>
                 <CodeBlock
                     code={value}
@@ -148,7 +150,7 @@ const DiffView = ({ oldCode, newCode, className }: { oldCode: string; newCode: s
     }, [oldCode, newCode]);
 
     return (
-        <div className={cn("grid grid-cols-2 gap-4", className)}>
+        <div className={cn('grid grid-cols-2 gap-4', className)}>
             <div
                 ref={leftRef}
                 onScroll={syncScroll}
@@ -199,9 +201,9 @@ export const CustomFieldPage = () => {
     const { messages, status, sendMessage, setMessages } = useChat({
         transport: new DefaultChatTransport({
             api: '/api/schema-org',
-            headers: {
+            headers: () => ({
                 'x-vercel-api-key': apiKey!,
-            },
+            }),
             body: () => ({
                 layout: pageLayoutRef.current,
                 site: siteRef.current,
@@ -241,7 +243,7 @@ export const CustomFieldPage = () => {
 
         const information = await getPageInformation(client, pageContext, sitecoreContextId!);
         if (!information) {
-            console.error("Failed to get render page result");
+            console.error('Failed to get render page result');
             setIsLoading(false);
             return;
         }
@@ -320,7 +322,7 @@ export const CustomFieldPage = () => {
                                 <span>Generated Value (Preview)</span>
                             </div>
                             <DiffView
-                                oldCode={existingValue || "// No existing value"}
+                                oldCode={existingValue || '// No existing value'}
                                 newCode={newValue}
                                 className="h-[400px]"
                             />
@@ -370,15 +372,14 @@ export const CustomFieldPage = () => {
                                                 </thead>
                                                 <tbody className="divide-y">
                                                     {Object.entries(generatedSchema).map(([key, value]) => {
-                                                        const schemaValue = value as any;
-                                                        const probability = schemaValue?.probability ?? 0;
-                                                        const isIncluded = probability > 0 && schemaValue?.item !== null && schemaValue?.item !== undefined;
+                                                        const probability = value?.probability ?? 0;
+                                                        const isIncluded = probability > 0 && value?.item !== null && value?.item !== undefined;
 
                                                         return (
                                                             <tr key={key} className="hover:bg-muted/30">
                                                                 <td className="p-3">
                                                                     <code className="text-sm bg-muted px-2 py-1 rounded">
-                                                                        {schemaValue?.type || key}
+                                                                        {value?.type || key}
                                                                     </code>
                                                                 </td>
                                                                 <td className="p-3 text-center">
@@ -394,7 +395,7 @@ export const CustomFieldPage = () => {
                                                                     </div>
                                                                 </td>
                                                                 <td className="p-3 text-sm text-muted-foreground">
-                                                                    {schemaValue?.probabilityExplanation || 'No explanation available'}
+                                                                    {value?.probabilityExplanation || 'No explanation available'}
                                                                 </td>
                                                             </tr>
                                                         );
@@ -437,7 +438,7 @@ export const CustomFieldPage = () => {
                         disabled={status === 'streaming' || status === 'submitted'}
                         className="gap-2"
                     >
-                        {(status === 'streaming' || status === 'submitted') ? "Generating..." : (
+                        {(status === 'streaming' || status === 'submitted') ? 'Generating...' : (
                             <>
                                 <Sparkles className="size-4" />
                                 Generate Schema
@@ -457,7 +458,7 @@ const getPageInformation = async (client: ClientSDK, pageContext: PagesContext |
         return;
     }
     try {
-        const renderedResult = await client.mutate("xmc.live.graphql", {
+        const renderedResult = await client.mutate('xmc.live.graphql', {
             params: {
                 body: {
                     query: `query {
@@ -478,7 +479,7 @@ const getPageInformation = async (client: ClientSDK, pageContext: PagesContext |
             }
         });
 
-        const item = (renderedResult?.data?.data?.layout as any)?.item;
+        const item = (renderedResult?.data?.data?.layout as { item: { rendered: { sitecore: { route: { placeholders: Record<string, Component[]>; fields: unknown } } }, fields: { name: string, value: string }[] } })?.item;
         const route = item?.rendered?.sitecore?.route;
 
         const site = await client.query('xmc.xmapp.retrieveSite', {
@@ -499,8 +500,8 @@ const getPageInformation = async (client: ClientSDK, pageContext: PagesContext |
                 isHome: pageInfo.id === siteInfo.startItemId,
                 route: pageInfo.route,
                 templateName: pageInfo.template?.name,
-                created: (item?.fields as any[])?.find(x => x.name === '__Created')?.value,
-                updated: (item?.fields as any[])?.find(x => x.name === '__Updated')?.value,
+                created: item?.fields?.find(x => x.name === '__Created')?.value,
+                updated: item?.fields?.find(x => x.name === '__Updated')?.value,
             },
             site: {
                 name: siteInfo.name,
@@ -508,7 +509,7 @@ const getPageInformation = async (client: ClientSDK, pageContext: PagesContext |
             }
         }
     } catch (e) {
-        console.error("Error fetching rendered result", e);
+        console.error('Error fetching rendered result', e);
         return null;
     }
 };

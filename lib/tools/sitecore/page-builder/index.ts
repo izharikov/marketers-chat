@@ -1,15 +1,13 @@
-import { ClientSDK } from "@sitecore-marketplace-sdk/client";
-import { tool } from "ai";
-import { z } from "zod";
-import { ClientSideContext, ClientSideTool } from "../types";
+import { tool } from 'ai';
+import { z } from 'zod';import { ClientSideContext, ClientSideTool } from '../types';
 
-export type ToolConfig<TInput> = {
+export type ToolConfig<TInput, TOutput> = {
     description: string;
     inputSchema: z.ZodType<TInput>;
-    execute: (opts: ClientSideContext, input: TInput) => Promise<any>;
+    execute: (opts: ClientSideContext, input: TInput) => Promise<TOutput>;
 }
 
-function define<TInput>(config: ToolConfig<TInput>) {
+function define<TInput, TOutput>(config: ToolConfig<TInput, TOutput>) {
     return config;
 }
 
@@ -101,7 +99,7 @@ export const pageBuilderTools = {
 export type PageBuilderToolName = keyof typeof pageBuilderTools;
 
 export async function executePageBuilderTool(context: ClientSideContext, tool: ClientSideTool) {
-    const toolFunction = tools[tool.toolName as keyof typeof pageBuilderTools] as ToolConfig<any>;
+    const toolFunction = tools[tool.toolName as keyof typeof pageBuilderTools] as ToolConfig<unknown, unknown>;
     if (!toolFunction) {
         return {
             success: false,

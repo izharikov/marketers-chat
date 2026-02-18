@@ -1,4 +1,4 @@
-import { UIMessageStreamWriter } from "ai";
+import { UIMessageStreamWriter } from 'ai';
 
 export function writeText(writer: UIMessageStreamWriter, id: string, text: string) {
     writer.write({
@@ -25,7 +25,7 @@ export function helpers(writer: UIMessageStreamWriter) {
             type: 'finish',
             finishReason: 'stop',
         }),
-        toolInput: ({ toolCallId, toolName, input }: { toolCallId: string, toolName: string, input: any }, finish: boolean = true) => {
+        toolInput: ({ toolCallId, toolName, input }: { toolCallId: string, toolName: string, input: unknown }, finish: boolean = true) => {
             writer.write({
                 type: 'tool-input-available',
                 toolCallId,

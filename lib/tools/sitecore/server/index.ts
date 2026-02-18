@@ -1,7 +1,15 @@
-import { experimental_XMC } from "@sitecore-marketplace-sdk/xmc";
-import { JSONValue, Tool, tool } from "ai";
-import { v4 as uuidv4 } from 'uuid';
-import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, pagesToolsConfig, sitesToolsConfig, jobToolsConfig, environmentToolsConfig, personalizationToolsConfig } from "../definitions";
+import { experimental_XMC } from '@sitecore-marketplace-sdk/xmc';
+import { Tool, tool } from 'ai';
+import { v4 as uuidv4 } from 'uuid';import {
+    assetToolsConfig,
+    componentsToolsConfig,
+    contentToolsConfig,
+    environmentToolsConfig,
+    jobToolsConfig,
+    pagesToolsConfig,
+    personalizationToolsConfig,
+    sitesToolsConfig
+} from '../definitions';
 
 type ToolConfig = {
     needsApproval?: Parameters<typeof tool>[0]['needsApproval'];
@@ -16,7 +24,7 @@ function wrapTool(commonConfig: ToolConfig) {
     };
 }
 
-async function wrapAgentCall<TResult extends { data: any }>(call: () => Promise<TResult>) {
+async function wrapAgentCall<TData, TResult extends { data: TData }>(call: () => Promise<TResult>) {
     const response = await call();
     if ('error' in response) {
         throw response.error;
@@ -24,7 +32,7 @@ async function wrapAgentCall<TResult extends { data: any }>(call: () => Promise<
     return { ...response.data };
 };
 
-async function callWithJobId<TResult extends { data: any }>(call: (jobId: string) => Promise<TResult>) {
+async function callWithJobId<TData, TResult extends { data: TData }>(call: (jobId: string) => Promise<TResult>) {
     const jobId = uuidv4();
     const response = await call(jobId);
     if ('error' in response) {

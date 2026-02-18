@@ -1,22 +1,18 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { AppSettingsModal } from "@/components/custom/api-key-modal";
-import { useAppContext, useMarketplaceClient } from "@/components/providers/marketplace";
-import { getApiKey, saveApiKey } from "@/lib/sitecore/storage/api-key-storage";
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { AppSettingsModal } from '@/components/custom/api-key-modal';
+import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
+import { getApiKey, saveApiKey } from '@/lib/sitecore/storage/api-key-storage';
 
 /**
  * Supported API key names
  */
 export type ApiKey = 'vercel' | 'openai' | 'anthropic' | 'google' | 'exa';
 
-export interface LocalSettings extends Record<string, any> {
+export interface LocalSettings extends Record<string, unknown> {
     needsToolApproval: boolean;
 }
-
-const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
-    needsToolApproval: false,
-};
 
 interface AppSettingsContextType {
     keys: Record<ApiKey, string>;
@@ -39,23 +35,11 @@ export function AppSettingsProvider({
     const client = useMarketplaceClient();
     const appContext = useAppContext();
     const [keys, setKeys] = useState<Record<ApiKey, string>>({} as Record<ApiKey, string>);
-    const [localSettings, setLocalSettings] = useState<LocalSettings>(DEFAULT_LOCAL_SETTINGS);
+    const [localSettings, setLocalSettings] = useState<LocalSettings>(() => JSON.parse(localStorage.getItem('marketers-chat-settings') || '{}'));
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview!;
-
-    // Load local settings from localStorage
-    useEffect(() => {
-        const saved = localStorage.getItem("marketers-chat-settings");
-        if (saved) {
-            try {
-                setLocalSettings(prev => ({ ...prev, ...JSON.parse(saved) }));
-            } catch (e) {
-                console.error("Failed to parse local settings", e);
-            }
-        }
-    }, []);
+    const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
 
     // Load API keys from Sitecore
     useEffect(() => {
@@ -65,7 +49,7 @@ export function AppSettingsProvider({
             const results = await Promise.all(
                 requestedKeys.map(async (name) => {
                     const value = await getApiKey(client, sitecoreContextId, name);
-                    return { name, value: value || "" };
+                    return { name, value: value || '' };
                 })
             );
 
@@ -87,6 +71,9 @@ export function AppSettingsProvider({
     }, [sitecoreContextId, client, requestedKeys]);
 
     const saveSettings = useCallback(async (newKeys: Record<string, string>, newLocalSettings: LocalSettings) => {
+        if (!sitecoreContextId) {
+            throw new Error('Sitecore context ID is not defined');
+        }
         // Save API keys to Sitecore
         const savePromises = Object.entries(newKeys).map(async ([name, value]) => {
             if (keys[name as ApiKey] !== value) {
@@ -99,7 +86,7 @@ export function AppSettingsProvider({
         setKeys(prev => ({ ...prev, ...newKeys }));
 
         // Save local settings to localStorage
-        localStorage.setItem("marketers-chat-settings", JSON.stringify(newLocalSettings));
+        localStorage.setItem('marketers-chat-settings', JSON.stringify(newLocalSettings));
         setLocalSettings(newLocalSettings);
 
         setIsModalOpen(false);
@@ -134,7 +121,7 @@ export function AppSettingsProvider({
 export function useApiKey(name: ApiKey): string | undefined {
     const context = useContext(AppSettingsContext);
     if (context === undefined) {
-        throw new Error("useApiKey must be used within an AppSettingsProvider");
+        throw new Error('useApiKey must be used within an AppSettingsProvider');
     }
     return context.keys[name];
 }
@@ -145,7 +132,7 @@ export function useApiKey(name: ApiKey): string | undefined {
 export function useLocalSettings() {
     const context = useContext(AppSettingsContext);
     if (context === undefined) {
-        throw new Error("useLocalSettings must be used within an AppSettingsProvider");
+        throw new Error('useLocalSettings must be used within an AppSettingsProvider');
     }
     return context.localSettings;
 }
@@ -153,7 +140,7 @@ export function useLocalSettings() {
 export function useAppSettings() {
     const context = useContext(AppSettingsContext);
     if (context === undefined) {
-        throw new Error("useAppSettings must be used within an AppSettingsProvider");
+        throw new Error('useAppSettings must be used within an AppSettingsProvider');
     }
     return {
         setModalOpen: context.setModalOpen,

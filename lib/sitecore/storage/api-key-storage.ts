@@ -1,4 +1,4 @@
-import { ClientSDK } from "@sitecore-marketplace-sdk/client";
+import { ClientSDK } from '@sitecore-marketplace-sdk/client';
 
 type PathSegment = {
   name: string;
@@ -6,16 +6,16 @@ type PathSegment = {
 };
 
 const config = {
-  templateId: "{97D75760-CF8B-4740-810B-7727B564EF4D}", // Template ID for API Key items
-  folderTemplateId: "{A87A00B1-E6DB-45AB-8B54-636FEC3B5523}",
-  basePath: "/sitecore/system/Modules", // Base path that always exists
+  templateId: '{97D75760-CF8B-4740-810B-7727B564EF4D}', // Template ID for API Key items
+  folderTemplateId: '{A87A00B1-E6DB-45AB-8B54-636FEC3B5523}',
+  basePath: '/sitecore/system/Modules', // Base path that always exists
   pathSegments: [
-    { name: "Editors Chat", icon: "Office/32x32/window_gear.png" },
-    { name: "Api Keys", icon: "Office/32x32/keys.png" }
+    { name: 'Editors Chat', icon: 'Office/32x32/window_gear.png' },
+    { name: 'Api Keys', icon: 'Office/32x32/keys.png' }
   ] as PathSegment[],
-  field: "Value", // Field name where the key is stored
+  field: 'Value', // Field name where the key is stored
   language: 'en',
-  apiKeyIcon: "Office/32x32/key.png", // Icon for individual API key items (empty by default)
+  apiKeyIcon: 'Office/32x32/key.png', // Icon for individual API key items (empty by default)
 };
 
 const queries = {
@@ -70,11 +70,11 @@ const queries = {
  * Simple mutex to prevent race conditions during path creation
  */
 class PathCreationMutex {
-  private queue: Promise<any> = Promise.resolve();
+  private queue: Promise<unknown> = Promise.resolve();
 
   async lock<T>(fn: () => Promise<T>): Promise<T> {
     const previous = this.queue;
-    let resolve!: (value: any) => void;
+    let resolve!: (value: unknown) => void;
 
     this.queue = new Promise(r => resolve = r);
 
@@ -121,7 +121,7 @@ async function ensurePathExists(
       },
     });
 
-    const baseData = baseResult?.data?.data as any;
+    const baseData = baseResult?.data?.data as { item: { itemId: string } };
     if (!baseData?.item?.itemId) {
       throw new Error(`Base path does not exist: ${config.basePath}`);
     }
@@ -143,12 +143,12 @@ async function ensurePathExists(
         },
       });
 
-      const checkData = checkResult?.data?.data as any;
+      const checkData = checkResult?.data?.data as { item: { itemId: string } };
       if (checkData?.item?.itemId) {
         parentId = checkData.item.itemId;
       } else {
         // Create this segment with its icon
-        const fields: any[] = [];
+        const fields: { name: string, value: string }[] = [];
         if (segment.icon) {
           fields.push({ name: '__Icon', value: segment.icon });
         }
@@ -169,7 +169,7 @@ async function ensurePathExists(
           },
         });
 
-        const createData = createResult?.data?.data as any;
+        const createData = createResult?.data?.data as { createItem: { item: { itemId: string } } };
         parentId = createData?.createItem?.item?.itemId;
         if (!parentId) {
           throw new Error(`Failed to create path segment: ${segment.name}`);
@@ -211,9 +211,9 @@ export async function getApiKey(
     });
 
     if (result?.data?.data) {
-      const data = result.data?.data as any;
+      const data = result.data?.data as { item: { fields: { nodes: { name: string, value: string }[] } } };
       if (data?.item?.fields) {
-        const field = data.item.fields?.nodes?.find((f: any) => f.name === config.field);
+        const field = data.item.fields?.nodes?.find((f: { name: string, value: string }) => f.name === config.field);
         if (field?.value) {
           return field.value as string;
         }
@@ -222,7 +222,7 @@ export async function getApiKey(
 
     return null;
   } catch (error) {
-    console.error("Error fetching API key:", error);
+    console.error('Error fetching API key:', error);
     return null;
   }
 }
@@ -241,7 +241,7 @@ export async function saveApiKey(
     const parentId = await ensurePathExists(client, sitecoreContextId);
 
     const itemPath = `${getStorageRoot()}/${name}`;
-    const checkResult = await client.mutate("xmc.authoring.graphql", {
+    const checkResult = await client.mutate('xmc.authoring.graphql', {
       params: {
         body: {
           query: queries.getItem,
@@ -254,12 +254,12 @@ export async function saveApiKey(
           sitecoreContextId,
         }
       }
-    } as any);
+    });
 
     let itemId: string | null = null;
 
     if (checkResult?.data?.data) {
-      const data = checkResult.data?.data as any;
+      const data = checkResult.data?.data as { item: { itemId: string } };
       if (data?.item?.itemId) {
         itemId = data.item.itemId;
       }
@@ -267,7 +267,7 @@ export async function saveApiKey(
 
     if (itemId) {
       // Item exists, update it (no icon update)
-      await client.mutate("xmc.authoring.graphql", {
+      await client.mutate('xmc.authoring.graphql', {
         params: {
           body: {
             query: queries.updateItem,
@@ -287,10 +287,10 @@ export async function saveApiKey(
             sitecoreContextId,
           }
         }
-      } as any);
+      });
     } else {
       // Item doesn't exist, create it with apiKeyIcon
-      const fieldsToCreate: any[] = [
+      const fieldsToCreate: { name: string, value: string }[] = [
         {
           name: config.field,
           value: key,
@@ -304,7 +304,7 @@ export async function saveApiKey(
         });
       }
 
-      await client.mutate("xmc.authoring.graphql", {
+      await client.mutate('xmc.authoring.graphql', {
         params: {
           body: {
             query: queries.createItem,
@@ -320,12 +320,12 @@ export async function saveApiKey(
             sitecoreContextId,
           }
         }
-      } as any);
+      });
     }
 
     return true;
   } catch (error) {
-    console.error("Error saving API key:", error);
+    console.error('Error saving API key:', error);
     // Re-throw to propagate path creation errors
     throw error;
   }

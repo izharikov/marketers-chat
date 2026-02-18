@@ -1,20 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useAppContext } from "@/components/providers/marketplace";
-import type { Xmapp } from "@sitecore-marketplace-sdk/xmc";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/components/providers/auth";
+import { useState } from 'react';
+import { useAuth } from '@/components/providers/auth';
+import { useAppContext } from '@/components/providers/marketplace';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { Xmapp } from '@sitecore-marketplace-sdk/xmc';
 
 export const ListLanguagesFromApiRoute = () => {
   const appContext = useAppContext();
@@ -41,23 +35,23 @@ export const ListLanguagesFromApiRoute = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("languages from api", data);
+      console.log('languages from api', data);
       setLanguages(data.data);
     } catch (error) {
-      console.error("error from api", error);
-      setError(error instanceof Error ? error.message : "An error occurred");
+      console.error('error from api', error);
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card style={"outline"}>
+    <Card style={'outline'}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           API Route Example
-          <Badge colorScheme={"primary"}>Server-side</Badge>
-          <Badge colorScheme={"warning"}>Custom Auth</Badge>
+          <Badge colorScheme={'primary'}>Server-side</Badge>
+          <Badge colorScheme={'warning'}>Custom Auth</Badge>
         </CardTitle>
         <CardDescription>
           Fetch languages using Next.js API route from client component
@@ -71,7 +65,7 @@ export const ListLanguagesFromApiRoute = () => {
           disabled={loading}
           className="w-full sm:w-auto"
         >
-          {loading ? "Fetching..." : "Fetch Languages"}
+          {loading ? 'Fetching...' : 'Fetch Languages'}
         </Button>
 
         {error && (

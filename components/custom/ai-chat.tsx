@@ -1,9 +1,22 @@
 'use client';
+import React, { Fragment, useEffect, useState } from 'react';
+import { useChat } from '@ai-sdk/react';
+import { ToolUIPart, UIMessage } from 'ai';
 import {
-    Conversation,
-    ConversationContent,
-    ConversationScrollButton,
-} from '@/components/ai-elements/conversation';
+    CheckIcon,
+    CopyIcon,
+    Ellipsis,
+    GlobeIcon,
+    ImageIcon,
+    LayoutIcon,
+    RefreshCcwIcon,
+    Settings,
+    Undo,
+    UsersIcon,
+    Wrench,
+    XIcon
+} from 'lucide-react';
+import { AttachmentItem, Attachments } from '@/components/ai-elements/attachments';
 import {
     Confirmation,
     ConfirmationAccepted,
@@ -12,42 +25,17 @@ import {
     ConfirmationRejected,
     ConfirmationRequest,
     ConfirmationTitle,
-} from "@/components/ai-elements/confirmation";
+} from '@/components/ai-elements/confirmation';
+import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
+import { Loader } from '@/components/ai-elements/loader';
 import {
     Message,
+    MessageAction,
+    MessageActions,
+    MessageAttachments,
     MessageContent,
     MessageResponse,
-    MessageActions,
-    MessageAction,
-    MessageAttachments,
-    MessageAttachment,
 } from '@/components/ai-elements/message';
-import {
-    PromptInput,
-    PromptInputActionAddAttachments,
-    PromptInputActionMenu,
-    PromptInputActionMenuContent,
-    PromptInputActionMenuTrigger,
-    PromptInputAttachment,
-    PromptInputAttachments,
-    PromptInputBody,
-    PromptInputHeader,
-    type PromptInputMessage,
-    PromptInputSubmit,
-    PromptInputTextarea,
-    PromptInputFooter,
-    PromptInputTools,
-    PromptInputButton,
-    PromptInputActionMenuItem,
-} from '@/components/ai-elements/prompt-input';
-
-import {
-    Tool,
-    ToolContent,
-    ToolHeader,
-    ToolInput,
-    ToolOutput,
-} from '@/components/ai-elements/tool';
 import {
     ModelSelector,
     ModelSelectorContent,
@@ -61,42 +49,27 @@ import {
     ModelSelectorName,
     ModelSelectorTrigger,
 } from '@/components/ai-elements/model-selector';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { useChat } from '@ai-sdk/react';
 import {
-    CheckIcon,
-    CopyIcon,
-    GlobeIcon,
-    RefreshCcwIcon,
-    XIcon,
-    LayoutIcon,
-    ImageIcon,
-    UsersIcon,
-    ZapIcon,
-    Wrench,
-    Ellipsis,
-    ArrowLeftCircle,
-    ArrowDownLeft,
-    Undo2,
-    Undo,
-    Settings
-} from 'lucide-react';
-import {
-    Source,
-    Sources,
-    SourcesContent,
-    SourcesTrigger,
-} from '@/components/ai-elements/sources';
-import {
-    Reasoning,
-    ReasoningContent,
-    ReasoningTrigger,
-} from '@/components/ai-elements/reasoning';
-import { Loader } from '@/components/ai-elements/loader';
-import { ToolUIPart, UIMessage } from 'ai';
-import { AttachmentItem, Attachments } from '@/components/ai-elements/attachments';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+    PromptInput,
+    PromptInputActionAddAttachments,
+    PromptInputActionMenu,
+    PromptInputActionMenuContent,
+    PromptInputActionMenuItem,
+    PromptInputActionMenuTrigger,
+    PromptInputAttachment,
+    PromptInputAttachments,
+    PromptInputBody,
+    PromptInputButton,
+    PromptInputFooter,
+    PromptInputHeader,
+    PromptInputSubmit,
+    PromptInputTextarea,
+    PromptInputTools,
+} from '@/components/ai-elements/prompt-input';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning';
+import { Source, Sources, SourcesContent, SourcesTrigger } from '@/components/ai-elements/sources';
+import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -107,9 +80,16 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Toaster } from '@/components/ui/sonner';
-import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { Capability } from '@/lib/tools/capabilities';
 
 
@@ -168,6 +148,27 @@ const allCapabilities: { id: Capability; label: string; icon: React.ReactNode }[
     }
 ];
 
+const initialMessages: UIMessage[] = [
+    // {
+    //     id: 'message',
+    //     role: 'assistant',
+    //     parts: [
+    //         {
+    //             type: 'tool-test',
+    //             toolCallId: 'tool-test',
+    //             state: 'output-available',
+    //             input: {
+    //                 text: 'Hello',
+    //             },
+    //             output: {
+    //                 text: 'Hello',
+    //                 jobId: 'f3045dc1-4126-4c81-93a8-91a8b297d265',
+    //             },
+    //         }
+    //     ]
+    // }
+];
+
 type AiChatProps = {
     chat: ReturnType<typeof useChat>,
     onSetModel: (model: string) => void;
@@ -193,10 +194,10 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
     };
     useEffect(() => {
         onSetModel(model);
-    }, [model]);
+    }, [model, onSetModel]);
     useEffect(() => {
         onCapabilitiesChange?.(capabilities);
-    }, [capabilities]);
+    }, [capabilities, onCapabilitiesChange]);
 
 
     const { messages, setMessages, regenerate, status, sendMessage } = chat;
@@ -208,32 +209,12 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
     const revertInProgress = lastMessage?.role === 'assistant' &&
         lastMessage?.parts.some(part => part.type === 'tool-revert_operation') && !lastMessage?.parts.some(part => part.type === 'text');
     const submitEnabled = !revertInProgress && !toolRunningOrApproval && ((status === 'ready' && input.length > 0) || status === 'streaming' || status === 'submitted');
-    const initialMessages: UIMessage[] = [
-        // {
-        //     id: 'message',
-        //     role: 'assistant',
-        //     parts: [
-        //         {
-        //             type: 'tool-test',
-        //             toolCallId: 'tool-test',
-        //             state: 'output-available',
-        //             input: {
-        //                 text: 'Hello',
-        //             },
-        //             output: {
-        //                 text: 'Hello',
-        //                 jobId: 'f3045dc1-4126-4c81-93a8-91a8b297d265',
-        //             },
-        //         }
-        //     ]
-        // }
-    ]
 
     useEffect(() => {
         setMessages(initialMessages)
-    }, []);
+    }, [setMessages]);
 
-    const handleRevert = (jobId: string, tool: ToolUIPart) => {
+    const handleRevert = (jobId: string) => {
         sendMessage({
             role: 'user',
             parts: [
@@ -346,13 +327,14 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                                     state = 'output-error';
                                                 }
                                                 const jobId = (tool.output as { jobId: string })?.jobId;
+                                                const approval = tool.approval;
                                                 return <Fragment key={`${message.id}-${tool.toolCallId}`}>
                                                     <Tool defaultOpen={false}>
                                                         <ToolHeader type={tool.type} state={state} >
                                                             {jobId && state === 'output-available' &&
                                                                 <AlertDialog>
                                                                     <AlertDialogTrigger asChild>
-                                                                        <Button variant={"outline"} size={'icon-xs'} className='px-4' onClick={(e) => {
+                                                                        <Button variant={'outline'} size={'icon-xs'} className='px-4' onClick={(e) => {
                                                                             e.stopPropagation();
                                                                         }}>
                                                                             <Undo className='size-4' />
@@ -369,7 +351,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                                                             <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                                                                             <AlertDialogAction onClick={(e) => {
                                                                                 e.stopPropagation()
-                                                                                handleRevert(jobId, tool);
+                                                                                handleRevert(jobId);
                                                                             }}>Continue</AlertDialogAction>
                                                                         </AlertDialogFooter>
                                                                     </AlertDialogContent>
@@ -386,7 +368,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                                             />}
                                                         </ToolContent>
                                                     </Tool>
-                                                    {state === 'approval-requested' && <Confirmation approval={tool.approval} state={tool.state} className='flex-row'>
+                                                    {state === 'approval-requested' && approval && <Confirmation approval={approval} state={tool.state} className='flex-row'>
                                                         <ConfirmationTitle>
                                                             <div className='flex'>
                                                                 <ConfirmationRequest>
@@ -406,7 +388,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                                             <ConfirmationAction
                                                                 onClick={async () => {
                                                                     await chat.addToolApprovalResponse({
-                                                                        id: tool.approval?.id!,
+                                                                        id: approval.id,
                                                                         approved: false,
                                                                     });
                                                                     await onToolRejected?.(tool);
@@ -418,7 +400,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                                             <ConfirmationAction
                                                                 onClick={async () => {
                                                                     await chat.addToolApprovalResponse({
-                                                                        id: tool.approval?.id!,
+                                                                        id: approval.id,
                                                                         approved: true,
                                                                     });
                                                                     await onToolApproved?.(tool);
@@ -535,7 +517,7 @@ const AiChat = ({ chat, onSetModel, onCapabilitiesChange, onToolApproved, onTool
                                     <ModelSelectorInput placeholder="Search models..." />
                                     <ModelSelectorList>
                                         <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                                        {["OpenAI", "Anthropic", "Google"].map((chef) => (
+                                        {['OpenAI', 'Anthropic', 'Google'].map((chef) => (
                                             <ModelSelectorGroup heading={chef} key={chef}>
                                                 {models
                                                     .filter((m) => m.chef === chef)

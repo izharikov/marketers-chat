@@ -1,20 +1,21 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { ApiKey, LocalSettings } from '@/components/providers/app-settings-provider';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
-    DialogTitle,
     DialogDescription,
     DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { ApiKey, LocalSettings } from "@/components/providers/app-settings-provider";
-import { Eye, EyeOff } from "lucide-react";
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+
 
 interface AppSettingsModalProps {
     isOpen: boolean;
@@ -25,7 +26,7 @@ interface AppSettingsModalProps {
     isClosable?: boolean;
 }
 
-function ApiKeyInput(props: React.ComponentProps<"input"> & { label: string }) {
+function ApiKeyInput(props: React.ComponentProps<'input'> & { label: string }) {
     const [showPassword, setShowPassword] = useState(false)
     return (
         <div className="w-full max-w-sm space-y-2">
@@ -33,7 +34,7 @@ function ApiKeyInput(props: React.ComponentProps<"input"> & { label: string }) {
             <div className="relative">
                 <Input
                     className="bg-background pr-[2.2rem]"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     {...props}
                 />
                 <Button
@@ -91,7 +92,7 @@ export function AppSettingsModal({
         setTempKeys(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSettingChange = (name: keyof LocalSettings, value: any) => {
+    const handleSettingChange = (name: keyof LocalSettings, value: unknown) => {
         setTempSettings(prev => ({ ...prev, [name]: value }));
     };
 
@@ -122,7 +123,7 @@ export function AppSettingsModal({
                                     <ApiKeyInput
                                         id={`key-${name}`}
                                         label={labels[name] || name}
-                                        value={tempKeys[name] || ""}
+                                        value={tempKeys[name] || ''}
                                         onChange={(e) => handleKeyChange(name, e.target.value)}
                                     />
                                 </div>
@@ -154,7 +155,7 @@ export function AppSettingsModal({
 
                 <DialogFooter>
                     <Button onClick={handleSave} disabled={isSaving}>
-                        {isSaving ? "Saving..." : "Save"}
+                        {isSaving ? 'Saving...' : 'Save'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

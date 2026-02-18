@@ -1,6 +1,6 @@
-import { devToolsMiddleware } from "@ai-sdk/devtools";
-import { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
-import { createGateway, GatewayModelId, LanguageModel, ToolLoopAgent, wrapLanguageModel } from "ai";
+import { devToolsMiddleware } from '@ai-sdk/devtools';
+import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
+import { GatewayModelId, LanguageModel, ToolLoopAgent, createGateway, wrapLanguageModel } from 'ai';
 
 export function retrieveModel(modelName: GatewayModelId, apiKey: string): { model: LanguageModel, providerOptions: ConstructorParameters<typeof ToolLoopAgent>[0]['providerOptions'] } {
     const gateway = createGateway({ apiKey });

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 import {
+  Auth0ContextInterface,
   Auth0Provider,
   GetTokenSilentlyOptions,
   useAuth0,
-  Auth0ContextInterface,
   withAuthenticationRequired,
-} from "@auth0/auth0-react";
-import { useAppContext } from "./marketplace";
+} from '@auth0/auth0-react';
+import { useAppContext } from './marketplace';
 
 export const WithAuth = withAuthenticationRequired(
   ({ children }: { children: React.ReactNode }) => children
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
 
   if (!domain || !clientId) {
-    throw new Error("Auth0 domain and client ID are required");
+    throw new Error('Auth0 domain and client ID are required');
   }
 
   return (
@@ -63,6 +63,6 @@ export const useAuth = (): Auth0ContextInterface => {
   return {
     ...rest,
     getAccessTokenSilently:
-      customGetAccessTokenSilently as Auth0ContextInterface["getAccessTokenSilently"],
+      customGetAccessTokenSilently as Auth0ContextInterface['getAccessTokenSilently'],
   };
 };

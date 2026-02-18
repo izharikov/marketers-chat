@@ -1,6 +1,6 @@
-import { ExaToolName } from "./exa";
-import { PageBuilderToolName } from "./sitecore/page-builder";
-import { SitecoreToolName } from "./sitecore/types";
+import { ExaToolName } from './exa';
+import { PageBuilderToolName } from './sitecore/page-builder';
+import { SitecoreToolName } from './sitecore/types';
 
 export type Capability = 'page_layout' | 'assets' | 'personalization' | 'sites' | 'websearch';
 

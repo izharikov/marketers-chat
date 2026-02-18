@@ -24,7 +24,7 @@ export const FieldSchema = z.object({
     }).optional(),
 }).transform((val) => val.jsonValue?.value || val.value);
 
-export const ComponentSchema: z.ZodType<any> = z.lazy(() => z.object({
+export const ComponentSchema: z.ZodType<unknown> = z.lazy(() => z.object({
     componentName: z.string(),
     dataSource: z.string(),
     placeholders: z.record(z.string(), z.array(ComponentSchema)).optional(),
@@ -32,26 +32,26 @@ export const ComponentSchema: z.ZodType<any> = z.lazy(() => z.object({
         z.object({
             data: z.looseObject({}).transform((data) => {
                 // Deep transformation function
-                const transformDeep = (obj: any): any => {
+                const transformDeep = (obj: Record<string, unknown>): unknown => {
                     if (!obj || typeof obj !== 'object') return obj;
 
                     if (Array.isArray(obj)) {
                         return obj.map(transformDeep);
                     }
 
-                    const result: any = {};
+                    const result: Record<string, unknown> = {};
                     for (const [key, value] of Object.entries(obj)) {
                         if (key === 'jsonValue' && value && typeof value === 'object' && 'value' in value) {
-                            const val = (value as any).value;
+                            const val = (value as { value: { href: string, title: string, text: string } })?.value;
                             result[key] = {
                                 value: {
-                                    href: val.href,
-                                    title: val.title,
-                                    text: val.text
+                                    href: val?.href,
+                                    title: val?.title,
+                                    text: val?.text
                                 }
                             };
                         } else {
-                            result[key] = transformDeep(value);
+                            result[key] = transformDeep(value as Record<string, unknown>);
                         }
                     }
                     return result;

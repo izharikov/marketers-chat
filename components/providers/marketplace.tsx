@@ -1,19 +1,10 @@
-"use client";
+'use client';
 
-import React, {
-  useEffect,
-  useState,
-  ReactNode,
-  createContext,
-  useContext,
-} from "react";
-import {
-  ApplicationContext,
-  ClientSDK,
-} from "@sitecore-marketplace-sdk/client";
-import { XMC } from "@sitecore-marketplace-sdk/xmc";
+import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { ApplicationContext, ClientSDK } from '@sitecore-marketplace-sdk/client';
+import { XMC } from '@sitecore-marketplace-sdk/xmc';
+import { Toaster, toast } from 'sonner';
 import { Loader } from '@/components/ai-elements/loader';
-import { toast, Toaster } from "sonner";
 
 interface ClientSDKProviderProps {
   children: ReactNode;
@@ -32,10 +23,10 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
 
   useEffect(() => {
     if (client) {
-      client.query("application.context").then((res) => {
+      client.query('application.context').then((res) => {
         if (res && res.data) {
           setAppContext(res.data);
-          console.log("appContext", res.data);
+          console.log('appContext', res.data);
         }
       });
     }
@@ -52,8 +43,8 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
         const client = await ClientSDK.init(config);
         setClient(client);
       } catch (error) {
-        console.error("Error initializing client SDK", error);
-        setError("Error initializing client SDK");
+        console.error('Error initializing client SDK', error);
+        setError('Error initializing client SDK');
       } finally {
         setLoading(false);
       }
@@ -61,6 +52,10 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
 
     init();
   }, []);
+
+  useEffect(() => {
+    toast.error(error, { duration: Infinity, position: 'top-left' });
+  }, [error]);
 
   if (loading) {
     return <div className="flex">
@@ -71,9 +66,6 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
   }
 
   if (error) {
-    useEffect(() => {
-      toast.error(error, { duration: Infinity, position: 'top-left' });
-    }, []);
     return (
       <div>
         <Toaster />
@@ -102,7 +94,7 @@ export const useMarketplaceClient = () => {
   const context = useContext(ClientSDKContext);
   if (!context) {
     throw new Error(
-      "useMarketplaceClient must be used within a ClientSDKProvider"
+      'useMarketplaceClient must be used within a ClientSDKProvider'
     );
   }
   return context;
@@ -111,7 +103,7 @@ export const useMarketplaceClient = () => {
 export const useAppContext = () => {
   const context = useContext(AppContextContext);
   if (!context) {
-    throw new Error("useAppContext must be used within a ClientSDKProvider");
+    throw new Error('useAppContext must be used within a ClientSDKProvider');
   }
   return context;
 };

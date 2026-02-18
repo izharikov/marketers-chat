@@ -1,5 +1,5 @@
-import { useMarketplaceClient } from "@/components/providers/marketplace";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { useMarketplaceClient } from '@/components/providers/marketplace';
 
 export const useFieldValue = () => {
     const client = useMarketplaceClient();
@@ -8,9 +8,9 @@ export const useFieldValue = () => {
         async function fetchValue() {
             try {
                 const res = await client.getValue();
-                setExistingValue(res || "");
+                setExistingValue(res || '');
             } catch (error) {
-                console.error("Failed to fetch existing value", error);
+                console.error('Failed to fetch existing value', error);
             }
         };
         fetchValue();

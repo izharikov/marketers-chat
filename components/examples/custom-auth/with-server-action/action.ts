@@ -1,7 +1,7 @@
-"use server";
+'use server';
 
-import { experimental_createXMCClient } from "@sitecore-marketplace-sdk/xmc";
-import { type Xmapp } from "@sitecore-marketplace-sdk/xmc";
+import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
+import { type Xmapp } from '@sitecore-marketplace-sdk/xmc';
 
 type Context = {
   sitecoreContextId: string;
@@ -23,7 +23,7 @@ export async function fetchLanguagesAction(
     },
   });
 
-  console.log("languages from server action", languages);
+  console.log('languages from server action', languages);
 
   return languages?.data ?? [];
 }

@@ -1,6 +1,14 @@
-import { tool } from "ai";
-import { assetToolsConfig, componentsToolsConfig, contentToolsConfig, environmentToolsConfig, jobToolsConfig, pagesToolsConfig, personalizationToolsConfig, sitesToolsConfig } from "./definitions";
-import { ClientSDK } from "@sitecore-marketplace-sdk/client";
+import { ClientSDK } from '@sitecore-marketplace-sdk/client';
+import { tool } from 'ai';import {
+    assetToolsConfig,
+    componentsToolsConfig,
+    contentToolsConfig,
+    environmentToolsConfig,
+    jobToolsConfig,
+    pagesToolsConfig,
+    personalizationToolsConfig,
+    sitesToolsConfig
+} from './definitions';
 
 export type NeedsApproval = Parameters<typeof tool>[0]['needsApproval'];
 

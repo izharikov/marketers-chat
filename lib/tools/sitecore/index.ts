@@ -1,7 +1,7 @@
-import { experimental_XMC } from "@sitecore-marketplace-sdk/xmc";
+import { experimental_XMC } from '@sitecore-marketplace-sdk/xmc';
 import * as clientTools from './client';
 import * as serverTools from './server';
-import { NeedsApproval } from "./types";
+import { NeedsApproval } from './types';
 
 export type CreateSitecoreToolsOptions = ({
     execution: 'client';

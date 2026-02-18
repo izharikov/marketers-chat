@@ -1,6 +1,6 @@
-import { ClientSDK, QueryKey, QueryOptions, MutationKey, MutationOptions } from "@sitecore-marketplace-sdk/client";
-import { z } from "zod/v4";
+import { ClientSDK, MutationKey, MutationOptions, QueryKey, QueryOptions } from '@sitecore-marketplace-sdk/client';
 import { v4 as uuid } from 'uuid';
+import { z } from 'zod/v4';
 
 export type ToolConfig<TInput, TOutput> = {
     inputSchema: z.ZodType<TInput>;
@@ -8,7 +8,7 @@ export type ToolConfig<TInput, TOutput> = {
 }
 
 export function clientTool<TInput, TOutput>(config: ToolConfig<TInput, TOutput>) {
-    return config.execute;
+    return config;
 }
 
 export async function clientQuery<K extends QueryKey>(client: ClientSDK, query: K, params: QueryOptions<K>) {

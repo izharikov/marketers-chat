@@ -1,11 +1,19 @@
-import { UIMessage, convertToModelMessages, smoothStream, ToolLoopAgent, createUIMessageStream, createUIMessageStreamResponse, ToolUIPart } from 'ai';
-import { pageBuilderTools } from '@/lib/tools/sitecore/page-builder';
-import { createSitecoreTools, CreateSitecoreToolsOptions } from '@/lib/tools/sitecore';
 import { experimental_createXMCClient } from '@sitecore-marketplace-sdk/xmc';
-import { retrieveModel } from '@/lib/ai/registry';
+import {
+ToolLoopAgent,
+ToolUIPart,
+UIMessage,
+convertToModelMessages,
+createUIMessageStream,
+createUIMessageStreamResponse,
+smoothStream
+} from 'ai';
 import { helpers, writeText } from '@/lib/ai/helpers';
-import { buildSystem, Capability, toolsMapping } from '@/lib/tools/capabilities';
+import { retrieveModel } from '@/lib/ai/registry';
+import { Capability, buildSystem, toolsMapping } from '@/lib/tools/capabilities';
 import { exaTools } from '@/lib/tools/exa';
+import { CreateSitecoreToolsOptions, createSitecoreTools } from '@/lib/tools/sitecore';
+import { pageBuilderTools } from '@/lib/tools/sitecore/page-builder';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -59,12 +67,12 @@ export async function POST(req: Request) {
         needsApproval: boolean;
     } = await req.json();
 
-    const apiKey = req.headers.get("x-vercel-api-key");
-    const exaApiKey = req.headers.get("x-exa-api-key");
-    const accessToken = req.headers.get("Authorization")?.split(" ")[1];
+    const apiKey = req.headers.get('x-vercel-api-key');
+    const exaApiKey = req.headers.get('x-exa-api-key');
+    const accessToken = req.headers.get('Authorization')?.split(' ')[1];
     if (!apiKey) {
         return Response.json(
-            { error: "API key is required" },
+            { error: 'API key is required' },
             { status: 401 }
         );
     }

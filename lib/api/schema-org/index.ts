@@ -1,5 +1,20 @@
-import z from "zod";
-import { ArticleSchema, ProductSchema, LocalBusinessSchema, BreadcrumbListSchema, RecipeSchema, VideoObjectSchema, ReviewSchema, CourseSchema, JobPostingSchema, WebsiteSchema, FAQPageSchema, EventSchema, NULL, OrganizationSchema } from "./schema-definitions";
+import z from 'zod';
+import {
+ArticleSchema,
+BreadcrumbListSchema,
+CourseSchema,
+EventSchema,
+FAQPageSchema,
+JobPostingSchema,
+LocalBusinessSchema,
+NULL,
+OrganizationSchema,
+ProductSchema,
+RecipeSchema,
+ReviewSchema,
+VideoObjectSchema,
+WebsiteSchema
+} from './schema-definitions';
 
 const Probability = z.int32()
     .describe('Probability percent of @type suits page (0-100%)')

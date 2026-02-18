@@ -1,13 +1,9 @@
-import { useState } from "react";
-import { useAppContext } from "@/components/providers/marketplace";
-import { CardTitle } from "@/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useAppContext } from '@/components/providers/marketplace';
+import { Badge } from '@/components/ui/badge';
+import { CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export const ApplicationContext = () => {
   const appContext = useAppContext();
@@ -25,7 +21,7 @@ export const ApplicationContext = () => {
               Application Context
             </CardTitle>
             <Badge colorScheme="primary">Client-side</Badge>
-            <Badge colorScheme={"success"}>SDK Built-in Auth</Badge>
+            <Badge colorScheme={'success'}>SDK Built-in Auth</Badge>
           </div>
           {isExpanded ? (
             <ChevronDown className="h-4 w-4 transition-transform" />

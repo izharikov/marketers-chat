@@ -1,7 +1,7 @@
-import { convertToModelMessages, jsonSchema, JSONSchema7, Output, streamText } from "ai";
-import z from "zod/v4";
-import { retrieveModel } from "@/lib/ai/registry";
-import { pageStructuredDataSchema } from "@/lib/api/schema-org";
+import { JSONSchema7, Output, convertToModelMessages, jsonSchema, streamText } from 'ai';
+import z from 'zod/v4';
+import { retrieveModel } from '@/lib/ai/registry';
+import { pageStructuredDataSchema } from '@/lib/api/schema-org';
 
 export const maxDuration = 30;
 
@@ -12,10 +12,10 @@ export async function POST(req: Request) {
         layout,
         language,
     } = await req.json();
-    const apiKey = req.headers.get("x-vercel-api-key");
+    const apiKey = req.headers.get('x-vercel-api-key');
     if (!apiKey) {
         return Response.json(
-            { error: "API key is required" },
+            { error: 'API key is required' },
             { status: 401 }
         );
     }
@@ -61,7 +61,7 @@ yyyyMMddTHHmmssZ, example: 20250513T151718Z
 - route: ${currentPage.route} (this page is ${currentPage.isHome ? 'home' : 'not home'} page)
 - template name: ${currentPage.templateName}
 - fields:
-${Object.entries(currentPage.fields).map(([key, field]) => `  - ${key}: ${(field as any)?.value}`).join('\n')}
+${Object.entries(currentPage.fields).map(([key, field]) => `  - ${key}: ${(field as { value: unknown })?.value}`).join('\n')}
 - created: ${currentPage.created}
 - updated: ${currentPage.updated}
 
