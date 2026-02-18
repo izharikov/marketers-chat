@@ -90,13 +90,7 @@ const eslintConfig = defineConfig([
   },
   prettier,
   prettierPlugin,
-  globalIgnores([
-    '.next/**',
-    'out/**',
-    'build/**',
-    'next-env.d.ts',
-    'components/ai-elements/**',
-  ]),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
 ]);
 
 export default eslintConfig;

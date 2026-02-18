@@ -245,20 +245,12 @@ export const CustomFieldPage = () => {
     useState<DeepPartial<PageStructuredData>>();
 
   const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
-  // const pageInfoRef = useRef({});
-  // const pageLayoutRef = useRef({});
-  // const siteRef = useRef({});
-  // const currentPageRef = useRef({});
-  // const languageRef = useRef('');
 
   const { messages, status, sendMessage, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/schema-org',
       headers: () => ({
         'x-vercel-api-key': apiKey!,
-      }),
-      body: () => ({
-        test: 'test',
       }),
     }),
   });

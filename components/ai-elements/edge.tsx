@@ -7,7 +7,7 @@ import {
   type Node,
   Position,
   useInternalNode,
-} from "@xyflow/react";
+} from '@xyflow/react';
 
 const Temporary = ({
   id,
@@ -29,11 +29,11 @@ const Temporary = ({
 
   return (
     <BaseEdge
-      className="stroke-1 stroke-ring"
+      className='stroke-1 stroke-ring'
       id={id}
       path={edgePath}
       style={{
-        strokeDasharray: "5, 5",
+        strokeDasharray: '5, 5',
       }}
     />
   );
@@ -44,7 +44,7 @@ const getHandleCoordsByPosition = (
   handlePosition: Position
 ) => {
   // Choose the handle type based on position - Left is for target, Right is for source
-  const handleType = handlePosition === Position.Left ? "target" : "source";
+  const handleType = handlePosition === Position.Left ? 'target' : 'source';
 
   const handle = node.internals.handleBounds?.[handleType]?.find(
     (h) => h.position === handlePosition
@@ -127,8 +127,8 @@ const Animated = ({ id, source, target, markerEnd, style }: EdgeProps) => {
   return (
     <>
       <BaseEdge id={id} markerEnd={markerEnd} path={edgePath} style={style} />
-      <circle fill="var(--primary)" r="4">
-        <animateMotion dur="2s" path={edgePath} repeatCount="indefinite" />
+      <circle fill='var(--primary)' r='4'>
+        <animateMotion dur='2s' path={edgePath} repeatCount='indefinite' />
       </circle>
     </>
   );
