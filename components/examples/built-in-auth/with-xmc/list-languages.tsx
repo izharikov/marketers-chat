@@ -1,11 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useAppContext, useMarketplaceClient } from '@/components/providers/marketplace';
+import {
+  useAppContext,
+  useMarketplaceClient,
+} from '@/components/providers/marketplace';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Xmapp } from '@sitecore-marketplace-sdk/xmc';
 
@@ -51,7 +60,7 @@ export const ListLanguagesFromClientSdk = () => {
   return (
     <Card style={'outline'}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className='flex items-center gap-2'>
           Client SDK Example
           <Badge colorScheme={'primary'}>Client-side</Badge>
           <Badge colorScheme={'success'}>SDK Built-in Auth</Badge>
@@ -60,35 +69,35 @@ export const ListLanguagesFromClientSdk = () => {
           Fetch languages using Sitecore Marketplace SDK from client component
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className='space-y-4'>
         <Button
           onClick={fetchLanguages}
           disabled={loading}
-          className="w-full sm:w-auto"
+          className='w-full sm:w-auto'
         >
           {loading ? 'Fetching...' : 'Fetch Languages'}
         </Button>
 
         {error && (
-          <Alert variant="danger">
+          <Alert variant='danger'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Languages found:</span>
+        <div className='space-y-2'>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm font-medium'>Languages found:</span>
             {loading ? (
-              <Skeleton className="h-5 w-8" />
+              <Skeleton className='h-5 w-8' />
             ) : (
               <Badge>{languages?.length || 0}</Badge>
             )}
           </div>
 
           {languages.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Language names:</p>
-              <div className="flex flex-wrap gap-1">
+            <div className='space-y-1'>
+              <p className='text-sm text-muted-foreground'>Language names:</p>
+              <div className='flex flex-wrap gap-1'>
                 {languages.map((language, index) => (
                   <Badge key={index}>{language.name}</Badge>
                 ))}

@@ -3,7 +3,11 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useAppContext } from '@/components/providers/marketplace';
 import { Badge } from '@/components/ui/badge';
 import { CardTitle } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 export const ApplicationContext = () => {
   const appContext = useAppContext();
@@ -12,26 +16,26 @@ export const ApplicationContext = () => {
     <Collapsible
       open={isExpanded}
       onOpenChange={setIsExpanded}
-      className="border-[1px] rounded-lg"
+      className='border-[1px] rounded-lg'
     >
       <CollapsibleTrigger asChild>
-        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50  p-6 rounded-t-lg transition-colors">
-          <div className="flex items-center gap-2">
-            <CardTitle className="flex items-center gap-2">
+        <div className='flex items-center justify-between cursor-pointer hover:bg-muted/50  p-6 rounded-t-lg transition-colors'>
+          <div className='flex items-center gap-2'>
+            <CardTitle className='flex items-center gap-2'>
               Application Context
             </CardTitle>
-            <Badge colorScheme="primary">Client-side</Badge>
+            <Badge colorScheme='primary'>Client-side</Badge>
             <Badge colorScheme={'success'}>SDK Built-in Auth</Badge>
           </div>
           {isExpanded ? (
-            <ChevronDown className="h-4 w-4 transition-transform" />
+            <ChevronDown className='h-4 w-4 transition-transform' />
           ) : (
-            <ChevronRight className="h-4 w-4 transition-transform" />
+            <ChevronRight className='h-4 w-4 transition-transform' />
           )}
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <pre className="bg-muted p-4 rounded-md text-sm overflow-auto">
+        <pre className='bg-muted p-4 rounded-md text-sm overflow-auto'>
           {JSON.stringify(appContext, null, 2)}
         </pre>
       </CollapsibleContent>

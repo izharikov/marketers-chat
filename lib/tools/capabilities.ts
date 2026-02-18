@@ -2,10 +2,15 @@ import { ExaToolName } from './exa';
 import { PageBuilderToolName } from './sitecore/page-builder';
 import { SitecoreToolName } from './sitecore/types';
 
-export type Capability = 'page_layout' | 'assets' | 'personalization' | 'sites' | 'websearch';
+export type Capability =
+  | 'page_layout'
+  | 'assets'
+  | 'personalization'
+  | 'sites'
+  | 'websearch';
 
 export const systemInstructions = {
-    system: `# You are SitecoreAI assistnant. Don't annoy user with too many questions. Decide by yourself most steps.
+  system: `# You are SitecoreAI assistnant. Don't annoy user with too many questions. Decide by yourself most steps.
 
 ## General Rules (IMPORTANT)
 - Output is strict Markdown
@@ -17,8 +22,8 @@ Examples:
 - Use \`props\` instead of props
 
 ## Capabilities`,
-    capabilities: {
-        page_layout: `### Manage page layout
+  capabilities: {
+    page_layout: `### Manage page layout
 
 You can add, edit, and remove components and manage their datasources.
 
@@ -35,7 +40,7 @@ You can add, edit, and remove components and manage their datasources.
 4. Call 'add_component_on_page' ONCE, including ALL datasourceFields.
 5. Reload the page after any change.
         `,
-        assets: `### Manage assets
+    assets: `### Manage assets
 
 You can upload, update, and search for assets.
 
@@ -45,7 +50,7 @@ You can upload, update, and search for assets.
 - Use 'update_asset' to update asset details.
 - Use 'upload_asset' to upload a new asset.
         `,
-        personalization: `### Manage personalization
+    personalization: `### Manage personalization
 
 You can create and manage personalization versions and conditions.
 
@@ -55,7 +60,7 @@ You can create and manage personalization versions and conditions.
 - Use 'get_condition_templates' to get condition templates.
 - Use 'get_condition_template_by_id' to get a specific condition template.
         `,
-        sites: `### Manage sites
+    sites: `### Manage sites
 
 You can manage sites and their pages.
 
@@ -64,44 +69,54 @@ You can manage sites and their pages.
 - Use 'get_site_details' to get details for a specific site.
 - Use 'get_all_pages_by_site' to get all pages for a site.
         `,
-        websearch: `### Web search
+    websearch: `### Web search
 
 You can search for information on the web.
 
 #### RULES (STRICT):
 - Use 'web_search' to search for information on the web.
         `,
-    },
-}
+  },
+};
 
-export const buildSystem: (capabilities: Capability[]) => string = (capabilities) => {
-    return systemInstructions.system + '\n\n' + capabilities.map((capability) => systemInstructions.capabilities[capability]).join('\n\n');
-}
+export const buildSystem: (capabilities: Capability[]) => string = (
+  capabilities
+) => {
+  return (
+    systemInstructions.system +
+    '\n\n' +
+    capabilities
+      .map((capability) => systemInstructions.capabilities[capability])
+      .join('\n\n')
+  );
+};
 
-export const toolsMapping: Record<Capability, (SitecoreToolName | PageBuilderToolName | ExaToolName)[]> = {
-    page_layout: [
-        'get_current_page_context',
-        'get_components_on_page',
-        'get_allowed_components_by_placeholder',
-        'add_component_on_page',
-        'get_component',
-        'update_content',
-        'reload_current_page',
-        'get_site_id_from_item',
-    ],
-    assets: ['get_asset_information', 'search_assets', 'update_asset', 'upload_asset'],
-    personalization: [
-        'create_personalization_version',
-        'get_personalization_versions_by_page',
-        'get_condition_templates',
-        'get_condition_template_by_id'
-    ],
-    sites: [
-        'get_sites_list',
-        'get_site_details',
-        'get_all_pages_by_site',
-    ],
-    websearch: [
-        'web_search',
-    ],
-}
+export const toolsMapping: Record<
+  Capability,
+  (SitecoreToolName | PageBuilderToolName | ExaToolName)[]
+> = {
+  page_layout: [
+    'get_current_page_context',
+    'get_components_on_page',
+    'get_allowed_components_by_placeholder',
+    'add_component_on_page',
+    'get_component',
+    'update_content',
+    'reload_current_page',
+    'get_site_id_from_item',
+  ],
+  assets: [
+    'get_asset_information',
+    'search_assets',
+    'update_asset',
+    'upload_asset',
+  ],
+  personalization: [
+    'create_personalization_version',
+    'get_personalization_versions_by_page',
+    'get_condition_templates',
+    'get_condition_template_by_id',
+  ],
+  sites: ['get_sites_list', 'get_site_details', 'get_all_pages_by_site'],
+  websearch: ['web_search'],
+};

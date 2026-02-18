@@ -9,11 +9,16 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary-bg [&>svg]:text-primary-500 dark:[&>svg]:text-primary-200',
-        primary: 'bg-primary-bg [&>svg]:text-primary-500 dark:[&>svg]:text-primary-200',
-        danger: 'bg-danger-bg [&>svg]:text-danger-500 dark:[&>svg]:text-danger-200',
-        warning: 'bg-warning-bg [&>svg]:text-warning-500 dark:[&>svg]:text-warning-200',
-        success: 'bg-success-bg [&>svg]:text-success-500 dark:[&>svg]:text-success-200',
+        default:
+          'bg-primary-bg [&>svg]:text-primary-500 dark:[&>svg]:text-primary-200',
+        primary:
+          'bg-primary-bg [&>svg]:text-primary-500 dark:[&>svg]:text-primary-200',
+        danger:
+          'bg-danger-bg [&>svg]:text-danger-500 dark:[&>svg]:text-danger-200',
+        warning:
+          'bg-warning-bg [&>svg]:text-warning-500 dark:[&>svg]:text-warning-200',
+        success:
+          'bg-success-bg [&>svg]:text-success-500 dark:[&>svg]:text-success-200',
       },
     },
     defaultVariants: {
@@ -37,8 +42,8 @@ function Alert({
 }: React.ComponentProps<'div'> & VariantProps<typeof alertVariants>) {
   return (
     <div
-      data-slot="alert"
-      role="alert"
+      data-slot='alert'
+      role='alert'
       className={cn(alertVariants({ variant }), className)}
       {...props}
     >
@@ -46,7 +51,7 @@ function Alert({
         <Icon
           path={variantIcons[variant]}
           size={1.2}
-          className="text-current"
+          className='text-current'
         />
       )}
       {props.children}
@@ -57,10 +62,10 @@ function Alert({
 function AlertTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-      data-slot="alert-title"
+      data-slot='alert-title'
       className={cn(
         'col-start-2 line-clamp-1 min-h-4 font-semibold tracking-tight',
-        className,
+        className
       )}
       {...props}
     />
@@ -73,7 +78,7 @@ function AlertDescription({
 }: React.ComponentProps<'div'>) {
   return (
     <div
-      data-slot="alert-description"
+      data-slot='alert-description'
       className={cn(
         'text-md col-start-2 grid justify-items-start gap-1 [&_p]:leading-relaxed',
         className

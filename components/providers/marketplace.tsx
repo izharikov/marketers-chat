@@ -1,7 +1,16 @@
 'use client';
 
-import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
-import { ApplicationContext, ClientSDK } from '@sitecore-marketplace-sdk/client';
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import {
+  ApplicationContext,
+  ClientSDK,
+} from '@sitecore-marketplace-sdk/client';
 import { XMC } from '@sitecore-marketplace-sdk/xmc';
 import { Toaster, toast } from 'sonner';
 import { Loader } from '@/components/ai-elements/loader';
@@ -58,11 +67,13 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
   }, [error]);
 
   if (loading) {
-    return <div className="flex">
-      <div className='relative mx-auto h-[100px]'>
-        <Loader className='absolute bottom-0 left-0' />
+    return (
+      <div className='flex'>
+        <div className='relative mx-auto h-[100px]'>
+          <Loader className='absolute bottom-0 left-0' />
+        </div>
       </div>
-    </div>
+    );
   }
 
   if (error) {

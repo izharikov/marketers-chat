@@ -11,7 +11,7 @@ const config = {
   basePath: '/sitecore/system/Modules', // Base path that always exists
   pathSegments: [
     { name: 'Editors Chat', icon: 'Office/32x32/window_gear.png' },
-    { name: 'Api Keys', icon: 'Office/32x32/keys.png' }
+    { name: 'Api Keys', icon: 'Office/32x32/keys.png' },
   ] as PathSegment[],
   field: 'Value', // Field name where the key is stored
   language: 'en',
@@ -63,8 +63,8 @@ const queries = {
             itemId
         }
     }
-}`
-}
+}`,
+};
 
 /**
  * Simple mutex to prevent race conditions during path creation
@@ -76,7 +76,7 @@ class PathCreationMutex {
     const previous = this.queue;
     let resolve!: (value: unknown) => void;
 
-    this.queue = new Promise(r => resolve = r);
+    this.queue = new Promise((r) => (resolve = r));
 
     try {
       await previous;
@@ -93,7 +93,7 @@ const pathMutex = new PathCreationMutex();
  * Computes the full storage path from config
  */
 function getStorageRoot(): string {
-  const segments = config.pathSegments.map(s => s.name).join('/');
+  const segments = config.pathSegments.map((s) => s.name).join('/');
   return `${config.basePath}/${segments}`;
 }
 
@@ -148,7 +148,7 @@ async function ensurePathExists(
         parentId = checkData.item.itemId;
       } else {
         // Create this segment with its icon
-        const fields: { name: string, value: string }[] = [];
+        const fields: { name: string; value: string }[] = [];
         if (segment.icon) {
           fields.push({ name: '__Icon', value: segment.icon });
         }
@@ -169,7 +169,9 @@ async function ensurePathExists(
           },
         });
 
-        const createData = createResult?.data?.data as { createItem: { item: { itemId: string } } };
+        const createData = createResult?.data?.data as {
+          createItem: { item: { itemId: string } };
+        };
         parentId = createData?.createItem?.item?.itemId;
         if (!parentId) {
           throw new Error(`Failed to create path segment: ${segment.name}`);
@@ -206,14 +208,18 @@ export async function getApiKey(
         },
         query: {
           sitecoreContextId,
-        }
-      }
+        },
+      },
     });
 
     if (result?.data?.data) {
-      const data = result.data?.data as { item: { fields: { nodes: { name: string, value: string }[] } } };
+      const data = result.data?.data as {
+        item: { fields: { nodes: { name: string; value: string }[] } };
+      };
       if (data?.item?.fields) {
-        const field = data.item.fields?.nodes?.find((f: { name: string, value: string }) => f.name === config.field);
+        const field = data.item.fields?.nodes?.find(
+          (f: { name: string; value: string }) => f.name === config.field
+        );
         if (field?.value) {
           return field.value as string;
         }
@@ -252,8 +258,8 @@ export async function saveApiKey(
         },
         query: {
           sitecoreContextId,
-        }
-      }
+        },
+      },
     });
 
     let itemId: string | null = null;
@@ -285,12 +291,12 @@ export async function saveApiKey(
           },
           query: {
             sitecoreContextId,
-          }
-        }
+          },
+        },
       });
     } else {
       // Item doesn't exist, create it with apiKeyIcon
-      const fieldsToCreate: { name: string, value: string }[] = [
+      const fieldsToCreate: { name: string; value: string }[] = [
         {
           name: config.field,
           value: key,
@@ -300,7 +306,7 @@ export async function saveApiKey(
       if (config.apiKeyIcon) {
         fieldsToCreate.push({
           name: '__Icon',
-          value: config.apiKeyIcon
+          value: config.apiKeyIcon,
         });
       }
 
@@ -314,12 +320,12 @@ export async function saveApiKey(
               parent: parentId,
               language: config.language,
               fields: fieldsToCreate,
-            }
+            },
           },
           query: {
             sitecoreContextId,
-          }
-        }
+          },
+        },
       });
     }
 

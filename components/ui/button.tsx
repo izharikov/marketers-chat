@@ -1,7 +1,7 @@
-import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
-import { type VariantProps, cva } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
+import * as React from 'react';
+import { Slot } from '@radix-ui/react-slot';
+import { type VariantProps, cva } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   [
@@ -32,11 +32,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary-600 active:bg-primary-700',
+        default:
+          'bg-primary text-primary-foreground hover:bg-primary-600 active:bg-primary-700',
         outline:
           'border bg-backgrounds hover:bg-neutral-bg hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
-        ghost:
-          'bg-transparent hover:bg-neutral-bg active:bg-neutral-bg-active',
+        ghost: 'bg-transparent hover:bg-neutral-bg active:bg-neutral-bg-active',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
@@ -75,7 +75,8 @@ const buttonVariants = cva(
       {
         variant: 'default',
         colorScheme: 'danger',
-        class: 'bg-danger text-inverse-text hover:bg-danger-hover active:bg-danger-active',
+        class:
+          'bg-danger text-inverse-text hover:bg-danger-hover active:bg-danger-active',
       },
       {
         variant: 'default',
@@ -163,7 +164,7 @@ const buttonVariants = cva(
       colorScheme: 'primary',
     },
   }
-)
+);
 
 function Button({
   className,
@@ -174,30 +175,30 @@ function Button({
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : 'button'
+  const Comp = asChild ? Slot : 'button';
 
-  let resolvedColorSchemeFinal = colorScheme
+  let resolvedColorSchemeFinal = colorScheme;
 
   if (!colorScheme) {
     switch (variant) {
       case 'default':
       case 'link':
-        resolvedColorSchemeFinal = 'primary'
-        break
+        resolvedColorSchemeFinal = 'primary';
+        break;
       case 'outline':
       case 'ghost':
-        resolvedColorSchemeFinal = 'neutral'
-        break
+        resolvedColorSchemeFinal = 'neutral';
+        break;
       default:
-        resolvedColorSchemeFinal = 'primary'
+        resolvedColorSchemeFinal = 'primary';
     }
   }
 
   return (
     <Comp
-      data-slot="button"
+      data-slot='button'
       className={cn(
         buttonVariants({
           variant,
@@ -208,7 +209,7 @@ function Button({
       )}
       {...props}
     />
-  )
+  );
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

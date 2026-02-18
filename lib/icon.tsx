@@ -20,7 +20,7 @@ export function Icon({
   return (
     <svg
       transform={`scale(${size})`}
-      viewBox="0 0 24 24"
+      viewBox='0 0 24 24'
       aria-label={title}
       className={className}
       {...rest}
