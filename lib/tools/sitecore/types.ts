@@ -13,6 +13,10 @@ import {
 
 export type NeedsApproval = Parameters<typeof tool>[0]['needsApproval'];
 
+export type DefaultToolOptions = {
+  needsApproval?: NeedsApproval;
+};
+
 export type SitecoreToolName =
   | keyof typeof assetToolsConfig
   | keyof typeof pagesToolsConfig

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 
 interface AppSettingsModalProps {
@@ -157,8 +158,32 @@ export function AppSettingsModal({
                 htmlFor='needsToolApproval'
                 className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
               >
-                Needs tool approval
+                Needs tool approval (for Sitecore tools)
               </Label>
+            </div>
+            <div className='flex flex-col gap-4'>
+              <Label
+                htmlFor='sitecoreToolsExecution'
+                className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+              >
+                Sitecoer Tools execution
+              </Label>
+              <RadioGroup
+                defaultValue={tempSettings.sitecoreToolsExecution}
+                className='w-fit'
+                onValueChange={(value) =>
+                  handleSettingChange('sitecoreToolsExecution', value)
+                }
+              >
+                <div className='flex items-center gap-3'>
+                  <RadioGroupItem value='frontend' id='frontend' />
+                  <Label htmlFor='frontend'>Frontend</Label>
+                </div>
+                <div className='flex items-center gap-3'>
+                  <RadioGroupItem value='backend' id='backend' />
+                  <Label htmlFor='backend'>Backend</Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
         </div>

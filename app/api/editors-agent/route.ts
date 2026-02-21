@@ -71,14 +71,14 @@ export async function POST(req: Request) {
     messages,
     model: modelName,
     capabilities,
-    toolExecution = 'frontend',
+    sitecoreToolsExecution = 'frontend',
     contextId,
     needsApproval,
   }: {
     messages: UIMessage[];
     model: string;
     capabilities: Capability[];
-    toolExecution: 'frontend' | 'backend';
+    sitecoreToolsExecution: 'frontend' | 'backend';
     contextId: string | undefined;
     needsApproval: boolean;
   } = await req.json();
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     return Response.json({ error: 'API key is required' }, { status: 401 });
   }
 
-  if (toolExecution === 'backend' && (!accessToken || !contextId)) {
+  if (sitecoreToolsExecution === 'backend' && (!accessToken || !contextId)) {
     throw new Error(
       'Access token and sitecore context ID are required for backend tool execution.'
     );
@@ -106,29 +106,32 @@ export async function POST(req: Request) {
 
   const { model, providerOptions } = retrieveModel(modelName, apiKey);
 
-  const options: CreateSitecoreToolsOptions =
-    toolExecution === 'frontend'
+  const options = {
+    needsApproval,
+  };
+  const sitecoreToolOptions: CreateSitecoreToolsOptions =
+    sitecoreToolsExecution === 'frontend'
       ? {
           execution: 'client',
-          needsApproval,
+          ...options,
         }
       : {
           execution: 'server',
-          needsApproval,
           client: await experimental_createXMCClient({
             getAccessToken: async () => {
               return accessToken!;
             },
           }),
           sitecoreContextId: contextId!,
+          ...options,
         };
 
   const agent = new ToolLoopAgent({
     model,
     instructions: buildSystem(capabilities),
     tools: {
-      ...createSitecoreTools(options),
-      ...pageBuilderTools,
+      ...createSitecoreTools(sitecoreToolOptions),
+      ...pageBuilderTools({}),
       ...exaTools({ apiKey: exaApiKey! }),
     },
     activeTools: capabilities.map((cap) => toolsMapping[cap]).flat(),

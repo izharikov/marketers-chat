@@ -91,10 +91,8 @@ export const buildSystem: (capabilities: Capability[]) => string = (
   );
 };
 
-export const toolsMapping: Record<
-  Capability,
-  (SitecoreToolName | PageBuilderToolName | ExaToolName)[]
-> = {
+export type ToolName = SitecoreToolName | PageBuilderToolName | ExaToolName;
+export const toolsMapping: Record<Capability, ToolName[]> = {
   page_layout: [
     'get_current_page_context',
     'get_components_on_page',
@@ -120,3 +118,11 @@ export const toolsMapping: Record<
   sites: ['get_sites_list', 'get_site_details', 'get_all_pages_by_site'],
   websearch: ['web_search'],
 };
+
+export const clientOnlyTools: ToolName[] = [
+  'get_current_page_context',
+  'reload_current_page',
+  'navigate_to_another_page',
+];
+
+export const serverOnlyTools: ToolName[] = ['web_search'];

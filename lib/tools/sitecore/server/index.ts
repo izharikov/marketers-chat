@@ -11,12 +11,9 @@ import {
   personalizationToolsConfig,
   sitesToolsConfig,
 } from '../definitions';
+import { DefaultToolOptions } from '../types';
 
-type ToolConfig = {
-  needsApproval?: Parameters<typeof tool>[0]['needsApproval'];
-};
-
-function wrapTool(commonConfig: ToolConfig) {
+function wrapTool(commonConfig: DefaultToolOptions) {
   return function <INPUT, OUTPUT>(params: Tool<INPUT, OUTPUT>) {
     return tool({
       ...params,
@@ -49,7 +46,7 @@ async function callWithJobId<TData, TResult extends { data: TData }>(
 export function assetTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {
@@ -149,7 +146,7 @@ export function assetTools(
 export function environmentTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {
@@ -171,7 +168,7 @@ export function environmentTools(
 export function personalizationTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {
@@ -257,7 +254,7 @@ export function personalizationTools(
 export function jobTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {
@@ -312,7 +309,7 @@ export function jobTools(
 export function pagesTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {
@@ -567,7 +564,7 @@ export function pagesTools(
 export function sitesTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {
@@ -635,7 +632,7 @@ export function sitesTools(
 export function contentTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {
@@ -763,7 +760,7 @@ export function contentTools(
 export function componentsTools(
   client: experimental_XMC,
   sitecoreContextId: string,
-  config?: ToolConfig
+  config?: DefaultToolOptions
 ) {
   const wrapped = wrapTool(config ?? {});
   return {

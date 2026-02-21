@@ -21,6 +21,7 @@ export type ApiKey = 'vercel' | 'openai' | 'anthropic' | 'google' | 'exa';
 
 export interface LocalSettings extends Record<string, unknown> {
   needsToolApproval: boolean;
+  sitecoreToolsExecution: 'frontend' | 'backend';
 }
 
 interface AppSettingsContextType {
@@ -51,9 +52,11 @@ export function AppSettingsProvider({
   const [keys, setKeys] = useState<Record<ApiKey, string>>(
     {} as Record<ApiKey, string>
   );
-  const [localSettings, setLocalSettings] = useState<LocalSettings>(() =>
-    JSON.parse(localStorage.getItem('marketers-chat-settings') || '{}')
-  );
+  const [localSettings, setLocalSettings] = useState<LocalSettings>(() => ({
+    needsToolApproval: true,
+    sitecoreToolsExecution: 'frontend',
+    ...JSON.parse(localStorage.getItem('marketers-chat-settings') || '{}'),
+  }));
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 

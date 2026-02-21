@@ -1,9 +1,16 @@
 import { tool } from 'ai';
 import { Exa } from 'exa-js';
 import { z } from 'zod';
+import { DefaultToolOptions } from '../sitecore/types';
 
-const webSearch = ({ apiKey }: { apiKey: string }) =>
+const webSearch = ({
+  apiKey,
+  needsApproval,
+}: {
+  apiKey: string;
+} & DefaultToolOptions) =>
   tool({
+    needsApproval,
     description: 'Search the web for up-to-date information',
     inputSchema: z.object({
       query: z.string().min(1).max(100).describe('The search query'),
@@ -34,9 +41,13 @@ const webSearch = ({ apiKey }: { apiKey: string }) =>
     },
   });
 
-export const exaTools = ({ apiKey }: { apiKey: string }) => {
+export const exaTools = (
+  config: {
+    apiKey: string;
+  } & DefaultToolOptions
+) => {
   return {
-    web_search: webSearch({ apiKey }),
+    web_search: webSearch(config),
   };
 };
 

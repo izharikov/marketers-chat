@@ -1,6 +1,10 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { ClientSideContext, ClientSideTool } from '../types';
+import {
+  ClientSideContext,
+  ClientSideTool,
+  DefaultToolOptions,
+} from '../types';
 
 export type ToolConfig<TInput, TOutput> = {
   description: string;
@@ -95,29 +99,34 @@ const tools = {
   }),
 };
 
-export const pageBuilderTools = {
+export type PageBuilderToolOptions = DefaultToolOptions;
+
+export const pageBuilderTools = (options: PageBuilderToolOptions) => ({
   get_current_page_context: tool({
     ...tools.get_current_page_context,
     execute: undefined,
+    needsApproval: options.needsApproval,
   }),
   reload_current_page: tool({
     ...tools.reload_current_page,
     execute: undefined,
+    needsApproval: options.needsApproval,
   }),
   navigate_to_another_page: tool({
     ...tools.navigate_to_another_page,
     execute: undefined,
+    needsApproval: options.needsApproval,
   }),
-};
+});
 
-export type PageBuilderToolName = keyof typeof pageBuilderTools;
+export type PageBuilderToolName = keyof ReturnType<typeof pageBuilderTools>;
 
 export async function executePageBuilderTool(
   context: ClientSideContext,
   tool: ClientSideTool
 ) {
   const toolFunction = tools[
-    tool.toolName as keyof typeof pageBuilderTools
+    tool.toolName as PageBuilderToolName
   ] as ToolConfig<unknown, unknown>;
   if (!toolFunction) {
     return {

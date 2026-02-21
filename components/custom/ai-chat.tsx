@@ -175,23 +175,22 @@ const allCapabilities: {
 
 const initialMessages: UIMessage[] = [
   // {
-  //     id: 'message',
-  //     role: 'assistant',
-  //     parts: [
-  //         {
-  //             type: 'tool-test',
-  //             toolCallId: 'tool-test',
-  //             state: 'output-available',
-  //             input: {
-  //                 text: 'Hello',
-  //             },
-  //             output: {
-  //                 text: 'Hello',
-  //                 jobId: 'f3045dc1-4126-4c81-93a8-91a8b297d265',
-  //             },
-  //         }
-  //     ]
-  // }
+  //   id: 'message',
+  //   role: 'assistant',
+  //   parts: [
+  //     {
+  //       type: 'tool-test',
+  //       toolCallId: 'tool-test',
+  //       state: 'approval-requested',
+  //       input: {
+  //         text: 'Hello',
+  //       },
+  //       approval: {
+  //         id: '123',
+  //       },
+  //     },
+  //   ],
+  // },
 ];
 
 type AiChatProps = {
@@ -202,6 +201,7 @@ type AiChatProps = {
   onToolRejected?: (tool: ToolUIPart) => Promise<void>;
   selectedCapabilities: Capability[];
   availabelCapabilities: Capability[];
+  needsApprovalRef: React.RefObject<boolean>;
 };
 
 const AiChat = ({
@@ -212,6 +212,7 @@ const AiChat = ({
   onToolRejected,
   selectedCapabilities,
   availabelCapabilities,
+  needsApprovalRef,
 }: AiChatProps) => {
   const { setModalOpen } = useAppSettings();
   const [input, setInput] = useState('');
@@ -452,9 +453,9 @@ const AiChat = ({
                               <Confirmation
                                 approval={approval}
                                 state={tool.state}
-                                className='flex-row'
+                                className='flex-col relative [&>svg]:absolute [&>svg]:top-3.5 [&>svg]:left-4 [&>svg]:size-4'
                               >
-                                <ConfirmationTitle>
+                                <ConfirmationTitle className='w-full pl-6'>
                                   <div className='flex'>
                                     <ConfirmationRequest>
                                       Do you want to execute this tool?
@@ -469,7 +470,7 @@ const AiChat = ({
                                     </ConfirmationRejected>
                                   </div>
                                 </ConfirmationTitle>
-                                <ConfirmationActions>
+                                <ConfirmationActions className='flex items-start'>
                                   <ConfirmationAction
                                     onClick={async () => {
                                       await chat.addToolApprovalResponse({
@@ -493,6 +494,19 @@ const AiChat = ({
                                     variant='default'
                                   >
                                     Accept
+                                  </ConfirmationAction>
+                                  <ConfirmationAction
+                                    onClick={async () => {
+                                      needsApprovalRef.current = true;
+                                      await chat.addToolApprovalResponse({
+                                        id: approval.id,
+                                        approved: true,
+                                      });
+                                      await onToolApproved?.(tool);
+                                    }}
+                                    variant='default'
+                                  >
+                                    Accept all in current section
                                   </ConfirmationAction>
                                 </ConfirmationActions>
                               </Confirmation>
