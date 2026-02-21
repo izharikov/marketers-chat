@@ -86,6 +86,13 @@ const eslintConfig = defineConfig([
         'error',
         { blankLine: 'never', prev: 'import', next: 'import' },
       ],
+
+      'prettier/prettier': [
+        'error',
+        {
+          endOfLine: 'auto',
+        },
+      ],
     },
   },
   prettier,
