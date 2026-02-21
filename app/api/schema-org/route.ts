@@ -1,78 +1,81 @@
-import { convertToModelMessages, jsonSchema, JSONSchema7, Output, streamText } from "ai";
-import z from "zod/v4";
-import { ArticleSchema, ProductSchema, LocalBusinessSchema, BreadcrumbListSchema, PersonSchema, RecipeSchema, VideoObjectSchema, ReviewSchema, CourseSchema, JobPostingSchema, WebsiteSchema, FAQPageSchema, EventSchema } from "./schema-definitions";
-import { retrieveModel } from "@/lib/ai/registry";
+import {
+  JSONSchema7,
+  Output,
+  convertToModelMessages,
+  jsonSchema,
+  streamText,
+} from 'ai';
+import z from 'zod/v4';
+import { retrieveModel } from '@/lib/ai/registry';
+import { pageStructuredDataSchema } from '@/lib/api/schema-org';
 
 export const maxDuration = 30;
 
-function schemaItem<T>(schema: z.ZodType<T>) {
-    return z.union([
-        z.literal('Ignore').describe('If current page doesn\'t suit to this schema'),
-        schema,
-    ]);
-}
-
 export async function POST(req: Request) {
-    const {
-        messages,
-        site,
-        currentPage,
-        layout,
-    } = await req.json();
-    const apiKey = req.headers.get("x-vercel-api-key");
-    if (!apiKey) {
-        return Response.json(
-            { error: "API key is required" },
-            { status: 401 }
-        );
-    }
-    const { model, providerOptions } = retrieveModel('openai/gpt-5-nano', apiKey);
-    const zodSchema = z.object({
-        article: schemaItem(ArticleSchema),
-        faqPage: schemaItem(FAQPageSchema),
-        event: schemaItem(EventSchema),
-        product: schemaItem(ProductSchema),
-        localBusiness: schemaItem(LocalBusinessSchema),
-        person: schemaItem(PersonSchema),
-        recipe: schemaItem(RecipeSchema),
-        videoObject: schemaItem(VideoObjectSchema),
-        review: schemaItem(ReviewSchema),
-        course: schemaItem(CourseSchema),
-        jobPosting: schemaItem(JobPostingSchema),
-        ...(currentPage.isHome ?
-            { website: schemaItem(WebsiteSchema) }
-            : { breadcrumbList: schemaItem(BreadcrumbListSchema) }),
-    });
+  const { site, currentPage, layout, language } = await req.json();
+  const apiKey = req.headers.get('x-vercel-api-key');
+  if (!apiKey) {
+    return Response.json({ error: 'API key is required' }, { status: 401 });
+  }
+  const { model, providerOptions } = retrieveModel('openai/gpt-5-nano', apiKey);
+  const originalSchema = pageStructuredDataSchema(currentPage.isHome);
+  const schema = jsonSchema(
+    z.toJSONSchema(originalSchema, {
+      reused: 'ref',
+    }) as JSONSchema7
+  );
 
-    const schema = jsonSchema(zodSchema.toJSONSchema() as JSONSchema7);
-    const result = streamText({
-        model,
-        system: `You are an expert in structured data and schema markup for SitecoreAI website.
-Your goal is to implement schema.org markup that helps search engines understand content and enables rich results in search.
+  const result = streamText({
+    model,
+    system: `You are an expert in structured data and schema markup for SitecoreAI website.
+Your goal is to EXTRACT schema.org markup from available site content, page content and layout.
 
 When implementing schema, understand:
 - Page Type - What kind of page? What's the primary content? What rich results are possible?
-- Current State - Any existing schema? Errors in implementation? Which rich results already appearing?
 - Goals - Which rich results are you targeting? What's the business value?
 
-# IMPORTANT (!!)
-- Be strict and don't generate schema if it doesn't suit to @type (e.g. DON'T generate schema for @type=Article if page is not article)
+## IMPORTANT
+- Be strict and don't generate schema if PAGE CONTENT (fields + layout) doesn't suit to @type (e.g. DON'T generate schema for @type=Article if page is not article)
+- Use current page route information for breadcrumbList is applies
 
-## Site information (use host for url)
-${JSON.stringify(site)}
+## Sitecore Date Format
+yyyyMMddTHHmmssZ, example: 20250513T151718Z
+`,
+    output: Output.object({
+      schema,
+    }),
+    messages: await convertToModelMessages([
+      {
+        role: 'user',
+        parts: [
+          {
+            type: 'text',
+            text: `
+## Page language and langauge for output: ${language}
 
-## Current page content
-${JSON.stringify(currentPage)}
+## Site information
+- name: ${site.name}
+- host: ${site.host}
+
+## Current page item fields
+- route: ${currentPage.route} (this page is ${currentPage.isHome ? 'home' : 'not home'} page)
+- template name: ${currentPage.templateName}
+- fields:
+${Object.entries(currentPage.fields)
+  .map(([key, field]) => `  - ${key}: ${(field as { value: unknown })?.value}`)
+  .join('\n')}
+- created: ${currentPage.created}
+- updated: ${currentPage.updated}
 
 ## Page Layout (components and datasources)
 ${JSON.stringify(layout)}
 `,
-        output: Output.object({
-            schema,
-        }),
-        messages: await convertToModelMessages(messages),
-        providerOptions,
-        abortSignal: req.signal,
-    });
-    return result.toUIMessageStreamResponse();
+          },
+        ],
+      },
+    ]),
+    providerOptions,
+    abortSignal: req.signal,
+  });
+  return result.toUIMessageStreamResponse();
 }

@@ -1,17 +1,19 @@
-"use client";
+'use client';
 
 import React, {
-  useEffect,
-  useState,
   ReactNode,
   createContext,
   useContext,
-} from "react";
+  useEffect,
+  useState,
+} from 'react';
 import {
   ApplicationContext,
   ClientSDK,
-} from "@sitecore-marketplace-sdk/client";
-import { XMC } from "@sitecore-marketplace-sdk/xmc";
+} from '@sitecore-marketplace-sdk/client';
+import { XMC } from '@sitecore-marketplace-sdk/xmc';
+import { Toaster, toast } from 'sonner';
+import { Loader } from '@/components/ai-elements/loader';
 
 interface ClientSDKProviderProps {
   children: ReactNode;
@@ -26,14 +28,14 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
   const [client, setClient] = useState<ClientSDK | null>(null);
   const [appContext, setAppContext] = useState<ApplicationContext | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (client) {
-      client.query("application.context").then((res) => {
+      client.query('application.context').then((res) => {
         if (res && res.data) {
           setAppContext(res.data);
-          console.log("appContext", res.data);
+          console.log('appContext', res.data);
         }
       });
     }
@@ -50,8 +52,8 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
         const client = await ClientSDK.init(config);
         setClient(client);
       } catch (error) {
-        console.error("Error initializing client SDK", error);
-        setError("Error initializing client SDK");
+        console.error('Error initializing client SDK', error);
+        setError('Error initializing client SDK');
       } finally {
         setLoading(false);
       }
@@ -60,19 +62,24 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
     init();
   }, []);
 
+  useEffect(() => {
+    toast.error(error, { duration: Infinity, position: 'top-left' });
+  }, [error]);
+
   if (loading) {
-    return <div>Attempting to connect to Sitecore Marketplace...</div>;
+    return (
+      <div className='flex'>
+        <div className='relative mx-auto h-[100px]'>
+          <Loader className='absolute bottom-0 left-0' />
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div>
-        <h1>Error initializing Marketplace SDK</h1>
-        <div>{error}</div>
-        <div>
-          Please check if the client SDK is loaded inside Sitecore Marketplace
-          parent window and you have properly set your app's extention points.
-        </div>
+        <Toaster />
       </div>
     );
   }
@@ -98,7 +105,7 @@ export const useMarketplaceClient = () => {
   const context = useContext(ClientSDKContext);
   if (!context) {
     throw new Error(
-      "useMarketplaceClient must be used within a ClientSDKProvider"
+      'useMarketplaceClient must be used within a ClientSDKProvider'
     );
   }
   return context;
@@ -107,7 +114,7 @@ export const useMarketplaceClient = () => {
 export const useAppContext = () => {
   const context = useContext(AppContextContext);
   if (!context) {
-    throw new Error("useAppContext must be used within a ClientSDKProvider");
+    throw new Error('useAppContext must be used within a ClientSDKProvider');
   }
   return context;
 };

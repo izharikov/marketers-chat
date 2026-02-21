@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useAppContext } from "@/components/providers/marketplace";
-import type { Xmapp } from "@sitecore-marketplace-sdk/xmc";
-import { fetchLanguagesAction } from "./action";
+import { useState } from 'react';
+import { useAuth } from '@/components/providers/auth';
+import { useAppContext } from '@/components/providers/marketplace';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/components/providers/auth";
+} from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { fetchLanguagesAction } from './action';
+import type { Xmapp } from '@sitecore-marketplace-sdk/xmc';
 
 export const ListLanguagesFromServerAction = () => {
   const appContext = useAppContext();
@@ -31,26 +31,26 @@ export const ListLanguagesFromServerAction = () => {
       // server action
       const languages = await fetchLanguagesAction({
         sitecoreContextId:
-          appContext?.resourceAccess?.[0]?.context?.preview || "",
+          appContext?.resourceAccess?.[0]?.context?.preview || '',
         accessToken: await getAccessTokenSilently(),
       });
 
       setLanguages(languages);
     } catch (error) {
-      console.error("error from server action", error);
-      setError(error instanceof Error ? error.message : "An error occurred");
+      console.error('error from server action', error);
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card style={"outline"}>
+    <Card style={'outline'}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className='flex items-center gap-2'>
           Server Action Example
-          <Badge colorScheme={"primary"}>Server-side</Badge>
-          <Badge colorScheme={"warning"}>Custom Auth</Badge>
+          <Badge colorScheme={'primary'}>Server-side</Badge>
+          <Badge colorScheme={'warning'}>Custom Auth</Badge>
         </CardTitle>
         <CardDescription>
           Fetch languages using Next.js server action from client component
@@ -58,35 +58,35 @@ export const ListLanguagesFromServerAction = () => {
           User access token is passed from client component to server action
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className='space-y-4'>
         <Button
           onClick={fetchLanguages}
           disabled={loading}
-          className="w-full sm:w-auto"
+          className='w-full sm:w-auto'
         >
-          {loading ? "Fetching..." : "Fetch Languages"}
+          {loading ? 'Fetching...' : 'Fetch Languages'}
         </Button>
 
         {error && (
-          <Alert variant="danger">
+          <Alert variant='danger'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Languages found:</span>
+        <div className='space-y-2'>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm font-medium'>Languages found:</span>
             {loading ? (
-              <Skeleton className="h-5 w-8" />
+              <Skeleton className='h-5 w-8' />
             ) : (
               <Badge>{languages.length}</Badge>
             )}
           </div>
 
           {languages.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Language names:</p>
-              <div className="flex flex-wrap gap-1">
+            <div className='space-y-1'>
+              <p className='text-sm text-muted-foreground'>Language names:</p>
+              <div className='flex flex-wrap gap-1'>
                 {languages.map((language, index) => (
                   <Badge key={index}>{language.name}</Badge>
                 ))}

@@ -1,15 +1,7 @@
-"use client";
+'use client';
 
-import type { FileUIPart, SourceDocumentUIPart } from "ai";
-import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-
-import { Button } from "@/components/ui/button";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { cn } from "@/lib/utils";
+import type { ComponentProps, HTMLAttributes, ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useMemo } from 'react';
 import {
   FileTextIcon,
   GlobeIcon,
@@ -18,8 +10,15 @@ import {
   PaperclipIcon,
   VideoIcon,
   XIcon,
-} from "lucide-react";
-import { createContext, memo, useCallback, useContext, useMemo } from "react";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import { cn } from '@/lib/utils';
+import type { FileUIPart, SourceDocumentUIPart } from 'ai';
 
 // ============================================================================
 // Types
@@ -30,14 +29,14 @@ export type AttachmentData =
   | (SourceDocumentUIPart & { id: string });
 
 export type AttachmentMediaCategory =
-  | "image"
-  | "video"
-  | "audio"
-  | "document"
-  | "source"
-  | "unknown";
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'document'
+  | 'source'
+  | 'unknown';
 
-export type AttachmentVariant = "grid" | "inline" | "list";
+export type AttachmentVariant = 'grid' | 'inline' | 'list';
 
 const mediaCategoryIcons: Record<AttachmentMediaCategory, typeof ImageIcon> = {
   audio: Music2Icon,
@@ -55,35 +54,35 @@ const mediaCategoryIcons: Record<AttachmentMediaCategory, typeof ImageIcon> = {
 export const getMediaCategory = (
   data: AttachmentData
 ): AttachmentMediaCategory => {
-  if (data.type === "source-document") {
-    return "source";
+  if (data.type === 'source-document') {
+    return 'source';
   }
 
-  const mediaType = data.mediaType ?? "";
+  const mediaType = data.mediaType ?? '';
 
-  if (mediaType.startsWith("image/")) {
-    return "image";
+  if (mediaType.startsWith('image/')) {
+    return 'image';
   }
-  if (mediaType.startsWith("video/")) {
-    return "video";
+  if (mediaType.startsWith('video/')) {
+    return 'video';
   }
-  if (mediaType.startsWith("audio/")) {
-    return "audio";
+  if (mediaType.startsWith('audio/')) {
+    return 'audio';
   }
-  if (mediaType.startsWith("application/") || mediaType.startsWith("text/")) {
-    return "document";
+  if (mediaType.startsWith('application/') || mediaType.startsWith('text/')) {
+    return 'document';
   }
 
-  return "unknown";
+  return 'unknown';
 };
 
 export const getAttachmentLabel = (data: AttachmentData): string => {
-  if (data.type === "source-document") {
-    return data.title || data.filename || "Source";
+  if (data.type === 'source-document') {
+    return data.title || data.filename || 'Source';
   }
 
   const category = getMediaCategory(data);
-  return data.filename || (category === "image" ? "Image" : "Attachment");
+  return data.filename || (category === 'image' ? 'Image' : 'Attachment');
 };
 
 const renderAttachmentImage = (
@@ -92,17 +91,19 @@ const renderAttachmentImage = (
   isGrid: boolean
 ) =>
   isGrid ? (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
-      alt={filename || "Image"}
-      className="size-full object-cover"
+      alt={filename || 'Image'}
+      className='size-full object-cover'
       height={96}
       src={url}
       width={96}
     />
   ) : (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
-      alt={filename || "Image"}
-      className="size-full rounded object-cover"
+      alt={filename || 'Image'}
+      className='size-full rounded object-cover'
       height={20}
       src={url}
       width={20}
@@ -133,12 +134,12 @@ const AttachmentContext = createContext<AttachmentContextValue | null>(null);
 // ============================================================================
 
 export const useAttachmentsContext = () =>
-  useContext(AttachmentsContext) ?? { variant: "grid" as const };
+  useContext(AttachmentsContext) ?? { variant: 'grid' as const };
 
 export const useAttachmentContext = () => {
   const ctx = useContext(AttachmentContext);
   if (!ctx) {
-    throw new Error("Attachment components must be used within <Attachment>");
+    throw new Error('Attachment components must be used within <Attachment>');
   }
   return ctx;
 };
@@ -152,7 +153,7 @@ export type AttachmentsProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export const Attachments = ({
-  variant = "grid",
+  variant = 'grid',
   className,
   children,
   ...props
@@ -163,9 +164,9 @@ export const Attachments = ({
     <AttachmentsContext.Provider value={contextValue}>
       <div
         className={cn(
-          "flex items-start",
-          variant === "list" ? "flex-col gap-2" : "flex-wrap gap-2",
-          variant === "grid" && "ml-auto w-fit",
+          'flex items-start',
+          variant === 'list' ? 'flex-col gap-2' : 'flex-wrap gap-2',
+          variant === 'grid' && 'ml-auto w-fit',
           className
         )}
         {...props}
@@ -204,17 +205,17 @@ export const Attachment = ({
     <AttachmentContext.Provider value={contextValue}>
       <div
         className={cn(
-          "group relative",
-          variant === "grid" && "size-24 overflow-hidden rounded-lg",
-          variant === "inline" && [
-            "flex h-8 cursor-pointer select-none items-center gap-1.5",
-            "rounded-md border border-border px-1.5",
-            "font-medium text-sm transition-all",
-            "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+          'group relative',
+          variant === 'grid' && 'size-24 overflow-hidden rounded-lg',
+          variant === 'inline' && [
+            'flex h-8 cursor-pointer select-none items-center gap-1.5',
+            'rounded-md border border-border px-1.5',
+            'font-medium text-sm transition-all',
+            'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
           ],
-          variant === "list" && [
-            "flex w-full items-center gap-3 rounded-lg border p-3",
-            "hover:bg-accent/50",
+          variant === 'list' && [
+            'flex w-full items-center gap-3 rounded-lg border p-3',
+            'hover:bg-accent/50',
           ],
           className
         )}
@@ -241,19 +242,19 @@ export const AttachmentPreview = ({
 }: AttachmentPreviewProps) => {
   const { data, mediaCategory, variant } = useAttachmentContext();
 
-  const iconSize = variant === "inline" ? "size-3" : "size-4";
+  const iconSize = variant === 'inline' ? 'size-3' : 'size-4';
 
   const renderIcon = (Icon: typeof ImageIcon) => (
-    <Icon className={cn(iconSize, "text-muted-foreground")} />
+    <Icon className={cn(iconSize, 'text-muted-foreground')} />
   );
 
   const renderContent = () => {
-    if (mediaCategory === "image" && data.type === "file" && data.url) {
-      return renderAttachmentImage(data.url, data.filename, variant === "grid");
+    if (mediaCategory === 'image' && data.type === 'file' && data.url) {
+      return renderAttachmentImage(data.url, data.filename, variant === 'grid');
     }
 
-    if (mediaCategory === "video" && data.type === "file" && data.url) {
-      return <video className="size-full object-cover" muted src={data.url} />;
+    if (mediaCategory === 'video' && data.type === 'file' && data.url) {
+      return <video className='size-full object-cover' muted src={data.url} />;
     }
 
     const Icon = mediaCategoryIcons[mediaCategory];
@@ -263,10 +264,10 @@ export const AttachmentPreview = ({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden",
-        variant === "grid" && "size-full bg-muted",
-        variant === "inline" && "size-5 rounded bg-background",
-        variant === "list" && "size-12 rounded bg-muted",
+        'flex shrink-0 items-center justify-center overflow-hidden',
+        variant === 'grid' && 'size-full bg-muted',
+        variant === 'inline' && 'size-5 rounded bg-background',
+        variant === 'list' && 'size-12 rounded bg-muted',
         className
       )}
       {...props}
@@ -292,15 +293,15 @@ export const AttachmentInfo = ({
   const { data, variant } = useAttachmentContext();
   const label = getAttachmentLabel(data);
 
-  if (variant === "grid") {
+  if (variant === 'grid') {
     return null;
   }
 
   return (
-    <div className={cn("min-w-0 flex-1", className)} {...props}>
-      <span className="block truncate">{label}</span>
+    <div className={cn('min-w-0 flex-1', className)} {...props}>
+      <span className='block truncate'>{label}</span>
       {showMediaType && data.mediaType && (
-        <span className="block truncate text-muted-foreground text-xs">
+        <span className='block truncate text-muted-foreground text-xs'>
           {data.mediaType}
         </span>
       )}
@@ -317,7 +318,7 @@ export type AttachmentRemoveProps = ComponentProps<typeof Button> & {
 };
 
 export const AttachmentRemove = ({
-  label = "Remove",
+  label = 'Remove',
   className,
   children,
   ...props
@@ -340,28 +341,28 @@ export const AttachmentRemove = ({
     <Button
       aria-label={label}
       className={cn(
-        variant === "grid" && [
-          "absolute top-2 right-2 size-6 rounded-full p-0",
-          "bg-background/80 backdrop-blur-sm",
-          "opacity-0 transition-opacity group-hover:opacity-100",
-          "hover:bg-background",
-          "[&>svg]:size-3",
+        variant === 'grid' && [
+          'absolute top-2 right-2 size-6 rounded-full p-0',
+          'bg-background/80 backdrop-blur-sm',
+          'opacity-0 transition-opacity group-hover:opacity-100',
+          'hover:bg-background',
+          '[&>svg]:size-3',
         ],
-        variant === "inline" && [
-          "size-5 rounded p-0",
-          "opacity-0 transition-opacity group-hover:opacity-100",
-          "[&>svg]:size-2.5",
+        variant === 'inline' && [
+          'size-5 rounded p-0',
+          'opacity-0 transition-opacity group-hover:opacity-100',
+          '[&>svg]:size-2.5',
         ],
-        variant === "list" && ["size-8 shrink-0 rounded p-0", "[&>svg]:size-4"],
+        variant === 'list' && ['size-8 shrink-0 rounded p-0', '[&>svg]:size-4'],
         className
       )}
       onClick={handleClick}
-      type="button"
-      variant="ghost"
+      type='button'
+      variant='ghost'
       {...props}
     >
       {children ?? <XIcon />}
-      <span className="sr-only">{label}</span>
+      <span className='sr-only'>{label}</span>
     </Button>
   );
 };
@@ -393,13 +394,13 @@ export type AttachmentHoverCardContentProps = ComponentProps<
 >;
 
 export const AttachmentHoverCardContent = ({
-  align = "start",
+  align = 'start',
   className,
   ...props
 }: AttachmentHoverCardContentProps) => (
   <HoverCardContent
     align={align}
-    className={cn("w-auto p-2", className)}
+    className={cn('w-auto p-2', className)}
     {...props}
   />
 );
@@ -417,20 +418,17 @@ export const AttachmentEmpty = ({
 }: AttachmentEmptyProps) => (
   <div
     className={cn(
-      "flex items-center justify-center p-4 text-muted-foreground text-sm",
+      'flex items-center justify-center p-4 text-muted-foreground text-sm',
       className
     )}
     {...props}
   >
-    {children ?? "No attachments"}
+    {children ?? 'No attachments'}
   </div>
 );
 
 export const AttachmentItem = memo(({ data, onRemove }: AttachmentProps) => {
-  const handleRemove = useCallback(
-    () => onRemove && onRemove(),
-    [onRemove]
-  );
+  const handleRemove = useCallback(() => onRemove && onRemove(), [onRemove]);
   const mediaCategory = getMediaCategory(data);
   const label = getAttachmentLabel(data);
 
@@ -438,34 +436,33 @@ export const AttachmentItem = memo(({ data, onRemove }: AttachmentProps) => {
     <AttachmentHoverCard key={data.id}>
       <AttachmentHoverCardTrigger asChild>
         <Attachment data={data} onRemove={handleRemove}>
-          <div className="relative size-5 shrink-0">
-            <div className="absolute inset-0 transition-opacity group-hover:opacity-0">
+          <div className='relative size-5 shrink-0'>
+            <div className='absolute inset-0 transition-opacity group-hover:opacity-0'>
               <AttachmentPreview />
             </div>
-            <AttachmentRemove className="absolute inset-0" />
+            <AttachmentRemove className='absolute inset-0' />
           </div>
           <AttachmentInfo />
         </Attachment>
       </AttachmentHoverCardTrigger>
       <AttachmentHoverCardContent>
-        <div className="space-y-3">
-          {mediaCategory === "image" &&
-            data.type === "file" &&
-            data.url && (
-              <div className="flex max-h-96 w-80 items-center justify-center overflow-hidden rounded-md border">
-                <img
-                  alt={label}
-                  className="max-h-full max-w-full object-contain"
-                  height={384}
-                  src={data.url}
-                  width={320}
-                />
-              </div>
-            )}
-          <div className="space-y-1 px-0.5">
-            <h4 className="font-semibold text-sm leading-none">{label}</h4>
+        <div className='space-y-3'>
+          {mediaCategory === 'image' && data.type === 'file' && data.url && (
+            <div className='flex max-h-96 w-80 items-center justify-center overflow-hidden rounded-md border'>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt={label}
+                className='max-h-full max-w-full object-contain'
+                height={384}
+                src={data.url}
+                width={320}
+              />
+            </div>
+          )}
+          <div className='space-y-1 px-0.5'>
+            <h4 className='font-semibold text-sm leading-none'>{label}</h4>
             {data.mediaType && (
-              <p className="font-mono text-muted-foreground text-xs">
+              <p className='font-mono text-muted-foreground text-xs'>
                 {data.mediaType}
               </p>
             )}
@@ -475,3 +472,4 @@ export const AttachmentItem = memo(({ data, onRemove }: AttachmentProps) => {
     </AttachmentHoverCard>
   );
 });
+AttachmentItem.displayName = 'AttachmentItem';
