@@ -1,14 +1,13 @@
 import { tool } from 'ai';
 import { Exa } from 'exa-js';
 import { z } from 'zod';
-import { DefaultToolOptions } from '../sitecore/types';
 
-const webSearch = ({
-  apiKey,
-  needsApproval,
-}: {
+type ExaToolOptions = {
   apiKey: string;
-} & DefaultToolOptions) =>
+  needsApproval?: Parameters<typeof tool>[0]['needsApproval'];
+};
+
+const webSearch = ({ apiKey, needsApproval }: ExaToolOptions) =>
   tool({
     needsApproval,
     description: 'Search the web for up-to-date information',
@@ -41,11 +40,7 @@ const webSearch = ({
     },
   });
 
-export const exaTools = (
-  config: {
-    apiKey: string;
-  } & DefaultToolOptions
-) => {
+export const exaTools = (config: ExaToolOptions) => {
   return {
     web_search: webSearch(config),
   };

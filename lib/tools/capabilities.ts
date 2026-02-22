@@ -1,6 +1,5 @@
+import { PageBuilderToolName, SitecoreToolName } from 'sitecore-ai-sdk-tools';
 import { ExaToolName } from './exa';
-import { PageBuilderToolName } from './sitecore/page-builder';
-import { SitecoreToolName } from './sitecore/types';
 
 export type Capability =
   | 'page_layout'

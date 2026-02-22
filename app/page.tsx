@@ -7,6 +7,10 @@ import {
   lastAssistantMessageIsCompleteWithApprovalResponses,
   lastAssistantMessageIsCompleteWithToolCalls,
 } from 'ai';
+import {
+  executeSitecoreTool,
+  executePageBuilderTool,
+} from 'sitecore-ai-sdk-tools';
 import { toast } from 'sonner';
 import AiChat from '@/components/custom/ai-chat';
 import {
@@ -19,8 +23,6 @@ import {
   useMarketplaceClient,
 } from '@/components/providers/marketplace';
 import { Capability } from '@/lib/tools/capabilities';
-import { executeSitecoreTool } from '@/lib/tools/sitecore/client';
-import { executePageBuilderTool } from '@/lib/tools/sitecore/page-builder';
 
 const ChatBot = () => {
   const client = useMarketplaceClient();

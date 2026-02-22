@@ -8,6 +8,11 @@ import {
   createUIMessageStreamResponse,
   smoothStream,
 } from 'ai';
+import { pageBuilderTools } from 'sitecore-ai-sdk-tools';
+import {
+  CreateSitecoreToolsOptions,
+  createSitecoreTools,
+} from 'sitecore-ai-sdk-tools';
 import { helpers, writeText } from '@/lib/ai/helpers';
 import { retrieveModel } from '@/lib/ai/registry';
 import {
@@ -16,11 +21,6 @@ import {
   toolsMapping,
 } from '@/lib/tools/capabilities';
 import { exaTools } from '@/lib/tools/exa';
-import {
-  CreateSitecoreToolsOptions,
-  createSitecoreTools,
-} from '@/lib/tools/sitecore';
-import { pageBuilderTools } from '@/lib/tools/sitecore/page-builder';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
