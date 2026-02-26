@@ -1,4 +1,4 @@
-import { PageBuilderToolName, SitecoreToolName } from 'sitecore-ai-sdk-tools';
+import { PageBuilderToolName, AgentToolName } from 'sitecore-ai-sdk-tools';
 import { ExaToolName } from './exa';
 
 export type Capability =
@@ -90,7 +90,7 @@ export const buildSystem: (capabilities: Capability[]) => string = (
   );
 };
 
-export type ToolName = SitecoreToolName | PageBuilderToolName | ExaToolName;
+export type ToolName = AgentToolName | PageBuilderToolName | ExaToolName;
 export const toolsMapping: Record<Capability, ToolName[]> = {
   page_layout: [
     'get_current_page_context',

@@ -10,8 +10,8 @@ import {
 } from 'ai';
 import { pageBuilderTools } from 'sitecore-ai-sdk-tools';
 import {
-  CreateSitecoreToolsOptions,
-  createSitecoreTools,
+  CreateAgentToolsOptions,
+  createAgentTools,
 } from 'sitecore-ai-sdk-tools';
 import { helpers, writeText } from '@/lib/ai/helpers';
 import { retrieveModel } from '@/lib/ai/registry';
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
   const options = {
     needsApproval,
   };
-  const sitecoreToolOptions: CreateSitecoreToolsOptions =
+  const agentToolOptions: CreateAgentToolsOptions =
     sitecoreToolsExecution === 'frontend'
       ? {
           execution: 'client',
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
     model,
     instructions: buildSystem(capabilities),
     tools: {
-      ...createSitecoreTools(sitecoreToolOptions),
+      ...createAgentTools(agentToolOptions),
       ...pageBuilderTools({}),
       ...exaTools({ apiKey: exaApiKey! }),
     },

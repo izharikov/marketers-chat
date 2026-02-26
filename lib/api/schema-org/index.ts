@@ -7,7 +7,6 @@ import {
   FAQPageSchema,
   JobPostingSchema,
   LocalBusinessSchema,
-  NULL,
   OrganizationSchema,
   ProductSchema,
   RecipeSchema,
@@ -32,8 +31,8 @@ function schemaItem(schema: z.ZodObject, id: string) {
       .describe(
         `Short but detailed explanation of probability percent of '${id}' schema suits page (1-2 sentences)`
       ),
-    item: z
-      .union([NULL, schema])
+    item: schema
+      .nullable()
       .describe(
         `Set null if probability is low, populate with '${id}' schema if probability is high`
       )

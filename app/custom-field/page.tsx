@@ -594,7 +594,6 @@ const getPageInformation = async (
       }
     )?.item;
     const route = item?.rendered?.sitecore?.route;
-
     const site = await client.query('xmc.xmapp.retrieveSite', {
       params: {
         path: {

@@ -8,7 +8,7 @@ import {
   lastAssistantMessageIsCompleteWithToolCalls,
 } from 'ai';
 import {
-  executeSitecoreTool,
+  executeAgentTool,
   executePageBuilderTool,
 } from 'sitecore-ai-sdk-tools';
 import { toast } from 'sonner';
@@ -48,7 +48,7 @@ const ChatBot = () => {
       throw new Error('No sitecore context found');
     }
     try {
-      let res = await executeSitecoreTool(
+      let res = await executeAgentTool(
         { client, sitecoreContextId },
         { toolName, input: toolPart.input }
       );
