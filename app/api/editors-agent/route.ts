@@ -20,7 +20,7 @@ import {
   buildSystem,
   toolsMapping,
 } from '@/lib/tools/capabilities';
-import { exaTools } from '@/lib/tools/exa';
+import { webSearchTools } from '@/lib/tools/websearch';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -84,7 +84,6 @@ export async function POST(req: Request) {
   } = await req.json();
 
   const apiKey = req.headers.get('x-vercel-api-key');
-  const exaApiKey = req.headers.get('x-exa-api-key');
   const accessToken = req.headers.get('Authorization')?.split(' ')[1];
   if (!apiKey) {
     return Response.json({ error: 'API key is required' }, { status: 401 });
@@ -132,7 +131,7 @@ export async function POST(req: Request) {
     tools: {
       ...createAgentTools(agentToolOptions),
       ...pageBuilderTools({}),
-      ...exaTools({ apiKey: exaApiKey! }),
+      ...webSearchTools({ provider: 'perplexity' }),
     },
     activeTools: capabilities.map((cap) => toolsMapping[cap]).flat(),
     providerOptions,

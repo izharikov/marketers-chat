@@ -1,4 +1,4 @@
-import { tool } from 'ai';
+import { gateway, tool } from 'ai';
 import { Exa } from 'exa-js';
 import { z } from 'zod';
 
@@ -7,7 +7,15 @@ type ExaToolOptions = {
   needsApproval?: Parameters<typeof tool>[0]['needsApproval'];
 };
 
-const webSearch = ({ apiKey, needsApproval }: ExaToolOptions) =>
+type WebSearchToolOptions =
+  | ({
+      provider: 'exa';
+    } & ExaToolOptions)
+  | {
+      provider: 'perplexity';
+    };
+
+const exaSearch = ({ apiKey, needsApproval }: ExaToolOptions) =>
   tool({
     needsApproval,
     description: 'Search the web for up-to-date information',
@@ -40,10 +48,13 @@ const webSearch = ({ apiKey, needsApproval }: ExaToolOptions) =>
     },
   });
 
-export const exaTools = (config: ExaToolOptions) => {
+export const webSearchTools = (config: WebSearchToolOptions) => {
   return {
-    web_search: webSearch(config),
+    web_search:
+      config.provider === 'exa'
+        ? exaSearch(config)
+        : gateway.tools.perplexitySearch(),
   };
 };
 
-export type ExaToolName = keyof ReturnType<typeof exaTools>;
+export type WebSearchToolName = keyof ReturnType<typeof webSearchTools>;
