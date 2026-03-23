@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  allowedDevOrigins: ['myapp.local'],
+  allowedDevOrigins: ['marketers-chat.local'],
 };
 
 export default nextConfig;
