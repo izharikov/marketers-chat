@@ -14,6 +14,7 @@ import {
 } from 'sitecore-ai-sdk-tools';
 import { toast } from 'sonner';
 import {
+  AgentApiSettings,
   useApiKey,
   useAppSettings,
 } from '@/components/providers/app-settings-provider';
@@ -30,15 +31,11 @@ export function useChatBot() {
   const { localSettings } = useAppSettings();
   const model = useRef<string | undefined>(undefined);
   const capabilities = useRef<Capability[]>([]);
-  const needsApproval = useRef<boolean>(localSettings.needsToolApproval);
-  const sitecoreToolExecutionRef = useRef<string>(
-    localSettings.sitecoreToolsExecution
-  );
+  const agentApi = useRef<AgentApiSettings>(localSettings.agentApi);
   const appContext = useAppContext();
 
   useEffect(() => {
-    needsApproval.current = localSettings.needsToolApproval;
-    sitecoreToolExecutionRef.current = localSettings.sitecoreToolsExecution;
+    agentApi.current = localSettings.agentApi;
   }, [localSettings]);
 
   const apiKey = useApiKey('vercel');
@@ -93,7 +90,7 @@ export function useChatBot() {
       api: '/api/editors-agent',
       headers: async () => {
         const authorization: Record<string, string> = {};
-        if (sitecoreToolExecutionRef.current === 'backend') {
+        if (agentApi.current.execution === 'backend') {
           const accessToken = await getAccessTokenSilently();
           authorization['Authorization'] = `Bearer ${accessToken}`;
         }
@@ -106,15 +103,14 @@ export function useChatBot() {
       body: () => {
         return {
           model: model.current,
-          sitecoreToolsExecution: sitecoreToolExecutionRef.current,
           contextId: appContext?.resourceAccess?.[0]?.context?.preview,
           capabilities: capabilities.current,
-          needsApproval: needsApproval.current,
+          agentApi: agentApi.current,
         };
       },
     }),
     sendAutomaticallyWhen: (opts) => {
-      if (sitecoreToolExecutionRef.current === 'frontend') {
+      if (agentApi.current.execution === 'frontend') {
         return lastAssistantMessageIsCompleteWithToolCalls(opts);
       }
       return (
@@ -126,7 +122,7 @@ export function useChatBot() {
       toast('Error in chat: ' + error.message);
     },
     onFinish: async ({ message, finishReason }) => {
-      if (sitecoreToolExecutionRef.current === 'backend') {
+      if (agentApi.current.execution === 'backend') {
         return;
       }
       if (finishReason !== 'tool-calls') {
@@ -148,7 +144,7 @@ export function useChatBot() {
       }
     },
     onToolCall: async ({ toolCall }) => {
-      if (sitecoreToolExecutionRef.current === 'frontend') {
+      if (agentApi.current.execution === 'frontend') {
         return;
       }
       const sitecoreContextId =
@@ -186,7 +182,7 @@ export function useChatBot() {
     chat,
     model,
     capabilities,
-    needsApproval,
+    agentApi,
     executeTool,
     toolRejected,
   };

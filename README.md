@@ -10,7 +10,7 @@ A **Sitecore Marketplace Extension** built with [Next.js](https://nextjs.org) th
 
 - **AI Chat Interface**: Conversational UI for managing Sitecore content, pages, assets, and personalization.
 - **Multi-Model Support**: Works with OpenAI, Anthropic, and Vercel AI models via gateway.
-- **Tool Execution**: Client-side and server-side AI tool execution with optional approval workflows.
+- **Tool Execution**: Client-side and server-side AI tool execution with configurable approval (all tools or mutations only).
 - **Web Search**: Integrated web search via Exa / Perplexity.
 - **Marketplace SDK Integration**: Uses `@sitecore-marketplace-sdk/client` for seamless Sitecore Cloud Marketplace integration.
 - **Authentication**: Auth0-based authentication with Sitecore organization/tenant context.
@@ -31,7 +31,15 @@ A **Sitecore Marketplace Extension** built with [Next.js](https://nextjs.org) th
 pnpm install
 ```
 
-### 2. HTTPS Configuration
+### 2. Environment Configuration
+
+Copy `.env.example` to `.env.local` and fill in the required values:
+
+```bash
+cp .env.example .env.local
+```
+
+### 3. HTTPS Configuration
 
 This project is configured to run with HTTPS locally. This is strictly required for embedding the application within the Sitecore Cloud Marketplace interface.
 
@@ -39,7 +47,7 @@ Ensure you have the following certificate files in the `./certificates` director
 - `marketers-chat.local.pem`
 - `marketers-chat.local-key.pem`
 
-### 3. Run Development Server
+### 4. Run Development Server
 
 ```bash
 pnpm dev
@@ -54,18 +62,21 @@ The application will be accessible at:
 ## Project Structure
 
 - **`app/`**: Next.js App Router structure.
-    - `page.tsx`: Main AI chat interface.
+    - `page.tsx`: Entry point with redirect support.
+    - `fullscreen/page.tsx`: Fullscreen chat (sites, assets, personalization, websearch).
+    - `page-builder/page.tsx`: Page Builder extension chat (includes `page_layout` capability).
     - `layout.tsx`: Root layout with `MarketplaceProvider`, `AuthProvider`, and `AppSettingsProvider`.
     - `api/editors-agent/`: AI agent endpoint with streaming and tool loop.
 - **`components/`**:
-    - `ai-elements/`: Chat UI components (messages, tools, reasoning, code blocks, etc.).
-    - `custom/`: Application-specific components (ai-chat, api-key-modal).
+    - `ai-elements/`: Chat UI primitives (messages, tools, reasoning, code blocks, etc.).
+    - `custom/`: Application components (`ai-chat`, `chat-message-parts`, `api-key-modal`).
     - `providers/`: Context providers for Marketplace SDK, Auth0, and app settings.
-    - `ui/`: Shared UI components.
+    - `ui/`: Shared UI components ([Sitecore Blok](https://blok.sitecore.com)).
 - **`lib/`**:
-    - `ai/`: Model registry and helpers.
+    - `ai/`: Model registry, model definitions, capability definitions, and helpers.
+    - `hooks/`: Shared hooks (`use-chat-bot`, `use-chat-status`, `use-model-selection`).
     - `tools/`: Tool definitions and capability system.
-    - `sitecore/`: Sitecore utilities and API key storage.
+    - `sitecore/storage/`: Sitecore GraphQL client and API key storage.
 - **`next.config.ts`**: Configures **Content Security Policy (CSP)** headers (`frame-ancestors`) to allow the app to be iframe-embedded within `sitecorecloud.io` domains.
 
 ## Learn More

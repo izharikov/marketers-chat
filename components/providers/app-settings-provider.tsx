@@ -19,9 +19,14 @@ import { getApiKey, saveApiKey } from '@/lib/sitecore/storage/api-key-storage';
  */
 export type ApiKey = 'vercel' | 'openai' | 'anthropic' | 'google' | 'exa';
 
+export interface AgentApiSettings {
+  needsApproval: boolean;
+  approvalFor: 'all' | 'mutations';
+  execution: 'frontend' | 'backend';
+}
+
 export interface LocalSettings extends Record<string, unknown> {
-  needsToolApproval: boolean;
-  sitecoreToolsExecution: 'frontend' | 'backend';
+  agentApi: AgentApiSettings;
 }
 
 interface AppSettingsContextType {
@@ -52,11 +57,19 @@ export function AppSettingsProvider({
   const [keys, setKeys] = useState<Record<ApiKey, string>>(
     {} as Record<ApiKey, string>
   );
-  const [localSettings, setLocalSettings] = useState<LocalSettings>(() => ({
-    needsToolApproval: true,
-    sitecoreToolsExecution: 'frontend',
-    ...JSON.parse(localStorage.getItem('marketers-chat-settings') || '{}'),
-  }));
+  const [localSettings, setLocalSettings] = useState<LocalSettings>(() => {
+    const stored = JSON.parse(
+      localStorage.getItem('marketers-chat-settings') || '{}'
+    );
+    return {
+      agentApi: {
+        needsApproval: true,
+        approvalFor: 'mutations' as const,
+        execution: 'frontend' as const,
+        ...stored.agentApi,
+      },
+    };
+  });
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 

@@ -78,6 +78,7 @@ import { allCapabilities } from '@/lib/ai/capability-definitions';
 import { models, modelProviders } from '@/lib/ai/models';
 import { useChatStatus } from '@/lib/hooks/use-chat-status';
 import { useModelSelection } from '@/lib/hooks/use-model-selection';
+import { AgentApiSettings } from '@/components/providers/app-settings-provider';
 import { Capability } from '@/lib/tools/capabilities';
 
 const initialMessages: UIMessage[] = [];
@@ -90,7 +91,7 @@ type AiChatProps = {
   onToolRejected?: (tool: ToolUIPart) => Promise<void>;
   selectedCapabilities: Capability[];
   availabelCapabilities: Capability[];
-  needsApprovalRef: React.RefObject<boolean>;
+  agentApiRef: React.RefObject<AgentApiSettings>;
 };
 
 const AiChat = ({
@@ -101,7 +102,7 @@ const AiChat = ({
   onToolRejected,
   selectedCapabilities,
   availabelCapabilities,
-  needsApprovalRef,
+  agentApiRef,
 }: AiChatProps) => {
   const { setModalOpen } = useAppSettings();
   const [input, setInput] = useState('');
@@ -230,7 +231,7 @@ const AiChat = ({
                     chat={chat}
                     onToolApproved={onToolApproved}
                     onToolRejected={onToolRejected}
-                    needsApprovalRef={needsApprovalRef}
+                    agentApiRef={agentApiRef}
                     onRevert={handleRevert}
                   />
                 ))}

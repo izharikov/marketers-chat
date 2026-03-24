@@ -4,7 +4,7 @@ import AiChat from '@/components/custom/ai-chat';
 import { useChatBot } from '@/lib/hooks/use-chat-bot';
 
 const ChatBot = () => {
-  const { chat, model, capabilities, needsApproval, executeTool, toolRejected } =
+  const { chat, model, capabilities, agentApi, executeTool, toolRejected } =
     useChatBot();
 
   return (
@@ -25,7 +25,7 @@ const ChatBot = () => {
         'personalization',
         'websearch',
       ]}
-      needsApprovalRef={needsApproval}
+      agentApiRef={agentApi}
     />
   );
 };

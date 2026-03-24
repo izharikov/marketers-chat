@@ -102,8 +102,8 @@ importers:
         specifier: ^3.20.0
         version: 3.23.0
       sitecore-ai-sdk-tools:
-        specifier: ^0.0.1-alpha.4
-        version: 0.0.1-alpha.4(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6)
+        specifier: 0.0.1-alpha.5
+        version: 0.0.1-alpha.5(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -3714,8 +3714,8 @@ packages:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
 
-  sitecore-ai-sdk-tools@0.0.1-alpha.4:
-    resolution: {integrity: sha512-HRdiTzBSBsVDgVIzdxJaAqlesblgNAsBOJC24/FjV2snLmt34L/52kBUs9RjOZSg+JI/jtXhCugzX+QHZo03Gg==}
+  sitecore-ai-sdk-tools@0.0.1-alpha.5:
+    resolution: {integrity: sha512-VDfhXTt3T4JN9gOe+SHo3KVpioOlhSQtSMnLfS12wFTVis+RiFTshHTrGL8NfCD1Z3OyNU294uGK5jYN05hK5g==}
     peerDependencies:
       '@sitecore-marketplace-sdk/client': ^0.3.2
       '@sitecore-marketplace-sdk/xmc': ^0.4.0
@@ -8258,7 +8258,7 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
-  sitecore-ai-sdk-tools@0.0.1-alpha.4(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6):
+  sitecore-ai-sdk-tools@0.0.1-alpha.5(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6):
     dependencies:
       '@sitecore-marketplace-sdk/client': 0.3.2
       '@sitecore-marketplace-sdk/xmc': 0.4.1(@sitecore-marketplace-sdk/client@0.3.2)

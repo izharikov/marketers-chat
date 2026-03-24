@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import {
+  AgentApiSettings,
   ApiKey,
   LocalSettings,
 } from '@/components/providers/app-settings-provider';
@@ -19,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
 interface AppSettingsModalProps {
   isOpen: boolean;
@@ -101,8 +103,14 @@ export function AppSettingsModal({
     setTempKeys((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSettingChange = (name: keyof LocalSettings, value: unknown) => {
-    setTempSettings((prev) => ({ ...prev, [name]: value }));
+  const handleAgentApiChange = (
+    name: keyof AgentApiSettings,
+    value: unknown
+  ) => {
+    setTempSettings((prev) => ({
+      ...prev,
+      agentApi: { ...prev.agentApi, [name]: value },
+    }));
   };
 
   const hasKeys = Object.keys(keys).length > 0;
@@ -143,45 +151,68 @@ export function AppSettingsModal({
           <Separator />
 
           <div className='grid gap-4'>
-            <h4 className='text-sm font-medium leading-none'>Preferences</h4>
+            <h4 className='text-sm font-medium leading-none'>Agent API</h4>
             <div className='flex items-center space-x-2'>
-              <input
-                type='checkbox'
-                id='needsToolApproval'
-                className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
-                checked={tempSettings.needsToolApproval}
-                onChange={(e) =>
-                  handleSettingChange('needsToolApproval', e.target.checked)
+              <Switch
+                id='agentNeedsApproval'
+                checked={tempSettings.agentApi.needsApproval}
+                onCheckedChange={(checked) =>
+                  handleAgentApiChange('needsApproval', checked)
                 }
               />
               <Label
-                htmlFor='needsToolApproval'
+                htmlFor='agentNeedsApproval'
                 className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
               >
-                Needs tool approval (for Sitecore tools)
+                Require approval
               </Label>
             </div>
+            {tempSettings.agentApi.needsApproval && (
+              <div className='flex flex-col gap-4 pl-6'>
+                <Label className='text-sm font-medium leading-none'>
+                  Approval scope
+                </Label>
+                <RadioGroup
+                  value={tempSettings.agentApi.approvalFor}
+                  className='w-fit'
+                  onValueChange={(value) =>
+                    handleAgentApiChange('approvalFor', value)
+                  }
+                >
+                  <div className='flex items-center gap-3'>
+                    <RadioGroupItem value='all' id='approvalFor-all' />
+                    <Label htmlFor='approvalFor-all'>All tools</Label>
+                  </div>
+                  <div className='flex items-center gap-3'>
+                    <RadioGroupItem
+                      value='mutations'
+                      id='approvalFor-mutations'
+                    />
+                    <Label htmlFor='approvalFor-mutations'>
+                      Mutations only
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
             <div className='flex flex-col gap-4'>
-              <Label
-                htmlFor='sitecoreToolsExecution'
-                className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-              >
-                Sitecoer Tools execution
+              <Label className='text-sm font-medium leading-none'>
+                Execution
               </Label>
               <RadioGroup
-                defaultValue={tempSettings.sitecoreToolsExecution}
+                value={tempSettings.agentApi.execution}
                 className='w-fit'
                 onValueChange={(value) =>
-                  handleSettingChange('sitecoreToolsExecution', value)
+                  handleAgentApiChange('execution', value)
                 }
               >
                 <div className='flex items-center gap-3'>
-                  <RadioGroupItem value='frontend' id='frontend' />
-                  <Label htmlFor='frontend'>Frontend</Label>
+                  <RadioGroupItem value='frontend' id='execution-frontend' />
+                  <Label htmlFor='execution-frontend'>Frontend</Label>
                 </div>
                 <div className='flex items-center gap-3'>
-                  <RadioGroupItem value='backend' id='backend' />
-                  <Label htmlFor='backend'>Backend</Label>
+                  <RadioGroupItem value='backend' id='execution-backend' />
+                  <Label htmlFor='execution-backend'>Backend</Label>
                 </div>
               </RadioGroup>
             </div>

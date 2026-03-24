@@ -71,16 +71,18 @@ export async function POST(req: Request) {
     messages,
     model: modelName,
     capabilities,
-    sitecoreToolsExecution = 'frontend',
     contextId,
-    needsApproval,
+    agentApi,
   }: {
     messages: UIMessage[];
     model: string;
     capabilities: Capability[];
-    sitecoreToolsExecution: 'frontend' | 'backend';
     contextId: string | undefined;
-    needsApproval: boolean;
+    agentApi: {
+      needsApproval: boolean;
+      approvalFor: 'all' | 'mutations';
+      execution: 'frontend' | 'backend';
+    };
   } = await req.json();
 
   const apiKey = req.headers.get('x-vercel-api-key');
@@ -89,7 +91,7 @@ export async function POST(req: Request) {
     return Response.json({ error: 'API key is required' }, { status: 401 });
   }
 
-  if (sitecoreToolsExecution === 'backend' && (!accessToken || !contextId)) {
+  if (agentApi.execution === 'backend' && (!accessToken || !contextId)) {
     throw new Error(
       'Access token and sitecore context ID are required for backend tool execution.'
     );
@@ -105,14 +107,15 @@ export async function POST(req: Request) {
 
   const { model, providerOptions } = retrieveModel(modelName, apiKey);
 
-  const options = {
-    needsApproval,
+  const approvalOptions = {
+    needsApproval: agentApi.needsApproval,
+    needsApprovalFor: agentApi.approvalFor,
   };
   const agentToolOptions: CreateAgentToolsOptions =
-    sitecoreToolsExecution === 'frontend'
+    agentApi.execution === 'frontend'
       ? {
           execution: 'client',
-          ...options,
+          ...approvalOptions,
         }
       : {
           execution: 'server',
@@ -122,7 +125,7 @@ export async function POST(req: Request) {
             },
           }),
           sitecoreContextId: contextId!,
-          ...options,
+          ...approvalOptions,
         };
 
   const agent = new ToolLoopAgent({

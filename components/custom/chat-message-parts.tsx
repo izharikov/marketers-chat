@@ -41,6 +41,7 @@ import {
   MessageContent,
   MessageResponse,
 } from '@/components/ai-elements/message';
+import { AgentApiSettings } from '@/components/providers/app-settings-provider';
 
 type ChatMessagePartProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,7 +54,7 @@ type ChatMessagePartProps = {
   chat: ReturnType<typeof useChat>;
   onToolApproved?: (tool: ToolUIPart) => Promise<void>;
   onToolRejected?: (tool: ToolUIPart) => Promise<void>;
-  needsApprovalRef: React.RefObject<boolean>;
+  agentApiRef: React.RefObject<AgentApiSettings>;
   onRevert: (jobId: string) => void;
 };
 
@@ -67,7 +68,7 @@ export const ChatMessagePart = ({
   chat,
   onToolApproved,
   onToolRejected,
-  needsApprovalRef,
+  agentApiRef,
   onRevert,
 }: ChatMessagePartProps) => {
   switch (part.type) {
@@ -100,7 +101,7 @@ export const ChatMessagePart = ({
             chat={chat}
             onToolApproved={onToolApproved}
             onToolRejected={onToolRejected}
-            needsApprovalRef={needsApprovalRef}
+            agentApiRef={agentApiRef}
             onRevert={onRevert}
           />
         );
@@ -115,7 +116,7 @@ type ToolPartRendererProps = {
   chat: ReturnType<typeof useChat>;
   onToolApproved?: (tool: ToolUIPart) => Promise<void>;
   onToolRejected?: (tool: ToolUIPart) => Promise<void>;
-  needsApprovalRef: React.RefObject<boolean>;
+  agentApiRef: React.RefObject<AgentApiSettings>;
   onRevert: (jobId: string) => void;
 };
 
@@ -125,7 +126,7 @@ const ToolPartRenderer = ({
   chat,
   onToolApproved,
   onToolRejected,
-  needsApprovalRef,
+  agentApiRef,
   onRevert,
 }: ToolPartRendererProps) => {
   let state = tool.state;
@@ -237,7 +238,7 @@ const ToolPartRenderer = ({
             </ConfirmationAction>
             <ConfirmationAction
               onClick={async () => {
-                needsApprovalRef.current = true;
+                agentApiRef.current.needsApproval = false;
                 await chat.addToolApprovalResponse({
                   id: approval.id,
                   approved: true,
