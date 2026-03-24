@@ -1,34 +1,20 @@
 'use client';
-import React, { Fragment, useEffect, useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { ToolUIPart, UIMessage } from 'ai';
 import {
   CheckIcon,
   CopyIcon,
   Ellipsis,
-  GlobeIcon,
-  ImageIcon,
-  LayoutIcon,
   RefreshCcwIcon,
   Settings,
-  Undo,
-  UsersIcon,
   Wrench,
-  XIcon,
 } from 'lucide-react';
 import {
   AttachmentItem,
   Attachments,
 } from '@/components/ai-elements/attachments';
-import {
-  Confirmation,
-  ConfirmationAccepted,
-  ConfirmationAction,
-  ConfirmationActions,
-  ConfirmationRejected,
-  ConfirmationRequest,
-  ConfirmationTitle,
-} from '@/components/ai-elements/confirmation';
 import {
   Conversation,
   ConversationContent,
@@ -40,8 +26,6 @@ import {
   MessageAction,
   MessageActions,
   MessageAttachments,
-  MessageContent,
-  MessageResponse,
 } from '@/components/ai-elements/message';
 import {
   ModelSelector,
@@ -74,35 +58,13 @@ import {
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from '@/components/ai-elements/reasoning';
-import {
   Source,
   Sources,
   SourcesContent,
   SourcesTrigger,
 } from '@/components/ai-elements/sources';
-import {
-  Tool,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolOutput,
-} from '@/components/ai-elements/tool';
+import { ChatMessagePart } from '@/components/custom/chat-message-parts';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -112,86 +74,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Toaster } from '@/components/ui/sonner';
+import { allCapabilities } from '@/lib/ai/capability-definitions';
+import { models, modelProviders } from '@/lib/ai/models';
+import { useChatStatus } from '@/lib/hooks/use-chat-status';
+import { useModelSelection } from '@/lib/hooks/use-model-selection';
 import { Capability } from '@/lib/tools/capabilities';
 
-const models = [
-  {
-    id: 'openai/gpt-5-nano',
-    name: 'GPT 5 Nano',
-    chef: 'OpenAI',
-    chefSlug: 'openai',
-  },
-  {
-    id: 'openai/gpt-5.2',
-    name: 'GPT 5.2',
-    chef: 'OpenAI',
-    chefSlug: 'openai',
-  },
-  {
-    id: 'anthropic/claude-opus-4.5',
-    name: 'Claude Opus 4.5',
-    chef: 'Anthropic',
-    chefSlug: 'anthropic',
-  },
-  {
-    id: 'google/gemini-2.0-pro',
-    name: 'Gemini 2.0 Pro',
-    chef: 'Google',
-    chefSlug: 'google',
-  },
-];
-
-const allCapabilities: {
-  id: Capability;
-  label: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    id: 'page_layout',
-    label: 'Page Layout',
-    icon: <LayoutIcon className='size-4' />,
-  },
-  {
-    id: 'sites',
-    label: 'Sites',
-    icon: <GlobeIcon className='size-4' />,
-  },
-  {
-    id: 'assets',
-    label: 'Assets',
-    icon: <ImageIcon className='size-4' />,
-  },
-  {
-    id: 'personalization',
-    label: 'Personalization',
-    icon: <UsersIcon className='size-4' />,
-  },
-  {
-    id: 'websearch',
-    label: 'Web Search',
-    icon: <GlobeIcon className='size-4' />,
-  },
-];
-
-const initialMessages: UIMessage[] = [
-  // {
-  //   id: 'message',
-  //   role: 'assistant',
-  //   parts: [
-  //     {
-  //       type: 'tool-test',
-  //       toolCallId: 'tool-test',
-  //       state: 'approval-requested',
-  //       input: {
-  //         text: 'Hello',
-  //       },
-  //       approval: {
-  //         id: '123',
-  //       },
-  //     },
-  //   ],
-  // },
-];
+const initialMessages: UIMessage[] = [];
 
 type AiChatProps = {
   chat: ReturnType<typeof useChat>;
@@ -216,45 +105,24 @@ const AiChat = ({
 }: AiChatProps) => {
   const { setModalOpen } = useAppSettings();
   const [input, setInput] = useState('');
-  const [model, setModel] = useState<string>(models[0].id);
-  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
-  const selectedModelData = models.find((m) => m.id === model);
 
-  const [capabilities, setCapabilities] =
-    useState<Capability[]>(selectedCapabilities);
-  const toggleCapability = (cap: Capability) => {
-    setCapabilities((prev) =>
-      prev.includes(cap) ? prev.filter((c) => c !== cap) : [...prev, cap]
-    );
-  };
-  useEffect(() => {
-    onSetModel(model);
-  }, [model, onSetModel]);
-  useEffect(() => {
-    onCapabilitiesChange?.(capabilities);
-  }, [capabilities, onCapabilitiesChange]);
+  const {
+    model,
+    setModel,
+    modelSelectorOpen,
+    setModelSelectorOpen,
+    selectedModelData,
+    capabilities,
+    toggleCapability,
+  } = useModelSelection(selectedCapabilities, onSetModel, onCapabilitiesChange);
 
   const { messages, setMessages, regenerate, status, sendMessage } = chat;
-  const lastMessage = messages[messages.length - 1];
-  const toolRunningOrApproval = lastMessage?.parts
-    .filter((part) => part.type.startsWith('tool'))
-    .some(
-      (part) =>
-        (part as ToolUIPart).state === 'approval-requested' ||
-        (part as ToolUIPart).state === 'input-available'
-    );
-  const statusComputed =
-    status === 'ready' && toolRunningOrApproval ? 'streaming' : status;
-  const revertInProgress =
-    lastMessage?.role === 'assistant' &&
-    lastMessage?.parts.some((part) => part.type === 'tool-revert_operation') &&
-    !lastMessage?.parts.some((part) => part.type === 'text');
-  const submitEnabled =
-    !revertInProgress &&
-    !toolRunningOrApproval &&
-    ((status === 'ready' && input.length > 0) ||
-      status === 'streaming' ||
-      status === 'submitted');
+
+  const { statusComputed, submitEnabled } = useChatStatus(
+    messages,
+    status,
+    input.length
+  );
 
   useEffect(() => {
     setMessages(initialMessages);
@@ -350,173 +218,22 @@ const AiChat = ({
                     </Attachments>
                   </MessageAttachments>
                 )}
-                {message.parts.map((part, i) => {
-                  switch (part.type) {
-                    case 'text':
-                      return (
-                        <React.Fragment key={`${message.id}-${i}`}>
-                          <MessageContent className='text-base'>
-                            <MessageResponse>{part.text}</MessageResponse>
-                          </MessageContent>
-                        </React.Fragment>
-                      );
-                    case 'reasoning':
-                      return (
-                        <Reasoning
-                          key={`${message.id}-${i}`}
-                          className='w-full'
-                          isStreaming={
-                            status === 'streaming' &&
-                            i === message.parts.length - 1 &&
-                            message.id === messages.at(-1)?.id
-                          }
-                        >
-                          <ReasoningTrigger />
-                          <ReasoningContent>{part.text}</ReasoningContent>
-                        </Reasoning>
-                      );
-                    default:
-                      if (part.type.startsWith('tool')) {
-                        const tool = part as ToolUIPart;
-                        let state = tool.state;
-                        if (
-                          tool.output &&
-                          tool.output.toString().startsWith('ERROR')
-                        ) {
-                          state = 'output-error';
-                        }
-                        const jobId = (tool.output as { jobId: string })?.jobId;
-                        const approval = tool.approval;
-                        return (
-                          <Fragment key={`${message.id}-${tool.toolCallId}`}>
-                            <Tool defaultOpen={false}>
-                              <ToolHeader type={tool.type} state={state}>
-                                {jobId && state === 'output-available' && (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant={'outline'}
-                                        size={'icon-xs'}
-                                        className='px-4'
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                        }}
-                                      >
-                                        <Undo className='size-4' />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                          Are you sure you want to revert this?
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRevert(jobId);
-                                          }}
-                                        >
-                                          Continue
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                )}
-                              </ToolHeader>
-                              <ToolContent>
-                                {!!tool.input && (
-                                  <ToolInput input={tool.input} />
-                                )}
-                                {tool.state === 'output-error' &&
-                                  !!tool.rawInput && (
-                                    <ToolInput input={tool.rawInput} />
-                                  )}
-                                {!!(tool.output || tool.errorText) && (
-                                  <ToolOutput
-                                    output={tool.output}
-                                    errorText={tool.errorText}
-                                  />
-                                )}
-                              </ToolContent>
-                            </Tool>
-                            {state === 'approval-requested' && approval && (
-                              <Confirmation
-                                approval={approval}
-                                state={tool.state}
-                                className='flex-col relative [&>svg]:absolute [&>svg]:top-3.5 [&>svg]:left-4 [&>svg]:size-4'
-                              >
-                                <ConfirmationTitle className='w-full pl-6'>
-                                  <div className='flex'>
-                                    <ConfirmationRequest>
-                                      Do you want to execute this tool?
-                                    </ConfirmationRequest>
-                                    <ConfirmationAccepted>
-                                      <CheckIcon className='size-4 text-green-600 dark:text-green-400 my-auto mr-1' />
-                                      <span>Accepted</span>
-                                    </ConfirmationAccepted>
-                                    <ConfirmationRejected>
-                                      <XIcon className='size-4 text-destructive my-auto mr-1' />
-                                      <span>Rejected</span>
-                                    </ConfirmationRejected>
-                                  </div>
-                                </ConfirmationTitle>
-                                <ConfirmationActions className='flex items-start'>
-                                  <ConfirmationAction
-                                    onClick={async () => {
-                                      await chat.addToolApprovalResponse({
-                                        id: approval.id,
-                                        approved: false,
-                                      });
-                                      await onToolRejected?.(tool);
-                                    }}
-                                    variant='outline'
-                                  >
-                                    Reject
-                                  </ConfirmationAction>
-                                  <ConfirmationAction
-                                    onClick={async () => {
-                                      await chat.addToolApprovalResponse({
-                                        id: approval.id,
-                                        approved: true,
-                                      });
-                                      await onToolApproved?.(tool);
-                                    }}
-                                    variant='default'
-                                  >
-                                    Accept
-                                  </ConfirmationAction>
-                                  <ConfirmationAction
-                                    onClick={async () => {
-                                      needsApprovalRef.current = true;
-                                      await chat.addToolApprovalResponse({
-                                        id: approval.id,
-                                        approved: true,
-                                      });
-                                      await onToolApproved?.(tool);
-                                    }}
-                                    variant='default'
-                                  >
-                                    Accept all in current section
-                                  </ConfirmationAction>
-                                </ConfirmationActions>
-                              </Confirmation>
-                            )}
-                          </Fragment>
-                        );
-                      }
-                      return null;
-                  }
-                })}
+                {message.parts.map((part, i) => (
+                  <ChatMessagePart
+                    key={`${message.id}-part-${i}`}
+                    part={part}
+                    partIndex={i}
+                    messageId={message.id}
+                    isLastPart={i === message.parts.length - 1}
+                    isLastMessage={message.id === messages.at(-1)?.id}
+                    status={status}
+                    chat={chat}
+                    onToolApproved={onToolApproved}
+                    onToolRejected={onToolRejected}
+                    needsApprovalRef={needsApprovalRef}
+                    onRevert={handleRevert}
+                  />
+                ))}
                 {statusComputed === 'ready' &&
                   message.role === 'assistant' &&
                   messagesIndex === messages.length - 1 &&
@@ -638,7 +355,7 @@ const AiChat = ({
                   <ModelSelectorInput placeholder='Search models...' />
                   <ModelSelectorList>
                     <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                    {['OpenAI', 'Anthropic', 'Google'].map((chef) => (
+                    {modelProviders.map((chef) => (
                       <ModelSelectorGroup heading={chef} key={chef}>
                         {models
                           .filter((m) => m.chef === chef)
