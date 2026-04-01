@@ -3,7 +3,7 @@
 import React, { Fragment } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { ToolUIPart } from 'ai';
-import { CheckIcon, Undo, XIcon } from 'lucide-react';
+import { BrainCircuitIcon, CheckIcon, Undo, XIcon } from 'lucide-react';
 import {
   Confirmation,
   ConfirmationAccepted,
@@ -135,11 +135,24 @@ const ToolPartRenderer = ({
   }
   const jobId = (tool.output as { jobId: string })?.jobId;
   const approval = tool.approval;
+  const isSkill = tool.type === 'tool-skill';
+  const skillName = isSkill
+    ? (tool.input as { skillName?: string })?.skillName
+    : undefined;
 
   return (
     <Fragment key={`${messageId}-${tool.toolCallId}`}>
       <Tool defaultOpen={false}>
-        <ToolHeader type={tool.type} state={state}>
+        <ToolHeader
+          type={tool.type}
+          state={state}
+          title={`${skillName} skill`}
+          icon={
+            isSkill ? (
+              <BrainCircuitIcon className='size-4 text-muted-foreground' />
+            ) : undefined
+          }
+        >
           {jobId && state === 'output-available' && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -199,7 +212,9 @@ const ToolPartRenderer = ({
           <ConfirmationTitle className='w-full pl-6'>
             <div className='flex'>
               <ConfirmationRequest>
-                Do you want to execute this tool?
+                {isSkill
+                  ? 'Do you want to load this skill?'
+                  : 'Do you want to execute this tool?'}
               </ConfirmationRequest>
               <ConfirmationAccepted>
                 <CheckIcon className='size-4 text-green-600 dark:text-green-400 my-auto mr-1' />
@@ -236,19 +251,21 @@ const ToolPartRenderer = ({
             >
               Accept
             </ConfirmationAction>
-            <ConfirmationAction
-              onClick={async () => {
-                agentApiRef.current.needsApproval = false;
-                await chat.addToolApprovalResponse({
-                  id: approval.id,
-                  approved: true,
-                });
-                await onToolApproved?.(tool);
-              }}
-              variant='default'
-            >
-              Accept all in current section
-            </ConfirmationAction>
+            {!isSkill && (
+              <ConfirmationAction
+                onClick={async () => {
+                  agentApiRef.current.needsApproval = false;
+                  await chat.addToolApprovalResponse({
+                    id: approval.id,
+                    approved: true,
+                  });
+                  await onToolApproved?.(tool);
+                }}
+                variant='default'
+              >
+                Accept all in current section
+              </ConfirmationAction>
+            )}
           </ConfirmationActions>
         </Confirmation>
       )}
