@@ -152,7 +152,7 @@ export async function POST(req: Request) {
 
   const stream = await agent.stream({
     messages: await convertToModelMessages(messages),
-    experimental_transform: smoothStream(),
+    experimental_transform: smoothStream({delayInMs: 10}),
     abortSignal: req.signal,
   });
   return stream.toUIMessageStreamResponse({

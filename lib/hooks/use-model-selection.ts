@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { models } from '@/lib/ai/models';
+import { DEFAULT_MODEL_ID, models } from '@/lib/ai/models';
 import { Capability } from '@/lib/tools/capabilities';
 
 export function useModelSelection(
@@ -9,7 +9,7 @@ export function useModelSelection(
   onSetModel: (model: string) => void,
   onCapabilitiesChange?: (capabilities: Capability[]) => void
 ) {
-  const [model, setModel] = useState<string>(models[0].id);
+  const [model, setModel] = useState<string>(DEFAULT_MODEL_ID);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const selectedModelData = models.find((m) => m.id === model);
 

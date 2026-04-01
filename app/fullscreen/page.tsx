@@ -18,7 +18,12 @@ const ChatBot = () => {
       onToolRejected={async (tool) => {
         await toolRejected(tool);
       }}
-      selectedCapabilities={['sites', 'websearch']}
+      selectedCapabilities={[
+        'sites',
+        'assets',
+        'personalization',
+        'websearch',
+      ]}
       availabelCapabilities={[
         'sites',
         'assets',

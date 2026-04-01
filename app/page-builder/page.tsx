@@ -18,7 +18,13 @@ const PageBuilder = () => {
       onToolRejected={async (tool) => {
         await toolRejected(tool);
       }}
-      selectedCapabilities={['page_layout', 'websearch']}
+      selectedCapabilities={[
+        'page_layout',
+        'sites',
+        'assets',
+        'personalization',
+        'websearch',
+      ]}
       availabelCapabilities={[
         'page_layout',
         'sites',

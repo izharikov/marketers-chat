@@ -28,13 +28,13 @@ export function retrieveModel(
   return {
     model,
     providerOptions: {
-      openai: {
-        // fixes from https://github.com/vercel/ai/issues/7099#issuecomment-3567630392
-        reasoningSummary: 'detailed',
-        reasoningEffort: 'low',
-        store: false,
-        include: ['reasoning.encrypted_content'],
-      } satisfies OpenAIResponsesProviderOptions,
+      // openai: {
+      //   // fixes from https://github.com/vercel/ai/issues/7099#issuecomment-3567630392
+      //   reasoningSummary: 'detailed',
+      //   reasoningEffort: 'low',
+      //   store: false,
+      //   include: ['reasoning.encrypted_content'],
+      // } satisfies OpenAIResponsesProviderOptions,
     },
   };
 }

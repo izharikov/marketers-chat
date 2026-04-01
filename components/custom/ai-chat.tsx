@@ -371,6 +371,9 @@ const AiChat = ({
                             >
                               <ModelSelectorLogo provider={m.chefSlug} />
                               <ModelSelectorName>{m.name}</ModelSelectorName>
+                              <span className='text-xs text-muted-foreground tabular-nums'>
+                                ${m.pricing.input} / ${m.pricing.output}
+                              </span>
                               <ModelSelectorLogoGroup>
                                 <ModelSelectorLogo provider='vercel' />
                               </ModelSelectorLogoGroup>
