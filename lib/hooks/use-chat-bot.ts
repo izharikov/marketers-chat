@@ -43,6 +43,11 @@ export function useChatBot() {
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
+    if (toolName === 'skill') {
+      chat.sendMessage();
+      return;
+    }
+
     const sitecoreContextId = appContext?.resourceAccess?.[0]?.context?.preview;
     if (!sitecoreContextId) {
       throw new Error('No sitecore context found');

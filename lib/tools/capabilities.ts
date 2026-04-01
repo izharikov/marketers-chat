@@ -90,7 +90,9 @@ export const buildSystem: (capabilities: Capability[]) => string = (
   );
 };
 
-export type ToolName = AgentToolName | PageBuilderToolName | WebSearchToolName;
+type SkillTool = 'skill';
+
+export type ToolName = AgentToolName | PageBuilderToolName | WebSearchToolName | SkillTool;
 export const toolsMapping: Record<Capability, ToolName[]> = {
   page_layout: [
     'get_current_page_context',

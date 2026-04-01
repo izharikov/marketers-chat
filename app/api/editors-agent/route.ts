@@ -8,6 +8,7 @@ import {
   createUIMessageStreamResponse,
   smoothStream,
 } from 'ai';
+import { experimental_createSkillTool as createSkillTool } from 'bash-tool';
 import { pageBuilderTools } from 'sitecore-ai-sdk-tools';
 import {
   CreateAgentToolsOptions,
@@ -128,6 +129,11 @@ export async function POST(req: Request) {
           ...approvalOptions,
         };
 
+  const { skill } = await createSkillTool({
+    skillsDirectory: './chat-skills',
+    destination: 'chat-skills',
+  });
+
   const agent = new ToolLoopAgent({
     model,
     instructions: buildSystem(capabilities),
@@ -135,8 +141,12 @@ export async function POST(req: Request) {
       ...createAgentTools(agentToolOptions),
       ...pageBuilderTools({}),
       ...webSearchTools({ provider: 'perplexity' }),
+      skill: {
+        ...skill,
+        needsApproval: true,
+      },
     },
-    activeTools: capabilities.map((cap) => toolsMapping[cap]).flat(),
+    activeTools: capabilities.map((cap) => toolsMapping[cap]).concat(['skill']).flat(),
     providerOptions,
   });
 
