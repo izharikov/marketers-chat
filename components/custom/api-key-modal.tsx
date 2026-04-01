@@ -19,7 +19,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
 interface AppSettingsModalProps {
@@ -131,9 +130,9 @@ export function AppSettingsModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className='grid gap-6 py-4'>
+        <div className='grid gap-4 py-4'>
           {hasKeys && (
-            <div className='grid gap-4'>
+            <div className='grid gap-4 rounded-lg border p-4'>
               <h4 className='text-sm font-medium leading-none'>API Keys</h4>
               {Object.entries(keys).map(([name]) => (
                 <div key={name} className='grid w-full items-center gap-1.5'>
@@ -148,10 +147,9 @@ export function AppSettingsModal({
             </div>
           )}
 
-          <Separator />
-
-          <div className='grid gap-4'>
+          <div className='grid gap-4 rounded-lg border p-4'>
             <h4 className='text-sm font-medium leading-none'>Agent API</h4>
+
             <div className='flex items-center space-x-2'>
               <Switch
                 id='agentNeedsApproval'
@@ -167,8 +165,9 @@ export function AppSettingsModal({
                 Require approval
               </Label>
             </div>
+
             {tempSettings.agentApi.needsApproval && (
-              <div className='flex flex-col gap-4 pl-6'>
+              <div className='flex flex-col gap-4'>
                 <Label className='text-sm font-medium leading-none'>
                   Approval scope
                 </Label>
@@ -195,6 +194,7 @@ export function AppSettingsModal({
                 </RadioGroup>
               </div>
             )}
+
             <div className='flex flex-col gap-4'>
               <Label className='text-sm font-medium leading-none'>
                 Execution

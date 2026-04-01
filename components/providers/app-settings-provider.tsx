@@ -17,7 +17,7 @@ import { getApiKey, saveApiKey } from '@/lib/sitecore/storage/api-key-storage';
 /**
  * Supported API key names
  */
-export type ApiKey = 'vercel' | 'openai' | 'anthropic' | 'google' | 'exa';
+export type ApiKey = 'vercel' | 'openai' | 'anthropic' | 'google';
 
 export interface AgentApiSettings {
   needsApproval: boolean;
