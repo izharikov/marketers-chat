@@ -163,14 +163,14 @@ export async function POST(req: Request) {
           ...approvalOptions,
         };
 
-  const { skill } = await createSkillTool({
+  const { skill, skills } = await createSkillTool({
     skillsDirectory: './chat-skills',
     destination: 'chat-skills',
   });
 
   const agent = new ToolLoopAgent({
     model,
-    instructions: buildSystem(capabilities),
+    instructions: buildSystem(capabilities, skills),
     tools: {
       ...createAgentTools(agentToolOptions),
       ...pageBuilderTools({}),

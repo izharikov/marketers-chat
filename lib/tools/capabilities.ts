@@ -80,16 +80,26 @@ You can search for information on the web.
   },
 };
 
-export const buildSystem: (capabilities: Capability[]) => string = (
-  capabilities
-) => {
-  return (
+type SkillInfo = { name: string; description: string };
+
+export const buildSystem = (
+  capabilities: Capability[],
+  skills: SkillInfo[] = []
+): string => {
+  let prompt =
     systemInstructions.system +
     '\n\n' +
     capabilities
       .map((capability) => systemInstructions.capabilities[capability])
-      .join('\n\n')
-  );
+      .join('\n\n');
+
+  if (skills.length > 0) {
+    prompt +=
+      '\n\n## Skills\nBefore starting a complex task, check if an applicable skill exists and load it with the `skill` tool. Available skills:\n' +
+      skills.map((s) => `- **${s.name}**: ${s.description}`).join('\n');
+  }
+
+  return prompt;
 };
 
 type SkillTool = 'skill';
