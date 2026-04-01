@@ -126,4 +126,4 @@ export const clientOnlyTools: ToolName[] = [
   'navigate_to_another_page',
 ];
 
-export const serverOnlyTools: ToolName[] = ['web_search'];
+export const serverOnlyTools: ToolName[] = ['web_search', 'skill'];

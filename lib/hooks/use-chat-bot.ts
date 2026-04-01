@@ -23,7 +23,7 @@ import {
   useAppContext,
   useMarketplaceClient,
 } from '@/components/providers/marketplace';
-import { Capability } from '@/lib/tools/capabilities';
+import { Capability, serverOnlyTools } from '@/lib/tools/capabilities';
 
 export function useChatBot() {
   const client = useMarketplaceClient();
@@ -43,7 +43,7 @@ export function useChatBot() {
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
-    if (toolName === 'skill') {
+    if (serverOnlyTools.includes(toolName as any)) {
       chat.sendMessage();
       return;
     }
