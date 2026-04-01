@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import type { UIMessage } from 'ai';
+import { LayersIcon } from 'lucide-react';
 import type { MessageMetadata } from '@/lib/ai/types';
 import type { Model } from '@/lib/ai/models';
 
@@ -39,6 +40,7 @@ export function ContextStatus({ messages, model }: ContextStatusProps) {
 
   return (
     <div className={`flex items-center justify-end gap-1.5 px-2 py-1 text-xs ${color}`}>
+      <LayersIcon className='size-3' />
       <span className='inline-block h-1.5 w-12 overflow-hidden rounded-full bg-current/20'>
         <span
           className='block h-full rounded-full bg-current'

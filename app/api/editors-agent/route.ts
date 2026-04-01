@@ -40,7 +40,11 @@ function executeRevert({
   const toolName = 'revert_operation';
   const toolPart = messages
     .findLast((msg) => msg.role === 'assistant')
-    ?.parts.find((part) => part.type === `tool-${toolName}`) as ToolUIPart;
+    ?.parts.find(
+      (part) =>
+        part.type === `tool-${toolName}` &&
+        (part as ToolUIPart).toolCallId === toolCallId
+    ) as ToolUIPart;
   const state = toolPart?.state;
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
@@ -51,7 +55,9 @@ function executeRevert({
         const reloadPart = messages
           .findLast((msg) => msg.role === 'assistant')
           ?.parts.find(
-            (part) => part.type === 'tool-reload_current_page'
+            (part) =>
+              part.type === 'tool-reload_current_page' &&
+              (part as ToolUIPart).toolCallId === `reload-${jobId}`
           ) as ToolUIPart;
 
         if (reloadPart) {
