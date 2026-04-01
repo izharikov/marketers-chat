@@ -186,5 +186,12 @@ export async function POST(req: Request) {
   return stream.toUIMessageStreamResponse({
     sendSources: true,
     sendReasoning: true,
+    messageMetadata: ({ part }) => {
+      if (part.type === 'finish-step') {
+        return {
+          inputTokens: part.usage.inputTokens,
+        };
+      }
+    },
   });
 }

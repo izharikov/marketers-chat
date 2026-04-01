@@ -64,6 +64,7 @@ import {
   SourcesTrigger,
 } from '@/components/ai-elements/sources';
 import { ChatMessagePart } from '@/components/custom/chat-message-parts';
+import { ContextStatus } from '@/components/custom/context-status';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { Button } from '@/components/ui/button';
 import {
@@ -271,6 +272,10 @@ const AiChat = ({
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
+        <ContextStatus
+          messages={messages}
+          model={selectedModelData}
+        />
         <PromptInput
           onSubmit={(message) => {
             chat.sendMessage(message);

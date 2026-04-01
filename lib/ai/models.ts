@@ -9,6 +9,7 @@ export type Model = {
   chef: string;
   chefSlug: string;
   pricing: ModelPricing;
+  contextWindow: number;
 };
 
 export const models: Model[] = [
@@ -19,6 +20,7 @@ export const models: Model[] = [
     chef: 'OpenAI',
     chefSlug: 'openai',
     pricing: { input: 30, output: 180 },
+    contextWindow: 128_000,
   },
   {
     id: 'openai/gpt-5.4',
@@ -26,6 +28,7 @@ export const models: Model[] = [
     chef: 'OpenAI',
     chefSlug: 'openai',
     pricing: { input: 2.5, output: 15 },
+    contextWindow: 128_000,
   },
   {
     id: 'openai/gpt-5.4-mini',
@@ -33,6 +36,7 @@ export const models: Model[] = [
     chef: 'OpenAI',
     chefSlug: 'openai',
     pricing: { input: 0.75, output: 4.5 },
+    contextWindow: 128_000,
   },
   {
     id: 'openai/gpt-5.4-nano',
@@ -40,6 +44,7 @@ export const models: Model[] = [
     chef: 'OpenAI',
     chefSlug: 'openai',
     pricing: { input: 0.2, output: 1.25 },
+    contextWindow: 128_000,
   },
   {
     id: 'openai/o4-mini',
@@ -47,6 +52,7 @@ export const models: Model[] = [
     chef: 'OpenAI',
     chefSlug: 'openai',
     pricing: { input: 1.1, output: 4.4 },
+    contextWindow: 200_000,
   },
   {
     id: 'openai/o3',
@@ -54,6 +60,7 @@ export const models: Model[] = [
     chef: 'OpenAI',
     chefSlug: 'openai',
     pricing: { input: 2, output: 8 },
+    contextWindow: 200_000,
   },
   // Anthropic
   {
@@ -62,6 +69,7 @@ export const models: Model[] = [
     chef: 'Anthropic',
     chefSlug: 'anthropic',
     pricing: { input: 5, output: 25 },
+    contextWindow: 200_000,
   },
   {
     id: 'anthropic/claude-sonnet-4.6',
@@ -69,6 +77,7 @@ export const models: Model[] = [
     chef: 'Anthropic',
     chefSlug: 'anthropic',
     pricing: { input: 3, output: 15 },
+    contextWindow: 200_000,
   },
   {
     id: 'anthropic/claude-sonnet-4.5',
@@ -76,6 +85,7 @@ export const models: Model[] = [
     chef: 'Anthropic',
     chefSlug: 'anthropic',
     pricing: { input: 3, output: 15 },
+    contextWindow: 200_000,
   },
   {
     id: 'anthropic/claude-haiku-4.5',
@@ -83,6 +93,7 @@ export const models: Model[] = [
     chef: 'Anthropic',
     chefSlug: 'anthropic',
     pricing: { input: 1, output: 5 },
+    contextWindow: 200_000,
   },
   // Google
   {
@@ -91,6 +102,7 @@ export const models: Model[] = [
     chef: 'Google',
     chefSlug: 'google',
     pricing: { input: 2, output: 12 },
+    contextWindow: 1_000_000,
   },
   {
     id: 'google/gemini-3-flash',
@@ -98,6 +110,7 @@ export const models: Model[] = [
     chef: 'Google',
     chefSlug: 'google',
     pricing: { input: 0.5, output: 3 },
+    contextWindow: 1_000_000,
   },
   {
     id: 'google/gemini-2.5-pro',
@@ -105,6 +118,7 @@ export const models: Model[] = [
     chef: 'Google',
     chefSlug: 'google',
     pricing: { input: 1.25, output: 10 },
+    contextWindow: 1_000_000,
   },
   {
     id: 'google/gemini-2.5-flash',
@@ -112,6 +126,7 @@ export const models: Model[] = [
     chef: 'Google',
     chefSlug: 'google',
     pricing: { input: 0.3, output: 2.5 },
+    contextWindow: 1_000_000,
   },
   // xAI
   {
@@ -120,6 +135,7 @@ export const models: Model[] = [
     chef: 'xAI',
     chefSlug: 'xai',
     pricing: { input: 3, output: 15 },
+    contextWindow: 256_000,
   },
   {
     id: 'xai/grok-3',
@@ -127,6 +143,7 @@ export const models: Model[] = [
     chef: 'xAI',
     chefSlug: 'xai',
     pricing: { input: 3, output: 15 },
+    contextWindow: 131_072,
   },
   // DeepSeek
   {
@@ -135,6 +152,7 @@ export const models: Model[] = [
     chef: 'DeepSeek',
     chefSlug: 'deepseek',
     pricing: { input: 0.28, output: 0.42 },
+    contextWindow: 128_000,
   },
   {
     id: 'deepseek/deepseek-r1',
@@ -142,6 +160,7 @@ export const models: Model[] = [
     chef: 'DeepSeek',
     chefSlug: 'deepseek',
     pricing: { input: 1.35, output: 5.4 },
+    contextWindow: 128_000,
   },
   // Mistral
   {
@@ -150,6 +169,7 @@ export const models: Model[] = [
     chef: 'Mistral',
     chefSlug: 'mistral',
     pricing: { input: 0.5, output: 1.5 },
+    contextWindow: 128_000,
   },
   {
     id: 'mistral/mistral-medium',
@@ -157,6 +177,7 @@ export const models: Model[] = [
     chef: 'Mistral',
     chefSlug: 'mistral',
     pricing: { input: 0.4, output: 2 },
+    contextWindow: 128_000,
   },
   // Meta
   {
@@ -165,6 +186,7 @@ export const models: Model[] = [
     chef: 'Meta',
     chefSlug: 'meta',
     pricing: { input: 0.35, output: 1.15 },
+    contextWindow: 1_000_000,
   },
   {
     id: 'meta/llama-4-scout',
@@ -172,6 +194,7 @@ export const models: Model[] = [
     chef: 'Meta',
     chefSlug: 'meta',
     pricing: { input: 0.17, output: 0.66 },
+    contextWindow: 512_000,
   },
 ];
 
