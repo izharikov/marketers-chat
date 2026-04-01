@@ -47,11 +47,25 @@ function executeRevert({
       const { start, finish, toolInput } = helpers(writer);
       start();
       if (state === 'output-available' || state === 'output-error') {
+        // Check if reload was already emitted and completed
+        const reloadPart = messages
+          .findLast((msg) => msg.role === 'assistant')
+          ?.parts.find(
+            (part) => part.type === 'tool-reload_current_page'
+          ) as ToolUIPart;
+
+        if (reloadPart) {
+          writeText(writer, `text-reload-${jobId}`, 'Page reloaded');
+          finish();
+          return;
+        }
+
         writeText(
           writer,
           `text-${jobId}`,
           state === 'output-available' ? 'Reverted job' : 'Error reverting job'
         );
+
         const activeTools = capabilities.flatMap((cap) => toolsMapping[cap]);
         if (
           state === 'output-available' &&
