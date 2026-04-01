@@ -29,9 +29,11 @@ export const maxDuration = 30;
 function executeRevert({
   messages,
   revert,
+  capabilities,
 }: {
   messages: UIMessage[];
   revert: UIMessage['parts'][number];
+  capabilities: Capability[];
 }) {
   const jobId = (revert as { data: { jobId: string } }).data.jobId;
   const toolCallId = `revert-${jobId}`;
@@ -50,7 +52,19 @@ function executeRevert({
           `text-${jobId}`,
           state === 'output-available' ? 'Reverted job' : 'Error reverting job'
         );
-        finish();
+        const activeTools = capabilities.flatMap((cap) => toolsMapping[cap]);
+        if (
+          state === 'output-available' &&
+          activeTools.includes('reload_current_page')
+        ) {
+          toolInput({
+            toolCallId: `reload-${jobId}`,
+            toolName: 'reload_current_page',
+            input: {},
+          });
+        } else {
+          finish();
+        }
         return;
       } else if (!state) {
         toolInput({
@@ -103,7 +117,7 @@ export async function POST(req: Request) {
     (part) => part.type === 'data-revert'
   );
   if (revert) {
-    return executeRevert({ messages, revert });
+    return executeRevert({ messages, revert, capabilities });
   }
 
   const { model, providerOptions } = retrieveModel(modelName, apiKey);

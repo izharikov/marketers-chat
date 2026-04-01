@@ -1,5 +1,5 @@
 - [x] stream throttle
 - [x] settings modal: @docs\image.png
-- [ ] reload page after revert (revert can remove e.g. page version): needs to be in instuctions??
+- [x] reload page after revert (revert can remove e.g. page version): needs to be in instuctions??
 - [ ] Error executing tool "get_components_on_page" "{\"errors\":{\"('path', 'pageId')\":\"Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `u` at 2\"},\"type\":\"https://datatracker.ietf.org/doc/html/rfc7231#section-6.5\"}"
 - [ ] instructions vs skill?
