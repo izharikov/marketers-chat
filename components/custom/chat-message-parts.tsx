@@ -146,7 +146,7 @@ const ToolPartRenderer = ({
         <ToolHeader
           type={tool.type}
           state={state}
-          title={`${skillName} skill`}
+          title={`Use '${skillName}' skill`}
           icon={
             isSkill ? (
               <BrainCircuitIcon className='size-4 text-muted-foreground' />
