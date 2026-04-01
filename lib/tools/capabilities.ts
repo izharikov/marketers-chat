@@ -30,7 +30,7 @@ You can add, edit, and remove components and manage their datasources.
 - Adding a component is a SINGLE atomic action which includes both component placement and content population.
 - NEVER call 'add_component_on_page' with missing or empty 'fields'.
 - All content fields MUST be known before adding a component. Use 'get_component' to get datasourceFields.
-- 'update_content' is ONLY for components that already existed before this action.
+- 'update_content' can be used with any content item (page fields, component datasources, etc.) but ONLY for items that already existed before this action.
 
 #### ADD Component Flow:
 1. To add a component, you MUST know the placeholder (ask if unknown).
@@ -39,15 +39,17 @@ You can add, edit, and remove components and manage their datasources.
 4. Call 'add_component_on_page' ONCE, including ALL datasourceFields.
 5. Reload the page after any change.
         `,
-    assets: `### Manage assets
+    assets: `### Manage assets (Media Library only)
 
-You can upload, update, and search for assets.
+You can upload, update, and search for assets in the Media Library.
+Assets are media files: images, videos, documents, PDFs, etc.
 
 #### RULES (STRICT):
+- Asset tools are ONLY for Media Library items. NEVER use asset tools for page content or components — use page layout tools instead.
 - Use 'get_asset_information' to get asset details.
 - Use 'search_assets' to search for assets.
-- Use 'update_asset' to update asset details.
-- Use 'upload_asset' to upload a new asset.
+- Use 'update_asset' to update asset metadata (title, description, alt text).
+- Use 'upload_asset' to upload a new media file.
         `,
     personalization: `### Manage personalization
 

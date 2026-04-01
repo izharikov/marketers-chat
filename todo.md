@@ -5,6 +5,6 @@
 - [x] Reverted job: atm output is revert_operation + Reverted job (text) + reload_current_page + Reverted job (text). Issue: 2nd text should be current page reloaded.
 - [x] status line for: chat (context size)
 - [ ] Error executing tool "get_components_on_page" "{\"errors\":{\"('path', 'pageId')\":\"Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `u` at 2\"},\"type\":\"https://datatracker.ietf.org/doc/html/rfc7231#section-6.5\"}"
+- [x] remove file: on hover cross (x) icon is too big - overlaps text
+- [x] asset tools: should only bne used in media items
 - [ ] instructions vs skill?
-- [ ] remove file: on hover cross (x) icon is too big - overlaps text
-- [ ] asset tools: should only bne used in media items

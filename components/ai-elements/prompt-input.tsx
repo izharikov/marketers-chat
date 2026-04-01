@@ -309,7 +309,7 @@ export function PromptInputAttachment({
           {...props}
         >
           <div className='relative size-5 shrink-0'>
-            <div className='absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded bg-background transition-opacity group-hover:opacity-0'>
+            <div className='absolute inset-0 flex items-center justify-center overflow-hidden rounded bg-background transition-opacity group-hover:opacity-0'>
               {isImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -325,19 +325,17 @@ export function PromptInputAttachment({
                 </div>
               )}
             </div>
-            <Button
+            <span
+              role='button'
               aria-label='Remove attachment'
-              className='absolute inset-0 size-5 cursor-pointer rounded p-0 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 [&>svg]:size-2.5'
+              className='absolute inset-0 flex items-center justify-center cursor-pointer rounded opacity-0 transition-opacity group-hover:opacity-100'
               onClick={(e) => {
                 e.stopPropagation();
                 attachments.remove(data.id);
               }}
-              type='button'
-              variant='ghost'
             >
-              <XIcon />
-              <span className='sr-only'>Remove</span>
-            </Button>
+              <XIcon className='size-3 text-muted-foreground' />
+            </span>
           </div>
 
           <span className='flex-1 truncate'>{attachmentLabel}</span>

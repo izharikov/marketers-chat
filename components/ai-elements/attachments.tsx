@@ -346,14 +346,12 @@ export const AttachmentRemove = ({
           'bg-background/80 backdrop-blur-sm',
           'opacity-0 transition-opacity group-hover:opacity-100',
           'hover:bg-background',
-          '[&>svg]:size-3',
         ],
         variant === 'inline' && [
           'size-5 rounded p-0',
           'opacity-0 transition-opacity group-hover:opacity-100',
-          '[&>svg]:size-2.5',
         ],
-        variant === 'list' && ['size-8 shrink-0 rounded p-0', '[&>svg]:size-4'],
+        variant === 'list' && ['size-8 shrink-0 rounded p-0'],
         className
       )}
       onClick={handleClick}
@@ -361,7 +359,15 @@ export const AttachmentRemove = ({
       variant='ghost'
       {...props}
     >
-      {children ?? <XIcon />}
+      {children ?? (
+        <XIcon
+          className={cn(
+            variant === 'grid' && '!size-3',
+            variant === 'inline' && '!size-2.5',
+            variant === 'list' && '!size-4'
+          )}
+        />
+      )}
       <span className='sr-only'>{label}</span>
     </Button>
   );
