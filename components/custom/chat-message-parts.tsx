@@ -149,7 +149,7 @@ const ToolPartRenderer = ({
         <ToolHeader
           type={tool.type}
           state={state}
-          title={isSkill ? `Use '${skillName}' skill` : undefined}
+          title={isSkill ? `Load '${skillName}' skill` : undefined}
           icon={
             isSkill ? (
               <BrainCircuitIcon className='size-4 text-muted-foreground' />

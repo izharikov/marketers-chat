@@ -27,6 +27,7 @@ Examples:
 You can add, edit, and remove components and manage their datasources.
 
 #### RULES (STRICT):
+- **BEFORE adding a component**, you MUST load the 'add-component' skill using the \`skill\` tool. Do NOT call 'add_component_on_page' without loading the skill first.
 - Adding a component is a SINGLE atomic action — placement and content in one call. NEVER call 'add_component_on_page' with missing or empty 'fields'.
 - 'update_content' can be used with any content item (page fields, component datasources, etc.) but ONLY for items that already existed before this action.
         `,
@@ -34,10 +35,16 @@ You can add, edit, and remove components and manage their datasources.
 
 Assets are media files: images, videos, documents, PDFs, etc.
 Asset tools are ONLY for Media Library items. NEVER use asset tools for page content or components.
+
+#### RULES (STRICT):
+- **BEFORE managing assets**, you MUST load the 'manage-assets' skill using the \`skill\` tool.
         `,
     personalization: `### Manage personalization
 
 You can create and manage personalization versions and conditions.
+
+#### RULES (STRICT):
+- **BEFORE managing personalization**, you MUST load the 'manage-personalization' skill using the \`skill\` tool.
         `,
     sites: `### Manage sites
 

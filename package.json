@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@ai-sdk/devtools": "^0.0.8",
-    "@ai-sdk/openai": "^3.0.2",
     "@ai-sdk/react": "^3.0.5",
     "@auth0/auth0-react": "^2.11.0",
     "@mdi/js": "^7.4.47",
@@ -41,7 +40,7 @@
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "shiki": "^3.20.0",
-    "sitecore-ai-sdk-tools": "0.0.1-alpha.5",
+    "sitecore-ai-sdk-tools": "0.0.1-alpha.7",
     "sonner": "^2.0.7",
     "streamdown": "^2.2.0",
     "tailwind-merge": "^3.4.0",

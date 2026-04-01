@@ -1,5 +1,4 @@
 import { devToolsMiddleware } from '@ai-sdk/devtools';
-import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
 import {
   GatewayModelId,
   LanguageModel,

@@ -11,9 +11,6 @@ importers:
       '@ai-sdk/devtools':
         specifier: ^0.0.8
         version: 0.0.8
-      '@ai-sdk/openai':
-        specifier: ^3.0.2
-        version: 3.0.47(zod@4.3.6)
       '@ai-sdk/react':
         specifier: ^3.0.5
         version: 3.0.136(react@19.2.1)(zod@4.3.6)
@@ -105,8 +102,8 @@ importers:
         specifier: ^3.20.0
         version: 3.23.0
       sitecore-ai-sdk-tools:
-        specifier: 0.0.1-alpha.5
-        version: 0.0.1-alpha.5(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6)
+        specifier: 0.0.1-alpha.7
+        version: 0.0.1-alpha.7(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -177,12 +174,6 @@ packages:
 
   '@ai-sdk/gateway@3.0.77':
     resolution: {integrity: sha512-UdwIG2H2YMuntJQ5L+EmED5XiwnlvDT3HOmKfVFxR4Nq/RSLFA/HcchhwfNXHZ5UJjyuL2VO0huLbWSZ9ijemQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/openai@3.0.47':
-    resolution: {integrity: sha512-bRsb2sDN5u+pKO3Kdr0flpxtL+cPwQ2uCo/pVyzIbj2I4AkKAokJHhw5JWLVOeEwdlYzWfmv+hzaiGarzUcTFQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3766,8 +3757,8 @@ packages:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
 
-  sitecore-ai-sdk-tools@0.0.1-alpha.5:
-    resolution: {integrity: sha512-VDfhXTt3T4JN9gOe+SHo3KVpioOlhSQtSMnLfS12wFTVis+RiFTshHTrGL8NfCD1Z3OyNU294uGK5jYN05hK5g==}
+  sitecore-ai-sdk-tools@0.0.1-alpha.7:
+    resolution: {integrity: sha512-RWYVEoIS2HYI2lyfHsx7llAY9F+EzUzs3vgKTaFZYZoJ7Jw2Z1gGp6ZRToid1+T6Szb6+WTPlRJdWw7febvquw==}
     peerDependencies:
       '@sitecore-marketplace-sdk/client': ^0.3.2
       '@sitecore-marketplace-sdk/xmc': ^0.4.0
@@ -4147,12 +4138,6 @@ snapshots:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.21(zod@4.3.6)
       '@vercel/oidc': 3.1.0
-      zod: 4.3.6
-
-  '@ai-sdk/openai@3.0.47(zod@4.3.6)':
-    dependencies:
-      '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.21(zod@4.3.6)
       zod: 4.3.6
 
   '@ai-sdk/provider-utils@4.0.21(zod@4.3.6)':
@@ -8363,7 +8348,7 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
-  sitecore-ai-sdk-tools@0.0.1-alpha.5(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6):
+  sitecore-ai-sdk-tools@0.0.1-alpha.7(@sitecore-marketplace-sdk/client@0.3.2)(@sitecore-marketplace-sdk/xmc@0.4.1(@sitecore-marketplace-sdk/client@0.3.2))(ai@6.0.134(zod@4.3.6))(zod@4.3.6):
     dependencies:
       '@sitecore-marketplace-sdk/client': 0.3.2
       '@sitecore-marketplace-sdk/xmc': 0.4.1(@sitecore-marketplace-sdk/client@0.3.2)
