@@ -119,7 +119,7 @@ const AiChat = ({
 
   const { messages, setMessages, regenerate, status, sendMessage } = chat;
 
-  const { statusComputed, submitEnabled } = useChatStatus(
+  const { computedStatus, submitEnabled } = useChatStatus(
     messages,
     status,
     input.length
@@ -148,7 +148,7 @@ const AiChat = ({
   };
 
   return (
-    <div className='max-w-4xl mx-auto p-6 relative size-full h-screen'>
+    <div className='max-w-4xl mx-auto px-6 pb-4 relative size-full h-screen'>
       <div className='flex flex-col h-full'>
         <div className='flex flex-col mb-2 border-b'>
           <div className='flex justify-end'>
@@ -235,7 +235,7 @@ const AiChat = ({
                     onRevert={handleRevert}
                   />
                 ))}
-                {statusComputed === 'ready' &&
+                {computedStatus === 'idle' &&
                   message.role === 'assistant' &&
                   messagesIndex === messages.length - 1 &&
                   !message.parts.some(
@@ -263,7 +263,7 @@ const AiChat = ({
                   )}
               </Message>
             ))}
-            {statusComputed === 'submitted' && (
+            {computedStatus === 'busy' && (
               <div className='relative mx-auto h-[20px]'>
                 <Loader className='absolute bottom-0 left-0' />
               </div>
@@ -392,7 +392,7 @@ const AiChat = ({
             </PromptInputTools>
             <PromptInputSubmit
               disabled={!submitEnabled}
-              status={statusComputed}
+              status={computedStatus === 'busy' ? 'submitted' : 'ready'}
               onClick={(event) => {
                 if (status === 'streaming' || status === 'submitted') {
                   chat.stop();
