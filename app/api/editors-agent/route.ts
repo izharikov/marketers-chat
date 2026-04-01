@@ -177,7 +177,7 @@ export async function POST(req: Request) {
       ...webSearchTools({ provider: 'perplexity' }),
       skill: {
         ...skill,
-        needsApproval: true,
+        needsApproval: false,
       },
     },
     activeTools: capabilities.map((cap) => toolsMapping[cap]).concat(['skill']).flat(),

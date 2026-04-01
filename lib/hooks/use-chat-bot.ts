@@ -72,12 +72,16 @@ export function useChatBot() {
       });
     } catch (e) {
       console.error('Error executing tool', toolName, e);
-      chat.addToolOutput({
-        state: 'output-error',
-        tool: toolName,
-        toolCallId: toolPart.toolCallId,
-        errorText: e?.toString() || 'Unknown error',
-      });
+      try {
+        chat.addToolOutput({
+          state: 'output-error',
+          tool: toolName,
+          toolCallId: toolPart.toolCallId,
+          errorText: e?.toString() || 'Unknown error',
+        });
+      } catch (addOutputError) {
+        console.error('Error adding tool output', addOutputError);
+      }
     }
   };
 

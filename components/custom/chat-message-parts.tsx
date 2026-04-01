@@ -98,6 +98,7 @@ export const ChatMessagePart = ({
             key={`${messageId}-${(part as ToolUIPart).toolCallId}`}
             tool={part as ToolUIPart}
             messageId={messageId}
+            status={status}
             chat={chat}
             onToolApproved={onToolApproved}
             onToolRejected={onToolRejected}
@@ -113,6 +114,7 @@ export const ChatMessagePart = ({
 type ToolPartRendererProps = {
   tool: ToolUIPart;
   messageId: string;
+  status: string;
   chat: ReturnType<typeof useChat>;
   onToolApproved?: (tool: ToolUIPart) => Promise<void>;
   onToolRejected?: (tool: ToolUIPart) => Promise<void>;
@@ -123,6 +125,7 @@ type ToolPartRendererProps = {
 const ToolPartRenderer = ({
   tool,
   messageId,
+  status,
   chat,
   onToolApproved,
   onToolRejected,
@@ -159,6 +162,7 @@ const ToolPartRenderer = ({
                 <Button
                   variant={'outline'}
                   size={'icon-xs'}
+                  disabled={status !== 'ready'}
                   className='px-4'
                   onClick={(e) => {
                     e.stopPropagation();
