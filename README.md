@@ -4,7 +4,7 @@
 
 <h1 align="center">Marketers Chat</h1>
 
-A **Sitecore Marketplace Extension** built with [Next.js](https://nextjs.org) that provides an AI-powered chat interface for content marketers to manage Sitecore XM Cloud resources through natural language.
+A **Sitecore Marketplace Extension** built with [Next.js](https://nextjs.org) that provides an AI-powered chat interface for content marketers to manage SitecoreAI resources through natural language.
 
 ## Features
 

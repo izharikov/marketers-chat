@@ -1,6 +1,6 @@
 ---
 name: manage-personalization
-description: Workflow for creating and managing personalization versions, targeting rules, and conditions on Sitecore XM Cloud pages.
+description: Workflow for creating and managing personalization versions, targeting rules, and conditions on SitecoreAI pages.
 ---
 
 # Manage Personalization

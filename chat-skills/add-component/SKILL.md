@@ -1,11 +1,11 @@
 ---
 name: add-component
-description: Step-by-step guide for adding a component to a Sitecore XM Cloud page — discovering placeholders, selecting components, populating fields, and verifying the result.
+description: Step-by-step guide for adding a component to a SitecoreAI page — discovering placeholders, selecting components, populating fields, and verifying the result.
 ---
 
 # Add Component to Page
 
-Follow this workflow when adding a component to a Sitecore XM Cloud page.
+Follow this workflow when adding a component to a SitecoreAI page.
 
 ## Step-by-Step Flow
 

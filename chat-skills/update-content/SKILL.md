@@ -5,7 +5,7 @@ description: Step-by-step guide for updating any content item — reading curren
 
 # Update Content Item
 
-Follow this workflow when updating any Sitecore XM Cloud content item (page, component datasource, or any other item).
+Follow this workflow when updating any SitecoreAI content item (page, component datasource, or any other item).
 
 ## Step-by-Step Flow
 

@@ -1,6 +1,6 @@
 ---
 name: manage-assets
-description: Workflow for managing Media Library assets in Sitecore XM Cloud — searching, inspecting, updating metadata, and uploading new files.
+description: Workflow for managing Media Library assets in SitecoreAI — searching, inspecting, updating metadata, and uploading new files.
 ---
 
 # Manage Assets
