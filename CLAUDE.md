@@ -1,4 +1,8 @@
-Sitecore Marketplace Extension — AI chat for Sitecore AI. Next.js 16, React 19, Tailwind CSS 4.
+Sitecore Marketplace Extension — AI chat for SitecoreAI. Next.js 16, React 19, Tailwind CSS 4.
+
+## Naming
+
+- The product name is **SitecoreAI** (one word, no space). Never write "Sitecore AI", "Sitecore XM Cloud", or "XM Cloud".
 
 ## Key Concepts
 
