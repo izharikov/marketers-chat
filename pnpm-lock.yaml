@@ -132,6 +132,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      dotenv:
+        specifier: ^17.4.1
+        version: 17.4.1
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -2314,6 +2317,10 @@ packages:
 
   dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
+
+  dotenv@17.4.1:
+    resolution: {integrity: sha512-k8DaKGP6r1G30Lx8V4+pCsLzKr8vLmV2paqEj1Y55GdAgJuIqpRp5FfajGF8KtwMxCz9qJc6wUIJnm053d/WCw==}
     engines: {node: '>=12'}
 
   dpop@2.1.1:
@@ -6344,6 +6351,8 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   dotenv@16.4.7: {}
+
+  dotenv@17.4.1: {}
 
   dpop@2.1.1: {}
 

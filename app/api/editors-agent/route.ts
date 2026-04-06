@@ -174,7 +174,7 @@ export async function POST(req: Request) {
     tools: {
       ...createAgentTools(agentToolOptions),
       ...pageBuilderTools({}),
-      ...webSearchTools({ provider: 'perplexity' }),
+      ...webSearchTools({ provider: 'exa', apiKey: req.headers.get('x-exa-api-key')! }),
       skill: {
         ...skill,
         needsApproval: false,

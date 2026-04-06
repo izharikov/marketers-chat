@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
     ];
   },
   allowedDevOrigins: ['marketers-chat.local'],
+  devIndicators: false,
 };
 
 export default nextConfig;

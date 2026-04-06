@@ -198,7 +198,8 @@ export const models: Model[] = [
   },
 ];
 
-export const DEFAULT_MODEL_ID = 'openai/gpt-5.4-nano';
+export const DEFAULT_MODEL_ID =
+  process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'openai/gpt-5.4-nano';
 
 export const modelProviders = [
   'OpenAI',

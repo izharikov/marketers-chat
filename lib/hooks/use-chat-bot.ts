@@ -39,6 +39,7 @@ export function useChatBot() {
   }, [localSettings]);
 
   const apiKey = useApiKey('vercel');
+  const exaApiKey = useApiKey('exa');
 
   const executeTool = async (toolPart: ToolUIPart) => {
     const toolName = toolPart.type.substring('tool-'.length);
@@ -104,6 +105,7 @@ export function useChatBot() {
         }
         return {
           'x-vercel-api-key': apiKey!,
+          ...(exaApiKey ? { 'x-exa-api-key': exaApiKey } : {}),
           ...authorization,
         };
       },

@@ -29,7 +29,7 @@ const exaSearch = ({ apiKey, needsApproval }: ExaToolOptions) =>
       try {
         const exa = new Exa(apiKey);
         const { results } = await exa.search(query, {
-          numResults: 3,
+          numResults: 5,
           contents: {
             summary: true,
             livecrawl: 'always',

@@ -66,6 +66,7 @@ function ApiKeyInput(props: React.ComponentProps<'input'> & { label: string }) {
 
 const labels: Record<string, string> = {
   vercel: 'Vercel Gateway API Key',
+  exa: 'Exa API Key',
 };
 
 export function AppSettingsModal({

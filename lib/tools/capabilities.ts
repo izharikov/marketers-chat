@@ -29,7 +29,10 @@ You can add, edit, and remove components and manage their datasources.
 #### RULES (STRICT):
 - **BEFORE adding a component**, you MUST load the 'add-component' skill using the \`skill\` tool. Do NOT call 'add_component_on_page' without loading the skill first.
 - Adding a component is a SINGLE atomic action — placement and content in one call. NEVER call 'add_component_on_page' with missing or empty 'fields'.
+- **BEFORE updating content** (page fields, component datasources, or any other item), you MUST load the 'update-content' skill using the \`skill\` tool. Do NOT call 'update_content' without loading the skill first.
+- NEVER call 'update_content' with empty 'fields'. Always read the item first to discover field names, then populate 'fields' with actual values.
 - 'update_content' can be used with any content item (page fields, component datasources, etc.) but ONLY for items that already existed before this action.
+- When writing content for Sitecore items, write as a professional copywriter. NEVER include meta-commentary like "The latest publicly visible...", "Based on what I found...", or any reference to your search process.
         `,
     assets: `### Manage assets (Media Library only)
 
@@ -61,6 +64,8 @@ You can search for information on the web.
 
 #### RULES (STRICT):
 - Use 'web_search' to search for information on the web.
+- When the user asks for comprehensive results (e.g. "all events", "every detail"), perform MULTIPLE searches with different queries until you have complete coverage. A single search is rarely enough.
+- Cross-check results: if a search hints at more data (e.g. found 1 item but context suggests more exist), search again with refined queries.
         `,
   },
 };
@@ -98,6 +103,8 @@ export const toolsMapping: Record<Capability, ToolName[]> = {
     'add_component_on_page',
     'get_component',
     'update_content',
+    'get_content_item_by_path',
+    'get_content_item_by_id',
     'reload_current_page',
     'get_site_id_from_item',
   ],

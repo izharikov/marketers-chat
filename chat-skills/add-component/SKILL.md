@@ -31,5 +31,6 @@ Follow this workflow when adding a component to a Sitecore XM Cloud page.
 
 ## Rules
 - Adding a component MUST be a single atomic action — placement and content in one call
-- If field values are unknown, ask the user or generate reasonable defaults
+- If field values are known (e.g. from search results or user input), always populate them. If unknown, ask the user or generate reasonable defaults
 - Use `update_content` ONLY for components that already existed on the page, never for newly added ones
+- Write content as a professional copywriter — NEVER include phrases like "Based on what I found", "According to my search", or any reference to your own process/tools. The content must read as if a human author wrote it.

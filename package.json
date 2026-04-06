@@ -6,6 +6,7 @@
     "dev": "next dev --hostname marketers-chat.local --experimental-https --experimental-https-key ./certificates/marketers-chat.local-key.pem --experimental-https-cert ./certificates/marketers-chat.local.pem",
     "build": "next build",
     "start": "next start",
+    "start:local": "node server.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -52,6 +53,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "eslint-config-prettier": "^10.1.8",
