@@ -1,4 +1,4 @@
-import { GlobeIcon, ImageIcon, LayoutIcon, UsersIcon } from 'lucide-react';
+import { FilePlus, GlobeIcon, ImageIcon, LayoutIcon, UsersIcon } from 'lucide-react';
 import { Capability } from '@/lib/tools/capabilities';
 
 export type CapabilityDefinition = {
@@ -17,6 +17,11 @@ export const allCapabilities: CapabilityDefinition[] = [
     id: 'sites',
     label: 'Sites',
     icon: <GlobeIcon className='size-4' />,
+  },
+  {
+    id: 'page_management',
+    label: 'Page Management',
+    icon: <FilePlus className='size-4' />,
   },
   {
     id: 'assets',

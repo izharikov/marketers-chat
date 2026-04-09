@@ -20,6 +20,7 @@ const PageBuilder = () => {
       }}
       selectedCapabilities={[
         'page_layout',
+        'page_management',
         'sites',
         'assets',
         'personalization',
@@ -27,6 +28,7 @@ const PageBuilder = () => {
       ]}
       availabelCapabilities={[
         'page_layout',
+        'page_management',
         'sites',
         'assets',
         'personalization',

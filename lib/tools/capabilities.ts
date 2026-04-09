@@ -3,6 +3,7 @@ import { WebSearchToolName } from './websearch';
 
 export type Capability =
   | 'page_layout'
+  | 'page_management'
   | 'assets'
   | 'personalization'
   | 'sites'
@@ -32,7 +33,19 @@ You can add, edit, and remove components and manage their datasources.
 - **BEFORE updating content** (page fields, component datasources, or any other item), you MUST load the 'update-content' skill using the \`skill\` tool. Do NOT call 'update_content' without loading the skill first.
 - NEVER call 'update_content' with empty 'fields'. Always read the item first to discover field names, then populate 'fields' with actual values.
 - 'update_content' can be used with any content item (page fields, component datasources, etc.) but ONLY for items that already existed before this action.
+- **BEFORE removing a component**, you MUST load the 'update-content' skill using the \`skill\` tool. Do NOT call 'delete_content' without loading the skill first.
 - When writing content for Sitecore items, write as a professional copywriter. NEVER include meta-commentary like "The latest publicly visible...", "Based on what I found...", or any reference to your search process.
+        `,
+    page_management: `### Manage pages
+
+You can create new pages within a site.
+
+#### RULES (STRICT):
+- **BEFORE creating a page**, you MUST load the 'create-page' skill using the \`skill\` tool. Do NOT call 'create_page' without loading the skill first.
+- Creating a page is a SINGLE atomic action. NEVER call 'create_page' without first checking insert options and inspecting the template fields.
+- Use 'list_available_insert_options' to discover which templates are allowed under the target parent page.
+- Use 'get_page_template_by_id' to inspect the template's fields before creating.
+- After creating a page, ALWAYS call 'navigate_to_another_page' to open the new page in the editor.
         `,
     assets: `### Manage assets (Media Library only)
 
@@ -103,6 +116,7 @@ export const toolsMapping: Record<Capability, ToolName[]> = {
     'add_component_on_page',
     'get_component',
     'update_content',
+    'delete_content',
     'get_content_item_by_path',
     'get_content_item_by_id',
     'reload_current_page',
@@ -119,6 +133,17 @@ export const toolsMapping: Record<Capability, ToolName[]> = {
     'get_personalization_versions_by_page',
     'get_condition_templates',
     'get_condition_template_by_id',
+  ],
+  page_management: [
+    'list_available_insert_options',
+    'create_page',
+    'get_page',
+    'get_page_template_by_id',
+    'search_site',
+    'get_all_pages_by_site',
+    'get_sites_list',
+    'get_site_details',
+    'navigate_to_another_page',
   ],
   sites: ['get_sites_list', 'get_site_details', 'get_all_pages_by_site'],
   websearch: ['web_search'],

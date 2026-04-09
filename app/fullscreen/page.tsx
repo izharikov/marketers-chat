@@ -19,12 +19,14 @@ const ChatBot = () => {
         await toolRejected(tool);
       }}
       selectedCapabilities={[
+        'page_management',
         'sites',
         'assets',
         'personalization',
         'websearch',
       ]}
       availabelCapabilities={[
+        'page_management',
         'sites',
         'assets',
         'personalization',

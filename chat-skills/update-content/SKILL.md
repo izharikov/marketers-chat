@@ -50,6 +50,14 @@ If any check fails — STOP. Go back to the missing step. Do NOT call `update_co
 ### 6. Verify
 - Call `reload_current_page` to refresh and confirm the update
 
+## Removing a Component
+
+When the user asks to remove a component from a page:
+
+1. Use `get_components_on_page` to identify the component and its datasource item ID
+2. Call `delete_content` with the component's datasource item ID and language
+3. Call `reload_current_page` to refresh and confirm the removal
+
 ## Rules
 - ALWAYS read the item first to discover field names — never guess field names
 - NEVER pass empty `fields: {}` — if you have nothing to write, stop and tell the user

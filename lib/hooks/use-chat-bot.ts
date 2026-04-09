@@ -23,7 +23,7 @@ import {
   useAppContext,
   useMarketplaceClient,
 } from '@/components/providers/marketplace';
-import { Capability, serverOnlyTools } from '@/lib/tools/capabilities';
+import { Capability, clientOnlyTools, serverOnlyTools, ToolName } from '@/lib/tools/capabilities';
 
 export function useChatBot() {
   const client = useMarketplaceClient();
@@ -45,6 +45,13 @@ export function useChatBot() {
     const toolName = toolPart.type.substring('tool-'.length);
     if (serverOnlyTools.includes(toolName as any)) {
       chat.sendMessage();
+      return;
+    }
+
+    if (
+      agentApi.current.execution === 'backend' &&
+      !clientOnlyTools.includes(toolName as ToolName)
+    ) {
       return;
     }
 
